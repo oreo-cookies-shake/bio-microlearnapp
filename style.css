@@ -752,3 +752,53 @@ a, a:visited, button {
   content: none !important;
   display: none !important;
 }
+
+/* =========================
+   EMERGENCY: remove triangle tails / wedges
+   Paste at END of style.css
+   ========================= */
+
+/* 1) Make sure bubbles/cards are solid (no weird gradient wedge) */
+.card,
+.bubble,
+.message,
+.story-card,
+.qa-card,
+.answer-card,
+.question-card{
+  background: var(--surface) !important;
+  background-image: none !important;
+  overflow: hidden !important; /* clips any tail element */
+}
+
+/* 2) If tails are pseudo-elements, kill them */
+.card::before, .card::after,
+.bubble::before, .bubble::after,
+.message::before, .message::after,
+.story-card::before, .story-card::after,
+.qa-card::before, .qa-card::after,
+.answer-card::before, .answer-card::after,
+.question-card::before, .question-card::after{
+  content: none !important;
+  display: none !important;
+}
+
+/* 3) If tails are real elements in HTML, hide them */
+.tail, .bubble-tail, .corner, .triangle,
+[class*="tail"], [class*="corner"], [class*="triangle"]{
+  display: none !important;
+}
+
+/* Compatibility aliases (old CSS -> new theme tokens) */
+:root{
+  --text-main: var(--text) !important;
+  --text-muted: var(--muted) !important;
+
+  --bg-elevated: var(--surface) !important;
+  --bg-soft: var(--surface-2) !important;
+}
+
+/* Some headings may be using old var names */
+.chapter-title, .chapter-header, .page-title, h1, h2{
+  color: var(--text) !important;
+}
