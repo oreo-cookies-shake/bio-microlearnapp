@@ -1,174 +1,30 @@
-:root {
-  /* --- LIGHT MODE (Creamy/Soft) --- */
-  --bg-color: #E6E9EF;       /* Slightly darker than white to make white pop */
-  --text-color: #4A5568;     /* Soft charcoal */
-  --card-bg: #E6E9EF;        /* Matches bg for neumorphism */
-  
-  /* The "Sage" Accent */
-  --primary: #7C9A8B;        
-  --primary-gradient: linear-gradient(135deg, #7C9A8B 0%, #5A7568 100%);
-  
-  /* Stronger Shadows for "Buttony" feel */
-  --shadow-light: -6px -6px 12px #FFFFFF;
-  --shadow-dark: 6px 6px 12px #C5C9D2;
-  
-  --header-text: #2D3748;
-}
+const CACHE_NAME = "microlearn-bio-v8";
+const ASSETS = [
+  "/",
+  "/index.html",
+  "/style.css",
+  "/script.js",
+  "/manifest.json"
+];
 
-body.dark-mode {
-  /* --- DARK MODE (Deep Blue-Grey) --- */
-  --bg-color: #212529;
-  --text-color: #E2E8F0;
-  --card-bg: #212529;
-  
-  --primary: #A3B8AD;
-  --primary-gradient: linear-gradient(135deg, #A3B8AD 0%, #8FA89B 100%);
+self.addEventListener("install", (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
+  );
+});
 
-  /* Dark Mode Shadows */
-  --shadow-light: -4px -4px 10px #2D3339; /* Lighter highlight */
-  --shadow-dark: 4px 4px 10px #15181C;    /* Deep shadow */
-  
-  --header-text: #FFFFFF; /* Fixes the invisible 12.1 Energy text */
-}
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    caches.keys().then((keys) =>
+      Promise.all(keys.map((k) => (k === CACHE_NAME ? null : caches.delete(k))))
+    )
+  );
+});
 
-/* --- GLOBAL RESETS --- */
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  /* Smooth transition for theme switching */
-  transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
-}
-
-body {
-  font-family: 'Inter', sans-serif;
-  background-color: var(--bg-color);
-  color: var(--text-color);
-  line-height: 1.6;
-  overflow-y: auto; 
-  padding-bottom: 120px;
-}
-
-/* --- HEADER --- */
-header {
-  padding: 20px 25px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color: var(--bg-color);
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
-
-h1, h2, .header-title {
-    color: var(--header-text) !important; /* Force color fix */
-    font-weight: 700;
-}
-
-.back-btn, .theme-toggle {
-  background: var(--card-bg);
-  border: none;
-  font-size: 1.2rem;
-  color: var(--text-color);
-  cursor: pointer;
-  width: 45px;
-  height: 45px;
-  border-radius: 12px; /* Slightly squarer looks more 'tech' */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: var(--shadow-dark), var(--shadow-light);
-}
-
-.back-btn:active, .theme-toggle:active {
-  box-shadow: inset 4px 4px 8px var(--shadow-dark), 
-              inset -4px -4px 8px var(--shadow-light);
-}
-
-/* --- CARDS & BUBBLES --- */
-.container {
-  max-width: 600px;
-  margin: 0 auto;
-  padding: 20px;
-}
-
-/* This is the text bubble */
-.card, .bubble, .content-card {
-  background-color: var(--card-bg);
-  padding: 30px 25px;
-  border-radius: 20px;
-  margin-bottom: 25px;
-  
-  /* THE NEUMORPHIC POP */
-  box-shadow: var(--shadow-dark), var(--shadow-light);
-  border: 1px solid rgba(255,255,255, 0.05);
-  
-  /* Remove the triangle thingy */
-  position: relative;
-}
-
-/* Force remove any pseudo-elements causing triangles */
-.card::before, .card::after, 
-.bubble::before, .bubble::after {
-    content: none !important;
-    display: none !important;
-}
-
-/* --- BUTTONS --- */
-.controls {
-  position: fixed;
-  bottom: 30px;
-  left: 0;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 15px;
-  pointer-events: none;
-  z-index: 200;
-}
-
-.btn {
-  pointer-events: auto;
-  padding: 15px 40px;
-  border-radius: 50px;
-  border: none;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  background: var(--card-bg);
-  color: var(--text-color);
-  
-  /* Neumorphic Button */
-  box-shadow: var(--shadow-dark), var(--shadow-light);
-}
-
-.btn:active {
-  box-shadow: inset 3px 3px 6px var(--shadow-dark), 
-              inset -3px -3px 6px var(--shadow-light);
-}
-
-.btn-primary {
-    color: var(--primary);
-    font-weight: 800;
-}
-
-/* --- PROGRESS BAR --- */
-.progress-container {
-  width: 80%;
-  margin: 0 auto 20px;
-  height: 10px;
-  border-radius: 10px;
-  background: var(--card-bg);
-  box-shadow: inset 3px 3px 6px var(--shadow-dark), 
-              inset -3px -3px 6px var(--shadow-light);
-}
-
-.progress-fill {
-  height: 100%;
-  background: var(--primary);
-  border-radius: 10px;
-  width: 0%;
-  transition: width 0.3s ease;
-}
+self.addEventListener("fetch", (event) => {
+  event.respondWith(
+    caches.match(event.request).then(
+      (resp) => resp || fetch(event.request)
+    )
+  );
+});
