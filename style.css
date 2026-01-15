@@ -723,10 +723,10 @@ body:not(.light) .action-bar{
 }
 
 /* If the triangle is still ugly, uncomment this to REMOVE tails completely */
-/*
+
 .bubble::before, .bubble::after,
 .message::before, .message::after,
 .story-card::before, .story-card::after{
   display:none !important;
 }
-*/
+
