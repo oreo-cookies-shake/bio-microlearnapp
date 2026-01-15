@@ -585,3 +585,148 @@ body:not(.light) .action-bar {
   border: 1px solid rgba(143, 168, 155, 0.35) !important;
   color: var(--text-main) !important;
 }
+
+/* =========================
+   POLISH PACK (contrast + airy + bubble tail fix)
+   Paste at END of style.css
+   ========================= */
+
+/* Core surfaces */
+:root{
+  --bg: #F0F2F5 !important;
+  --surface: #F7F8FA !important;      /* card surface (slightly lighter than bg) */
+  --surface-2: #E9EDF2 !important;    /* chips / tracks */
+  --text: #111827 !important;
+  --muted: #6B7280 !important;
+
+  --accent: #8FA89B !important;
+  --progress-start: #D4E0D9 !important;
+  --progress-end: #8FA89B !important;
+
+  /* super subtle outline (NOT a sharp border) */
+  --hairline: rgba(17, 24, 39, 0.05) !important;
+
+  --shadow-soft: 10px 10px 22px #d1d9e6, -10px -10px 22px #ffffff !important;
+}
+
+body{
+  background: var(--bg) !important;
+  color: var(--text) !important;
+  overflow-y: auto !important;
+}
+
+/* Dark mode: stronger separation + clearer text */
+body:not(.light){
+  --bg: #1E1E1E !important;
+  --surface: #252525 !important;
+  --surface-2: #2E2E2E !important;
+  --text: #F3F4F6 !important;
+  --muted: rgba(243, 244, 246, 0.65) !important;
+  --hairline: rgba(255,255,255,0.06) !important;
+  --shadow-soft: 10px 10px 22px #131313, -10px -10px 22px #292929 !important;
+
+  background: var(--bg) !important;
+  color: var(--text) !important;
+}
+
+/* Make cards/bubbles pop without “borders” */
+.card,
+.bubble,
+.message,
+.qa-card,
+.story-card,
+.mode-card{
+  background: var(--surface) !important;
+  border-radius: 30px !important;
+  box-shadow: var(--shadow-soft) !important;
+  outline: 1px solid var(--hairline) !important;
+}
+
+/* Make text readable everywhere */
+h1,h2,h3,.title{ color: var(--text) !important; }
+.subtitle,.muted,.label{ color: var(--muted) !important; }
+
+/* Tabs / segmented control: more airy + clearer */
+.tabs,
+.segmented,
+.mode-switch{
+  background: var(--surface-2) !important;
+  border-radius: 999px !important;
+  padding: 6px !important;
+  outline: 1px solid var(--hairline) !important;
+  box-shadow: none !important;
+}
+
+.tab,
+.segment,
+.mode-btn{
+  border-radius: 999px !important;
+  padding: 10px 14px !important;
+  color: var(--muted) !important;
+}
+
+.tab.active,
+.segment.active,
+.mode-btn.active{
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  box-shadow: var(--shadow-soft) !important;
+}
+
+/* Progress bar: calm sage */
+.progress-track{
+  background: var(--surface-2) !important;
+  border-radius: 999px !important;
+}
+
+.progress-fill{
+  background: linear-gradient(90deg, var(--progress-start), var(--progress-end)) !important;
+  border-radius: 999px !important;
+  filter: saturate(0.85) !important;
+}
+
+/* Airy layout spacing */
+.container,
+.app-main,
+.mode-panel{
+  padding-top: 18px !important;
+  padding-left: 18px !important;
+  padding-right: 18px !important;
+  padding-bottom: calc(170px + env(safe-area-inset-bottom)) !important;
+}
+
+/* Bottom bar stays visible in dark mode */
+.bottom-bar,
+.qa-actions,
+.action-bar{
+  background: var(--surface) !important;
+  outline: 1px solid var(--hairline) !important;
+  border-radius: 999px !important;
+  box-shadow: var(--shadow-soft) !important;
+}
+
+body:not(.light) .bottom-bar,
+body:not(.light) .qa-actions,
+body:not(.light) .action-bar{
+  background: #252525 !important;
+}
+
+/* ✅ FIX: white triangle “bubble tail”
+   If your bubble uses ::before/::after as a tail, force it to match surface. */
+.bubble::before,
+.bubble::after,
+.message::before,
+.message::after,
+.story-card::before,
+.story-card::after{
+  background: var(--surface) !important;
+}
+
+/* If the triangle is still ugly, uncomment this to REMOVE tails completely */
+/*
+.bubble::before, .bubble::after,
+.message::before, .message::after,
+.story-card::before, .story-card::after{
+  display:none !important;
+}
+*/
