@@ -1,30 +1,39 @@
-const CACHE_NAME = "microlearn-bio-v8";
+// Change the v9 to v10 to force your phone to update!
+const CACHE_NAME = "microlearn-bio-v10"; 
+
 const ASSETS = [
-  "/",
-  "/index.html",
-  "/style.css",
-  "/script.js",
-  "/manifest.json"
+  "./",
+  "./index.html",
+  "./style.css",
+  "./script.js",
+  "./manifest.json"
 ];
 
+// Install the Service Worker
 self.addEventListener("install", (event) => {
+  self.skipWaiting(); // Force update immediately
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
   );
 });
 
+// Clean up old versions
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
-      Promise.all(keys.map((k) => (k === CACHE_NAME ? null : caches.delete(k))))
+      Promise.all(
+        keys.map((k) => {
+          if (k !== CACHE_NAME) return caches.delete(k);
+        })
+      )
     )
   );
+  self.clients.claim();
 });
 
+// Serve files
 self.addEventListener("fetch", (event) => {
   event.respondWith(
-    caches.match(event.request).then(
-      (resp) => resp || fetch(event.request)
-    )
+    fetch(event.request).catch(() => caches.match(event.request))
   );
-});
+});git add .
