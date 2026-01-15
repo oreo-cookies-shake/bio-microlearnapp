@@ -1,4 +1,4 @@
-const CACHE_NAME = "microlearn-bio-v2";
+const CACHE_NAME = "microlearn-bio-v4";
 const ASSETS = [
   "/",
   "/index.html",

@@ -490,3 +490,98 @@ body:not(.light) .bottom-bar {
 .hidden {
   display: none !important;
 }
+
+/* =========================
+   HOTFIX OVERRIDES (mobile)
+   ========================= */
+
+/* Make sure accent is sage everywhere (kills teal/neon leftovers) */
+:root {
+  --accent: #8FA89B !important;
+  --progress-start: #D4E0D9 !important;
+  --progress-end: #8FA89B !important;
+}
+
+/* Progress bar should never look neon */
+.progress-fill {
+  background: linear-gradient(90deg, var(--progress-start), var(--progress-end)) !important;
+  filter: saturate(0.85) !important;
+}
+
+/* If ANY element still uses the old teal/green as inline background, this softens it */
+button, .btn, .tab.active {
+  accent-color: var(--accent);
+}
+
+/* --- FIX: giant "Show answer" blob --- */
+/* This targets multiple possible selectors so it catches your current element. */
+#showAnswerBtn,
+.show-answer,
+.show-answer-btn,
+.big-button,
+.big-action,
+button.show-answer,
+#questionArea button {
+  width: min(320px, 72vw) !important;      /* smaller */
+  height: auto !important;
+  padding: 10px 14px !important;          /* smaller */
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.18) !important;   /* glass */
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  box-shadow: var(--shadow-soft) !important;
+  color: var(--text-main) !important;
+}
+
+/* If you’re in light mode, use a slightly clearer glass */
+body.light #showAnswerBtn,
+body.light .show-answer,
+body.light .show-answer-btn,
+body.light .big-button,
+body.light .big-action,
+body.light #questionArea button {
+  background: rgba(255, 255, 255, 0.55) !important;
+  border: 1px solid rgba(255, 255, 255, 0.75) !important;
+}
+
+/* --- FIX: bottom buttons cut off on Android --- */
+/* Make action bars float ABOVE the system nav area */
+.bottom-bar,
+.qa-actions,
+.action-bar {
+  position: fixed !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  bottom: calc(14px + env(safe-area-inset-bottom)) !important;
+  width: min(520px, calc(100% - 28px)) !important;
+  z-index: 999 !important;
+
+  background: var(--nav-bg) !important;
+  padding: 10px !important;
+  border-radius: 999px !important;
+  box-shadow: var(--shadow-soft) !important;
+}
+
+/* Ensure content never hides behind fixed bar */
+.app-main,
+.container,
+.bubble-feed,
+.qa-wrapper,
+.mode-panel {
+  padding-bottom: calc(170px + env(safe-area-inset-bottom)) !important;
+}
+
+/* Dark mode visibility: nav bg clearly separated */
+body:not(.light) .bottom-bar,
+body:not(.light) .qa-actions,
+body:not(.light) .action-bar {
+  background: #252525 !important;
+}
+
+/* Make primary buttons less "neon" and more sage */
+.btn-primary {
+  background: rgba(143, 168, 155, 0.28) !important;
+  border: 1px solid rgba(143, 168, 155, 0.35) !important;
+  color: var(--text-main) !important;
+}
