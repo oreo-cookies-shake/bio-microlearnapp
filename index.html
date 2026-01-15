@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Microlearn Bio</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0f172a" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="app-header">
+      <button class="icon-button back-button hidden" id="backButton" aria-label="Back">
+        ←
+      </button>
+      <div class="header-title">
+        <span id="headerSubtitle" class="header-subtitle"></span>
+        <h1 id="headerTitle" class="header-main"></h1>
+      </div>
+      <button class="icon-button" id="themeToggle" aria-label="Toggle theme">
+        ☾
+      </button>
+    </header>
+
+    <main class="app-main">
+      <!-- Screen 1: Level selection (AS / A2) -->
+      <section id="screenLevels" class="screen active">
+        <div class="hero">
+          <h2>Microlearning for A-Level Biology</h2>
+          <p>Swipe-style revision in tiny, human-sized pieces.</p>
+        </div>
+        <div class="card-grid">
+          <button class="card card-select" data-level="as">
+            <h3>AS Level</h3>
+            <p>11 chapters · foundation concepts</p>
+          </button>
+          <button class="card card-select" data-level="a2">
+            <h3>A2 Level</h3>
+            <p>8 chapters · advanced topics</p>
+          </button>
+        </div>
+      </section>
+
+      <!-- Screen 2: Chapter list -->
+      <section id="screenChapters" class="screen hidden">
+        <div id="chaptersList" class="card-list"></div>
+      </section>
+
+      <!-- Screen 3: Chapter modes (Story / Questions / Difficult) -->
+      <section id="screenChapter" class="screen hidden">
+        <div class="tabs" id="modeTabs">
+          <button class="tab active" data-mode="story">Story</button>
+          <button class="tab" data-mode="questions">Questions</button>
+          <button class="tab" data-mode="difficult">Difficult</button>
+        </div>
+
+        <div class="progress-wrapper">
+          <div class="progress-label" id="progressLabel">0 / 0</div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+        </div>
+
+        <!-- Story mode content -->
+        <div id="storyMode" class="mode-panel active">
+          <div id="storyFeed" class="bubble-feed"></div>
+          <div class="bottom-bar">
+            <button id="storyMarkDifficult" class="btn btn-ghost">
+              Still confusing
+            </button>
+            <button id="storyNext" class="btn btn-primary">
+              Next
+            </button>
+          </div>
+        </div>
+
+        <!-- Question mode content -->
+        <div id="questionsMode" class="mode-panel hidden">
+          <div id="questionArea" class="qa-wrapper">
+            <!-- Question + answer will be injected here -->
+          </div>
+        </div>
+
+        <!-- Difficult list content -->
+        <div id="difficultMode" class="mode-panel hidden">
+          <div id="difficultEmpty" class="empty-state">
+            Nothing here yet. Mark items as “Still confusing” to build your list.
+          </div>
+          <ul id="difficultList" class="difficult-list"></ul>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="script.js" defer></script>
+</body>
+</html>
