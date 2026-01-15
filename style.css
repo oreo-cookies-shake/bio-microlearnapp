@@ -49,7 +49,7 @@ body.light {
 }
 
 *,
-*::before,
+*::before,Z
 *::after {
   box-sizing: border-box;
 }
@@ -730,3 +730,25 @@ body:not(.light) .action-bar{
   display:none !important;
 }
 
+/* --- compatibility aliases so older CSS uses new theme tokens --- */
+:root{
+  --text-main: var(--text) !important;
+  --text-muted: var(--muted) !important;
+
+  --bg-elevated: var(--surface) !important;
+  --bg-soft: var(--surface-2) !important;
+}
+
+/* links/buttons sometimes default to black on mobile */
+a, a:visited, button {
+  color: inherit !important;
+}
+
+/* TEMP: remove any pseudo-element tails in cards/messages */
+.card::before, .card::after,
+.message::before, .message::after,
+.story-card::before, .story-card::after,
+.qa-card::before, .qa-card::after {
+  content: none !important;
+  display: none !important;
+}
