@@ -1,30 +1,754 @@
-const CACHE_NAME = "microlearn-bio-v8";
-const ASSETS = [
-  "/",
-  "/index.html",
-  "/style.css",
-  "/script.js",
-  "/manifest.json"
-];
+/* =========================
+   Soft Neumorphic / Minimal
+   ========================= */
 
-self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
-  );
-});
+/* Dark mode defaults (your app loads dark first) */
+:root {
+  --bg: #1E1E1E;          /* Dark background */
+  --surface: #232323;     /* Card surface */
+  --nav-bg: #252525;      /* Bottom bars / nav visibility */
+  --text-main: #F2F2F2;
+  --text-muted: #B8B8B8;
 
-self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.map((k) => (k === CACHE_NAME ? null : caches.delete(k))))
-    )
-  );
-});
+  --accent: #8FA89B;      /* Sage Green */
+  --accent-soft: rgba(143, 168, 155, 0.18);
 
-self.addEventListener("fetch", (event) => {
-  event.respondWith(
-    caches.match(event.request).then(
-      (resp) => resp || fetch(event.request)
-    )
-  );
-});
+  --progress-start: #D4E0D9;
+  --progress-end: #8FA89B;
+
+  --card-radius: 30px;
+  --bubble-radius: 24px;
+
+  /* Neumorphic shadow (dark) */
+  --shadow-soft: 8px 8px 16px #131313, -8px -8px 16px #292929;
+
+  /* Glass buttons */
+  --btn-bg: rgba(255, 255, 255, 0.2);
+  --btn-border: rgba(255, 255, 255, 0.18);
+}
+
+/* Light mode variables (when body.light is applied) */
+body.light {
+  --bg: #F0F2F5;          /* Light background */
+  --surface: #F0F2F5;     /* Neumorphism: same as bg */
+  --nav-bg: #F0F2F5;
+  --text-main: #111827;
+  --text-muted: #6B7280;
+
+  --accent: #8FA89B;
+  --accent-soft: rgba(143, 168, 155, 0.18);
+
+  --progress-start: #D4E0D9;
+  --progress-end: #8FA89B;
+
+  /* Neumorphic shadow (light) */
+  --shadow-soft: 8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff;
+
+  --btn-bg: rgba(255, 255, 255, 0.2);
+  --btn-border: rgba(255, 255, 255, 0.55);
+}
+
+*,
+*::before,Z
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+    "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: var(--text-main);
+
+  /* Layout & Scrolling Fix */
+  overflow-y: auto;
+}
+
+/* ===== App Shell ===== */
+
+.app {
+  min-height: 100vh;
+  max-width: 520px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  padding: 16px 18px 10px;
+  gap: 10px;
+}
+
+.header-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.header-main {
+  margin: 0;
+  font-size: 1.1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.header-subtitle {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* Icon buttons: soften + neumorphic */
+.icon-button {
+  border: 0;
+  background: var(--surface);
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-muted);
+  box-shadow: var(--shadow-soft);
+}
+
+/* Screens */
+.app-main {
+  flex: 1;
+  padding: 4px 16px 16px;
+
+  /* Layout & Scrolling Fix: ensure bottom UI never gets cut */
+  padding-bottom: 120px;
+}
+
+/* If you happen to use .container anywhere */
+.container {
+  padding-bottom: 120px;
+}
+
+.screen {
+  /* Remove forced height constraints so natural scrolling works */
+  min-height: calc(100vh - 72px);
+}
+
+/* Hero */
+.hero {
+  margin: 8px 2px 18px;
+}
+
+.hero h2 {
+  margin: 0 0 8px;
+  font-size: 1.4rem;
+}
+
+.hero p {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+/* ===== Neumorphic Cards ===== */
+
+.card-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+.card {
+  border: none; /* Remove borders/outlines */
+  border-radius: var(--card-radius);
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+  padding: 18px 20px;
+}
+
+.card-select {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.card-select h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.card-select p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 6px;
+}
+
+.card-chapter {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.card-chapter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-chapter-title {
+  font-size: 0.98rem;
+}
+
+.chapter-meta {
+  display: flex;
+  gap: 10px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.progress-circle {
+  font-size: 0.8rem;
+  color: var(--accent);
+}
+
+/* ===== Tabs ===== */
+
+.tabs {
+  display: inline-flex;
+  background: var(--surface);
+  border-radius: 999px;
+  padding: 6px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow-soft);
+}
+
+.tab {
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  padding: 8px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.tab.active {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* ===== Progress ===== */
+
+.progress-wrapper {
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.progress-label {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  min-width: 60px;
+}
+
+.progress-bar {
+  flex: 1;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+  box-shadow: var(--shadow-soft);
+}
+
+body.light .progress-bar {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.progress-fill {
+  width: 0%;
+  height: 100%;
+  background: linear-gradient(90deg, var(--progress-start), var(--progress-end));
+  transition: width 0.3s ease-out;
+}
+
+/* ===== Modes ===== */
+
+.mode-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ===== Story Mode ===== */
+
+.bubble-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  /* Natural scroll if long */
+  overflow-y: auto;
+
+  /* Extra bottom padding so content never collides with buttons */
+  padding-bottom: 120px;
+}
+
+.bubble {
+  max-width: 88%;
+  padding: 12px 14px;
+  border-radius: var(--bubble-radius);
+  background: var(--surface);
+  border: none;
+  box-shadow: var(--shadow-soft);
+  font-size: 0.92rem;
+}
+
+.bubble-meta {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.bubble-text {
+  margin: 0;
+}
+
+/* Bottom action bar */
+.bottom-bar {
+  display: flex;
+  gap: 10px;
+  padding: 10px 0 0;
+
+  /* Dark Mode Visibility */
+  background: transparent;
+}
+
+body:not(.light) .bottom-bar {
+  background: var(--nav-bg);
+  padding: 12px 10px;
+  border-radius: 18px;
+  box-shadow: var(--shadow-soft);
+}
+
+/* ===== Buttons (Glassmorphism) ===== */
+
+.btn {
+  border-radius: 999px;
+  padding: 10px 16px;
+  border: 1px solid var(--btn-border);
+  cursor: pointer;
+  font-size: 0.9rem;
+
+  background: var(--btn-bg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  color: var(--text-main);
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn-primary {
+  /* Keep it glass but accent text */
+  color: var(--text-main);
+}
+
+.btn-ghost {
+  color: var(--text-muted);
+}
+
+/* Button Overhaul: "Show answer" smaller
+   This targets ONLY the Show answer button because it's a direct child of #questionArea.
+*/
+#questionArea > .btn.btn-primary {
+  width: 70%;          /* ~30% smaller width */
+  padding: 7px 12px;   /* ~30% smaller height */
+  font-size: 0.85rem;
+  margin: 0 auto;
+}
+
+/* ===== Question Mode ===== */
+
+.qa-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  /* Natural scroll if needed */
+  overflow-y: auto;
+
+  /* Prevent bottom buttons from being cut off */
+  padding-bottom: 120px;
+}
+
+.qa-card {
+  padding: 14px 16px;
+  border-radius: var(--card-radius);
+  background: var(--surface);
+  border: none;
+  box-shadow: var(--shadow-soft);
+}
+
+.qa-meta {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.qa-question {
+  font-size: 0.98rem;
+}
+
+.qa-answer-title {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.qa-answer-text {
+  font-size: 0.98rem;
+}
+
+/* Actions row */
+.qa-actions {
+  display: flex;
+  gap: 10px;
+}
+
+/* ===== Difficult List ===== */
+
+.empty-state {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-top: 12px;
+}
+
+.difficult-list {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.difficult-item {
+  padding: 12px 14px;
+  border-radius: var(--card-radius);
+  background: var(--surface);
+  border: none;
+  box-shadow: var(--shadow-soft);
+  font-size: 0.88rem;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.difficult-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+/* Toast */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  background: var(--nav-bg);
+  color: var(--text-main);
+  padding: 9px 14px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  box-shadow: var(--shadow-soft);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s ease-out, transform 0.22s ease-out;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-2px);
+}
+
+/* Utility */
+.hidden {
+  display: none !important;
+}
+
+/* =========================
+   HOTFIX OVERRIDES (mobile)
+   ========================= */
+
+/* Make sure accent is sage everywhere (kills teal/neon leftovers) */
+:root {
+  --accent: #8FA89B !important;
+  --progress-start: #D4E0D9 !important;
+  --progress-end: #8FA89B !important;
+}
+
+/* Progress bar should never look neon */
+.progress-fill {
+  background: linear-gradient(90deg, var(--progress-start), var(--progress-end)) !important;
+  filter: saturate(0.85) !important;
+}
+
+/* If ANY element still uses the old teal/green as inline background, this softens it */
+button, .btn, .tab.active {
+  accent-color: var(--accent);
+}
+
+/* --- FIX: giant "Show answer" blob --- */
+/* This targets multiple possible selectors so it catches your current element. */
+#showAnswerBtn,
+.show-answer,
+.show-answer-btn,
+.big-button,
+.big-action,
+button.show-answer,
+#questionArea button {
+  width: min(320px, 72vw) !important;      /* smaller */
+  height: auto !important;
+  padding: 10px 14px !important;          /* smaller */
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.18) !important;   /* glass */
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  box-shadow: var(--shadow-soft) !important;
+  color: var(--text-main) !important;
+}
+
+/* If you’re in light mode, use a slightly clearer glass */
+body.light #showAnswerBtn,
+body.light .show-answer,
+body.light .show-answer-btn,
+body.light .big-button,
+body.light .big-action,
+body.light #questionArea button {
+  background: rgba(255, 255, 255, 0.55) !important;
+  border: 1px solid rgba(255, 255, 255, 0.75) !important;
+}
+
+/* --- FIX: bottom buttons cut off on Android --- */
+/* Make action bars float ABOVE the system nav area */
+.bottom-bar,
+.qa-actions,
+.action-bar {
+  position: fixed !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  bottom: calc(14px + env(safe-area-inset-bottom)) !important;
+  width: min(520px, calc(100% - 28px)) !important;
+  z-index: 999 !important;
+
+  background: var(--nav-bg) !important;
+  padding: 10px !important;
+  border-radius: 999px !important;
+  box-shadow: var(--shadow-soft) !important;
+}
+
+/* Ensure content never hides behind fixed bar */
+.app-main,
+.container,
+.bubble-feed,
+.qa-wrapper,
+.mode-panel {
+  padding-bottom: calc(170px + env(safe-area-inset-bottom)) !important;
+}
+
+/* Dark mode visibility: nav bg clearly separated */
+body:not(.light) .bottom-bar,
+body:not(.light) .qa-actions,
+body:not(.light) .action-bar {
+  background: #252525 !important;
+}
+
+/* Make primary buttons less "neon" and more sage */
+.btn-primary {
+  background: rgba(143, 168, 155, 0.28) !important;
+  border: 1px solid rgba(143, 168, 155, 0.35) !important;
+  color: var(--text-main) !important;
+}
+
+/* =========================
+   POLISH PACK (contrast + airy + bubble tail fix)
+   Paste at END of style.css
+   ========================= */
+
+/* Core surfaces */
+:root{
+  --bg: #F0F2F5 !important;
+  --surface: #F7F8FA !important;      /* card surface (slightly lighter than bg) */
+  --surface-2: #E9EDF2 !important;    /* chips / tracks */
+  --text: #111827 !important;
+  --muted: #6B7280 !important;
+
+  --accent: #8FA89B !important;
+  --progress-start: #D4E0D9 !important;
+  --progress-end: #8FA89B !important;
+
+  /* super subtle outline (NOT a sharp border) */
+  --hairline: rgba(17, 24, 39, 0.05) !important;
+
+  --shadow-soft: 10px 10px 22px #d1d9e6, -10px -10px 22px #ffffff !important;
+}
+
+body{
+  background: var(--bg) !important;
+  color: var(--text) !important;
+  overflow-y: auto !important;
+}
+
+/* Dark mode: stronger separation + clearer text */
+body:not(.light){
+  --bg: #1E1E1E !important;
+  --surface: #252525 !important;
+  --surface-2: #2E2E2E !important;
+  --text: #F3F4F6 !important;
+  --muted: rgba(243, 244, 246, 0.65) !important;
+  --hairline: rgba(255,255,255,0.06) !important;
+  --shadow-soft: 10px 10px 22px #131313, -10px -10px 22px #292929 !important;
+
+  background: var(--bg) !important;
+  color: var(--text) !important;
+}
+
+/* Make cards/bubbles pop without “borders” */
+.card,
+.bubble,
+.message,
+.qa-card,
+.story-card,
+.mode-card{
+  background: var(--surface) !important;
+  border-radius: 30px !important;
+  box-shadow: var(--shadow-soft) !important;
+  outline: 1px solid var(--hairline) !important;
+}
+
+/* Make text readable everywhere */
+h1,h2,h3,.title{ color: var(--text) !important; }
+.subtitle,.muted,.label{ color: var(--muted) !important; }
+
+/* Tabs / segmented control: more airy + clearer */
+.tabs,
+.segmented,
+.mode-switch{
+  background: var(--surface-2) !important;
+  border-radius: 999px !important;
+  padding: 6px !important;
+  outline: 1px solid var(--hairline) !important;
+  box-shadow: none !important;
+}
+
+.tab,
+.segment,
+.mode-btn{
+  border-radius: 999px !important;
+  padding: 10px 14px !important;
+  color: var(--muted) !important;
+}
+
+.tab.active,
+.segment.active,
+.mode-btn.active{
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  box-shadow: var(--shadow-soft) !important;
+}
+
+/* Progress bar: calm sage */
+.progress-track{
+  background: var(--surface-2) !important;
+  border-radius: 999px !important;
+}
+
+.progress-fill{
+  background: linear-gradient(90deg, var(--progress-start), var(--progress-end)) !important;
+  border-radius: 999px !important;
+  filter: saturate(0.85) !important;
+}
+
+/* Airy layout spacing */
+.container,
+.app-main,
+.mode-panel{
+  padding-top: 18px !important;
+  padding-left: 18px !important;
+  padding-right: 18px !important;
+  padding-bottom: calc(170px + env(safe-area-inset-bottom)) !important;
+}
+
+/* Bottom bar stays visible in dark mode */
+.bottom-bar,
+.qa-actions,
+.action-bar{
+  background: var(--surface) !important;
+  outline: 1px solid var(--hairline) !important;
+  border-radius: 999px !important;
+  box-shadow: var(--shadow-soft) !important;
+}
+
+body:not(.light) .bottom-bar,
+body:not(.light) .qa-actions,
+body:not(.light) .action-bar{
+  background: #252525 !important;
+}
+
+/* ✅ FIX: white triangle “bubble tail”
+   If your bubble uses ::before/::after as a tail, force it to match surface. */
+.bubble::before,
+.bubble::after,
+.message::before,
+.message::after,
+.story-card::before,
+.story-card::after{
+  background: var(--surface) !important;
+}
+
+/* If the triangle is still ugly, uncomment this to REMOVE tails completely */
+
+.bubble::before, .bubble::after,
+.message::before, .message::after,
+.story-card::before, .story-card::after{
+  display:none !important;
+}
+
+/* --- compatibility aliases so older CSS uses new theme tokens --- */
+:root{
+  --text-main: var(--text) !important;
+  --text-muted: var(--muted) !important;
+
+  --bg-elevated: var(--surface) !important;
+  --bg-soft: var(--surface-2) !important;
+}
+
+/* links/buttons sometimes default to black on mobile */
+a, a:visited, button {
+  color: inherit !important;
+}
+
+/* TEMP: remove any pseudo-element tails in cards/messages */
+.card::before, .card::after,
+.message::before, .message::after,
+.story-card::before, .story-card::after,
+.qa-card::before, .qa-card::after {
+  content: none !important;
+  display: none !important;
+}
