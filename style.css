@@ -1,24 +1,39 @@
 :root {
-  --bg: #0f172a;
-  --bg-elevated: #111827;
-  --bg-soft: #020617;
-  --text-main: #f9fafb;
-  --text-muted: #9ca3af;
-  --accent: #22c5b3; /* teal-ish */
-  --accent-soft: rgba(34, 197, 178, 0.1);
+  /* Dark mode: charcoal / ink */
+  --bg: #050816;
+  --bg-elevated: #0B1220;
+  --bg-soft: #0A1020;
+
+  --text-main: #F8FAFC;
+  --text-muted: #AAB4C0;
+
+  --accent: #22C5B3;
+  --accent-soft: rgba(34, 197, 179, 0.14);
+
   --card-radius: 18px;
   --bubble-radius: 18px;
-  --shadow-soft: 0 18px 45px rgba(0, 0, 0, 0.45);
+
+  --border: rgba(255, 255, 255, 0.08);
+  --shadow-soft: 0 14px 36px rgba(0, 0, 0, 0.35);
 }
 
+
 body.light {
-  --bg: #f3f4f6;
-  --bg-elevated: #ffffff;
-  --bg-soft: #e5e7eb;
-  --text-main: #111827;
-  --text-muted: #6b7280;
-  --shadow-soft: 0 18px 45px rgba(15, 23, 42, 0.12);
+  /* Light mode: paper / calm */
+  --bg: #F5F7FB;
+  --bg-elevated: #FFFFFF;
+  --bg-soft: #E9EEF6;
+
+  --text-main: #0F172A;
+  --text-muted: #64748B;
+
+  --accent: #22C5B3;
+  --accent-soft: rgba(34, 197, 179, 0.12);
+
+  --border: rgba(15, 23, 42, 0.08);
+  --shadow-soft: 0 14px 36px rgba(15, 23, 42, 0.12);
 }
+
 
 *,
 *::before,
@@ -30,7 +45,7 @@ body {
   margin: 0;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
     "Segoe UI", sans-serif;
-  background: radial-gradient(circle at top, #1f2933 0, var(--bg) 38%);
+   background: linear-gradient(180deg, var(--bg-soft) 0%, var(--bg) 60%);
   color: var(--text-main);
 }
 
@@ -132,7 +147,7 @@ body.light .icon-button {
   border-radius: var(--card-radius);
   background: radial-gradient(circle at top left, rgba(148, 163, 184, 0.3), transparent 40%),
               var(--bg-elevated);
-  border: 1px solid rgba(148, 163, 184, 0.2);
+  border: 1px solid var(--border);
   box-shadow: var(--shadow-soft);
   padding: 16px 18px;
 }
@@ -278,7 +293,7 @@ body.light .tabs {
   border-radius: var(--bubble-radius);
   background: radial-gradient(circle at top left, rgba(148, 163, 184, 0.2), transparent 50%),
               var(--bg-elevated);
-  border: 1px solid rgba(148, 163, 184, 0.28);
+  border: 1px solid var(--border);
   box-shadow: 0 14px 32px rgba(15, 23, 42, 0.5);
   font-size: 0.9rem;
 }
@@ -344,7 +359,7 @@ body.light .btn-ghost {
   padding: 12px 14px;
   border-radius: var(--bubble-radius);
   background: var(--bg-elevated);
-  border: 1px solid rgba(148, 163, 184, 0.28);
+  border: 1px solid var(--border);
   box-shadow: var(--shadow-soft);
 }
 
@@ -396,7 +411,7 @@ body.light .btn-ghost {
   padding: 10px 12px;
   border-radius: 14px;
   background: var(--bg-elevated);
-  border: 1px solid rgba(148, 163, 184, 0.25);
+  border: 1px solid var(--border);
   font-size: 0.85rem;
   display: flex;
   flex-direction: column;
