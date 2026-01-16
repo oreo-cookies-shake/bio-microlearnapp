@@ -270,6 +270,15 @@ button.card:focus-visible {
   cursor: pointer;
 }
 
+body.light .tab{
+  background: var(--surface-2);
+  color: var(--muted);
+}
+body.light .tab.active{
+  background: var(--surface);
+  color: var(--text);
+}
+
 .tab.active {
   background: var(--surface);
   color: var(--text);
