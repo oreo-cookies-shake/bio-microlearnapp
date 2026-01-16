@@ -36,22 +36,33 @@
 }
 
 body.light {
-  /* Light mode */
-  --bg: #F0F2F5;                   /* requested */
-  --surface: #F7F8F6;              /* slightly creamy + matte */
-  --surface-2: #EEF1F4;
+  /* Light mode (matte + creamy) */
+  --bg: #F3F2EE;            /* creamier, less “flicker” than pure cool gray */
+  --surface: #F7F6F2;       /* card face */
+  --surface-2: #EEEDE8;     /* tabs / secondary surface */
 
   --text: #111827;
-  --muted: rgba(17, 24, 39, 0.62);
-  --edge: rgba(17, 24, 39, 0.04);
+  --muted: rgba(17, 24, 39, 0.60);
 
-  /* Slightly softened highlight to feel more matte (swap back to #ffffff if you want it shinier) */
-  --shadow-card: 8px 8px 16px #d1d9e6, -8px -8px 16px #fbfbfb;
+  /* slightly stronger than 0.04 so cards pop without glossy shadows */
+  --edge: rgba(17, 24, 39, 0.07);
 
-  --btn-bg: rgba(255, 255, 255, 0.35);
-  --btn-border: rgba(255, 255, 255, 0.55);
+  /* MATTE shadow (less “glow”, more soft depth) */
+  --shadow-card: 10px 12px 26px rgba(17, 24, 39, 0.10),
+                 -10px -12px 22px rgba(255, 255, 255, 0.78);
+
+  /* smaller shadow for pills/tabs so they don't look shiny */
+  --shadow-soft: 6px 7px 14px rgba(17, 24, 39, 0.08),
+                 -6px -7px 12px rgba(255, 255, 255, 0.70);
+
+  /* tiny top highlight = “matte material” feel */
+  --highlight-line: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+
+  --btn-bg: rgba(255, 255, 255, 0.22);
+  --btn-border: rgba(17, 24, 39, 0.08);
   --btn-text: var(--text);
 
-  --nav-bg: rgba(240, 242, 245, 0.86);
+  --nav-bg: rgba(243, 242, 238, 0.88);
 }
+
 
