@@ -998,3 +998,18 @@ body.light .card {
   -webkit-mask-image: none !important;
   mask-image: none !important;
 }
+
+/* Hard kill any tiny tails inside the content area */
+.mode-panel .tail,
+.mode-panel .bubble-tail,
+.mode-panel .message-tail {
+  display: none !important;
+}
+
+/* Ensure feeds themselves don't draw any edges */
+.mode-panel .bubble-feed,
+.mode-panel .bubble-feed > * {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
