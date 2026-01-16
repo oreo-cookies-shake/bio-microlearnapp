@@ -909,3 +909,32 @@ body.light .subtext,
 body.light .label {
   color: var(--muted) !important;
 }
+
+/* =========================
+   LIGHT MODE: MORE POP, LESS GLOSSY (MATTE)
+   ========================= */
+
+body.light {
+  /* keep your bg, but make it slightly calmer */
+  --bg: #F0F2F5;
+  --surface: #F8F9FB;                 /* slightly brighter than bg */
+  --hairline: rgba(17, 24, 39, 0.08); /* tiny border helps "pop" */
+}
+
+/* matte + pop card shadow */
+body.light .bubble,
+body.light .story-card,
+body.light .question-card,
+body.light .answer-card,
+body.light .card {
+  background: var(--surface) !important;
+  border: 1px solid var(--hairline) !important;
+  border-radius: 30px !important;
+
+  /* less glossy: reduce the pure-white lift, deepen the main shadow */
+  box-shadow:
+    14px 14px 28px rgba(170, 182, 204, 0.55),
+    -10px -10px 22px rgba(255, 255, 255, 0.65),
+    inset 1px 1px 2px rgba(255, 255, 255, 0.55),
+    inset -1px -1px 2px rgba(0, 0, 0, 0.03) !important;
+}
