@@ -36,33 +36,31 @@
 }
 
 body.light {
-  /* Light mode (matte + creamy) */
-  --bg: #F3F2EE;            /* creamier, less “flicker” than pure cool gray */
-  --surface: #F7F6F2;       /* card face */
-  --surface-2: #EEEDE8;     /* tabs / secondary surface */
+  /* Matte + slightly creamy */
+  --bg: #F3F1EB;
+  --surface: #F8F6F0;
+  --surface-2: #EFECE4;
 
   --text: #111827;
-  --muted: rgba(17, 24, 39, 0.60);
+  --muted: rgba(17, 24, 39, 0.62);
 
-  /* slightly stronger than 0.04 so cards pop without glossy shadows */
-  --edge: rgba(17, 24, 39, 0.07);
+  /* edges slightly stronger so shapes look clean (not dirty) */
+  --edge: rgba(17, 24, 39, 0.06);
 
-  /* MATTE shadow (less “glow”, more soft depth) */
-  --shadow-card: 10px 12px 26px rgba(17, 24, 39, 0.10),
-                 -10px -12px 22px rgba(255, 255, 255, 0.78);
+  /* Matte shadow: lower contrast, less “glow” */
+  --shadow-card: 10px 10px 26px rgba(15, 23, 42, 0.10),
+                 -10px -10px 26px rgba(255, 255, 255, 0.65);
 
-  /* smaller shadow for pills/tabs so they don't look shiny */
-  --shadow-soft: 6px 7px 14px rgba(17, 24, 39, 0.08),
-                 -6px -7px 12px rgba(255, 255, 255, 0.70);
+  /* Inset shadow for containers like tabs pill */
+  --shadow-inset: inset 6px 6px 14px rgba(15, 23, 42, 0.06),
+                  inset -6px -6px 14px rgba(255, 255, 255, 0.70);
 
-  /* tiny top highlight = “matte material” feel */
-  --highlight-line: inset 0 1px 0 rgba(255, 255, 255, 0.55);
-
-  --btn-bg: rgba(255, 255, 255, 0.22);
+  --btn-bg: rgba(255, 255, 255, 0.40);
   --btn-border: rgba(17, 24, 39, 0.08);
   --btn-text: var(--text);
 
-  --nav-bg: rgba(243, 242, 238, 0.88);
+  --nav-bg: rgba(243, 241, 235, 0.86);
 }
+
 
 

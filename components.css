@@ -30,6 +30,39 @@ body.light .btn-ghost {
   border-color: rgba(143, 168, 155, 0.45);
 }
 
+/* Icon buttons (back + theme toggle) */
+.icon-button {
+  width: 48px;
+  height: 48px;
+  border-radius: 22px;
+  border: none;
+  -webkit-appearance: none;
+  appearance: none;
+  color: var(--text);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.icon-button:focus { outline: none; }
+
+.icon-button:focus-visible {
+  outline: 2px solid rgba(17, 24, 39, 0.18);
+  outline-offset: 3px;
+}
+
+/* Remove default focus outline, keep a soft one for keyboard users */
+.icon-button:focus { outline: none; }
+.icon-button:focus-visible {
+  outline: 2px solid rgba(17, 24, 39, 0.18);
+  outline-offset: 3px;
+}
+
 /* bottom bars (story + question actions) */
 .bottom-bar,
 .qa-actions {
@@ -124,3 +157,4 @@ body:not(.light) .qa-actions {
 body.light .toast {
   border-color: rgba(17,24,39,0.06);
 }
+

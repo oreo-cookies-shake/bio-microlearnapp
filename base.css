@@ -90,9 +90,9 @@ body {
   border: none;
   border-radius: var(--radius-pill);
   padding: 12px 10px;
-  background: var(--surface-2);
+  background: transparent;        /* key */
   color: var(--muted);
-  box-shadow: var(--shadow-card);
+  box-shadow: none;               /* key */
   cursor: pointer;
 }
 
@@ -208,7 +208,11 @@ button.card {
 .tabs {
   display: flex;
   gap: 8px;
-  padding: 10px 0 12px;
+  padding: 10px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-2);
+  border: 1px solid var(--edge);
+  box-shadow: var(--shadow-inset);
 }
 
 .tab {
@@ -225,7 +229,8 @@ button.card {
 .tab.active {
   background: var(--surface);
   color: var(--text);
-  box-shadow: var(--shadow-card);
+  border: 1px solid var(--edge);
+  box-shadow: var(--shadow-card); /* pop only active */
 }
 
 .progress-wrapper {
