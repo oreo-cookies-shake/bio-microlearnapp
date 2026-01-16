@@ -2,6 +2,26 @@
    1) Theme tokens
    ===================== */
 :root {
+  /* ✅ Global layout + shape tokens (missing = “strip” UI) */
+  --maxw: 760px;
+  --side-pad: 22px;
+  --bottom-pad: 170px;
+
+  --radius-card: 28px;
+  --radius-pill: 999px;
+
+  /* ✅ Shadow helpers used in base/components */
+  --shadow-soft: 0 18px 50px rgba(0, 0, 0, 0.35);
+  --highlight-line: inset 0 1px 0 rgba(255,255,255,0.06);
+
+  /* ✅ Progress gradient */
+  --progress-start: #97b3a7;
+  --progress-end: #8fb0b0;
+
+  /* ...keep ALL your existing dark variables below... */
+}
+
+:root {
   /* DARK MODE (default) */
   --bg: #121212;
   --surface: #1b1b1b;
@@ -53,6 +73,8 @@ body.light {
   --shadow-press: inset 2px 2px 8px rgba(0,0,0,0.08),
                   inset -2px -2px 8px rgba(255,255,255,0.80);
 
+  --shadow-soft: 0 18px 50px rgba(17, 24, 39, 0.12);
+  --highlight-line: inset 0 1px 0 rgba(255,255,255,0.65);
 }
 
 
