@@ -163,11 +163,11 @@ button.card,
 .card.card-select,
 .chapter-item,
 button.chapter-item {
-  background: var(--surface) !important;
-  border: 1px solid var(--edge) !important;
-  border-radius: var(--radius-card) !important;
-  box-shadow: var(--shadow-card) !important;
-  padding: 20px 18px !important;
+  background: var(--surface);
+  border: 1px solid var(--edge);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: 20px 18px;
 }
 
 /* Chapter list spacing (the 12.1 Energy row) */
@@ -178,10 +178,4 @@ button.chapter-item {
   margin-top: 14px;
 }
 
-/* If any "divider line" styles exist, neutralize them */
-button.card,
-.chapter-item,
-button.chapter-item {
-  border-top: none !important;
-  border-bottom: none !important;
-}
+
