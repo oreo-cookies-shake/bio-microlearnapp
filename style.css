@@ -938,3 +938,45 @@ body.light .card {
     inset 1px 1px 2px rgba(255, 255, 255, 0.55),
     inset -1px -1px 2px rgba(0, 0, 0, 0.03) !important;
 }
+
+/* --- GLOBAL: remove any bubble "tail" triangles everywhere --- */
+.bubble::before,
+.bubble::after,
+.message::before,
+.message::after,
+.story-card::before,
+.story-card::after,
+.question-card::before,
+.question-card::after,
+.qa-card::before,
+.qa-card::after,
+.card::before,
+.card::after {
+  content: none !important;
+  display: none !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+/* --- GLOBAL: prevent the weird right-side vertical seam/line --- */
+/* This usually happens from overflow clipping + shadows/pseudo elements */
+.bubble,
+.message,
+.story-card,
+.question-card,
+.qa-card,
+.card {
+  overflow: visible !important;
+  background-clip: padding-box !important;
+  -webkit-mask-image: none !important;
+  mask-image: none !important;
+}
+
+/* If any container is clipping and creating that “edge” */
+.bubble-feed,
+.mode-panel,
+.container,
+#questionMode,
+#storyMode {
+  overflow-x: visible !important;
+}
