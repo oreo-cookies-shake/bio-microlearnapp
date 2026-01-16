@@ -806,3 +806,51 @@ a, a:visited, button {
 .tail, .bubble-tail, .message-tail, .speech-tail {
   display: none !important;
 }
+
+/* =========================
+   FIX: remove "triangle glare" + right-side clipped shadow line
+   Paste at VERY END of style.css
+   ========================= */
+
+/* Make sure the page background is truly the background everywhere */
+html, body {
+  background: var(--bg) !important;
+}
+
+/* These wrappers should not paint their own background */
+.container,
+.mode-panel,
+.bubble-feed,
+#storyMode, #questionMode, #difficultMode,
+#storyFeed, #questionFeed, #difficultFeed {
+  background: transparent !important;
+}
+
+/* IMPORTANT: don't clip shadows (clipping = straight vertical line) */
+.container,
+.mode-panel,
+.bubble-feed,
+#storyFeed, #questionFeed, #difficultFeed {
+  overflow: visible !important;
+}
+
+/* Softer neumorphic shadow (keeps the look, removes harsh white corner) */
+body.light {
+  --neu-shadow: 8px 8px 16px #d1d9e6, -8px -8px 16px #f6f8fb; /* NOT pure white */
+}
+body.dark {
+  --neu-shadow: 8px 8px 16px #131313, -8px -8px 16px #2b2b2b; /* slightly softer */
+}
+
+/* Apply the shadow consistently to your bubble/cards */
+.bubble,
+.story-card,
+.question-card,
+.answer-card,
+.card {
+  border: none !important;
+  outline: none !important;
+  background: var(--surface) !important;
+  background-image: none !important;
+  box-shadow: var(--neu-shadow) !important;
+}
