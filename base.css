@@ -252,7 +252,7 @@ button.card:focus-visible {
 .tabs {
   display: flex;
   gap: 8px;
-  padding: 10px;
+  padding: 10px 0 16px;
   border-radius: var(--radius-pill);
   background: var(--surface-2);
   border: 1px solid var(--edge);
@@ -282,7 +282,7 @@ button.card:focus-visible {
   grid-template-columns: auto 1fr;
   align-items: center;
   gap: 12px;
-  padding: 0 0 16px;
+  padding:10px 0 22px;
 }
 
 .progress-label {
