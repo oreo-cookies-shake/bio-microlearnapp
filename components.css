@@ -152,3 +152,36 @@ body.light .toast {
   border-color: rgba(17,24,39,0.06);
 }
 
+/* === Force clickable cards to look airy again (home + chapter list) === */
+.card-grid {
+  display: grid;
+  gap: 16px;              /* space between AS/A2 cards */
+  margin-top: 14px;
+}
+
+button.card,
+.card.card-select,
+.chapter-item,
+button.chapter-item {
+  background: var(--surface) !important;
+  border: 1px solid var(--edge) !important;
+  border-radius: var(--radius-card) !important;
+  box-shadow: var(--shadow-card) !important;
+  padding: 20px 18px !important;
+}
+
+/* Chapter list spacing (the 12.1 Energy row) */
+.chapter-list,
+#chapterList {
+  display: grid;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+/* If any "divider line" styles exist, neutralize them */
+button.card,
+.chapter-item,
+button.chapter-item {
+  border-top: none !important;
+  border-bottom: none !important;
+}
