@@ -284,27 +284,25 @@ body.light .tab.active{
   border-radius: var(--radius-pill);
   padding: 12px 10px;
   background: var(--surface-2);
-  color: var(--text);
-  box-shadow: var(--shadow-card);          /* raised */
+  color: var(--muted);
+  box-shadow: var(--shadow-card); /* RAISED default */
   cursor: pointer;
-  opacity: 0.82;
-  transition: box-shadow 120ms ease,
-              background 120ms ease,
-              transform 120ms ease,
-              color 120ms ease;
+  opacity: 0.92;
+  transition: box-shadow 120ms, background 120ms, color 120ms, opacity 120ms;
 }
 
-/* Hover: tiny lift for both themes */
+/* On hover, a tiny lift */
 .tab:hover {
   transform: translateY(-1px);
+  opacity: 1;
 }
 
-/* Active tab = pressed in */
+/* The active mode: pressed-in look */
 .tab.active {
   background: var(--surface);
   color: var(--text);
-  box-shadow: var(--shadow-press);         /* pressed */
-  transform: translateY(0);
+  box-shadow: var(--shadow-press); /* PRESSED */
+  transform: none;
   opacity: 1;
 }
 
