@@ -16,6 +16,11 @@
   transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
 }
 
+body.light .btn {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
 .btn:active { transform: scale(0.99); }
 
 .btn-ghost {

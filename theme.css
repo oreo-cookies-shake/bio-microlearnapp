@@ -2,7 +2,7 @@
    1) Theme tokens
    ===================== */
 :root {
-  /* ✅ Global layout + shape tokens (missing = “strip” UI) */
+  /* ✅ Global layout + shape tokens (keep these!) */
   --maxw: 760px;
   --side-pad: 22px;
   --bottom-pad: 170px;
@@ -15,67 +15,57 @@
   --highlight-line: inset 0 1px 0 rgba(255,255,255,0.06);
 
   /* ✅ Progress gradient */
-  --progress-start: #97b3a7;
-  --progress-end: #8fb0b0;
+  --progress-start: #8FB5A6;
+  --progress-end: #C2D2C3;
 
-  /* ...keep ALL your existing dark variables below... */
-}
+  /* ----------------------------
+     DARK MODE (default) — matte charcoal
+     ---------------------------- */
+  --bg: #15171A;
+  --surface: #1B1E22;
+  --surface-2: #22262B;
 
-:root {
-  /* DARK MODE (default) */
-  --bg: #121212;
-  --surface: #1b1b1b;
-  --surface-2: #202020;
+  --text: #F3F4F6;
+  --muted: rgba(243, 244, 246, 0.62);
+  --edge: rgba(255, 255, 255, 0.07);
 
-  --text: rgba(255,255,255,0.92);
-  --muted: rgba(255,255,255,0.62);
-  --edge: rgba(255,255,255,0.07);
+  --shadow-card: 14px 14px 28px rgba(0,0,0,0.60),
+                 -14px -14px 28px rgba(255,255,255,0.03);
 
-  --shadow-card: 10px 10px 26px rgba(0,0,0,0.55),
-                 -10px -10px 26px rgba(255,255,255,0.04);
-
+  /* (optional press shadow if you use it elsewhere) */
   --shadow-press: inset 2px 2px 10px rgba(0,0,0,0.55),
                   inset -2px -2px 10px rgba(255,255,255,0.06);
 
-  --btn-bg: rgba(255,255,255,0.06);
+  --btn-bg: rgba(255,255,255,0.05);
   --btn-border: rgba(255,255,255,0.10);
   --btn-text: var(--text);
 
-  --nav-bg: rgba(18,18,18,0.72);
+  --nav-bg: rgba(21, 23, 26, 0.84);
 }
 
 body.light {
-  /* Matte + slightly creamy */
-  --bg: #F3F1EB;
-  --surface: #F8F6F0;
-  --surface-2: #EFECE4;
+  /* Light mode — warm cream / off-white */
+  --bg: #F4F0E6;
+  --surface: #FBF7EE;
+  --surface-2: #F1EADF;
 
   --text: #111827;
   --muted: rgba(17, 24, 39, 0.62);
-
-  /* edges slightly stronger so shapes look clean (not dirty) */
   --edge: rgba(17, 24, 39, 0.06);
 
-  /* Matte shadow: lower contrast, less “glow” */
-  --shadow-card: 10px 10px 26px rgba(15, 23, 42, 0.10),
-                 -10px -10px 26px rgba(255, 255, 255, 0.65);
+  /* Warm shadows (avoid blue-grey = “default” feel) */
+  --shadow-card: 12px 12px 26px rgba(140, 122, 95, 0.16),
+                 -12px -12px 26px rgba(255,255,255,0.80);
 
-  /* Inset shadow for containers like tabs pill */
-  --shadow-inset: inset 6px 6px 14px rgba(15, 23, 42, 0.06),
-                  inset -6px -6px 14px rgba(255, 255, 255, 0.70);
+  --highlight-line: inset 0 1px 0 rgba(255,255,255,0.75);
 
-  --btn-bg: rgba(255, 255, 255, 0.40);
+  /* More matte, less “dirty glass” */
+  --btn-bg: rgba(251, 247, 238, 0.92);
   --btn-border: rgba(17, 24, 39, 0.08);
   --btn-text: var(--text);
 
-  --nav-bg: rgba(243, 241, 235, 0.86);
+  --nav-bg: rgba(244, 240, 230, 0.88);
 
-  --shadow-press: inset 2px 2px 8px rgba(0,0,0,0.08),
-                  inset -2px -2px 8px rgba(255,255,255,0.80);
-
-  --shadow-soft: 0 18px 50px rgba(17, 24, 39, 0.12);
-  --highlight-line: inset 0 1px 0 rgba(255,255,255,0.65);
+  --progress-start: #7FA99A;
+  --progress-end: #BFD2C4;
 }
-
-
-
