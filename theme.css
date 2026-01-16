@@ -44,28 +44,26 @@
 }
 
 body.light {
-  /* Pinned to Pinterest: off-white, soft neutral, not blue, not beige */
-  --bg: #F5F6FA;           /* paper off-white */
-  --surface: #FCFCFE;      /* card: pale, ultra-light */
-  --surface-2: #F1F2F6;    /* tabs: soft, pale */
-  --text: #22252A;
-  --muted: rgba(34,37,42,0.58);
-  --edge: rgba(34,37,42,0.05);
+  /* LIGHT MODE – softer, more neutral neumorphism */
+  --bg: #E3E6EC;              /* background grey (like the Pinterest examples) */
+  --surface: #F1F3F8;         /* card face */
+  --surface-2: #E9ECF4;       /* pills / secondary surfaces */
 
-  /* Neumorphic shadow: soft, short, neutral */
-  --shadow-card: 6px 6px 16px rgba(200,210,220,0.23),
-                 -6px -6px 12px rgba(255,255,255,0.95);
+  --text: #111827;
+  --muted: rgba(17, 24, 39, 0.60);
+  --edge: rgba(255, 255, 255, 0.9);
 
-  --shadow-press: inset 4px 4px 10px rgba(200,210,220,0.19),
-                  inset -4px -4px 8px rgba(255,255,255,0.95);
+  /* Raised card shadow */
+  --shadow-card: 10px 10px 24px rgba(163, 177, 198, 0.55),
+                 -10px -10px 24px rgba(255, 255, 255, 0.9);
 
-  --btn-bg: #FCFCFE;
-  --btn-border: rgba(34,37,42,0.07);
+  /* Pressed-in shadow (for active tabs etc.) */
+  --shadow-press: inset 6px 6px 12px rgba(163, 177, 198, 0.55),
+                  inset -6px -6px 12px rgba(255, 255, 255, 0.9);
+
+  --btn-bg: #F1F3F8;
+  --btn-border: rgba(255, 255, 255, 0.7);
   --btn-text: var(--text);
 
-  --nav-bg: rgba(245,246,250,0.96);
-
-  --progress-start: #A3C1B8;
-  --progress-end: #BDD1C6;
+  --nav-bg: rgba(227, 231, 238, 0.96);
 }
-
