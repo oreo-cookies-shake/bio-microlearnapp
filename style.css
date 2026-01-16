@@ -1,85 +1,128 @@
-/* =========================
-   Soft Neumorphic / Minimal
-   ========================= */
+/*
+  Microlearn Bio — clean, consolidated styles
+  Soft Neumorphic / Pinterest-Minimal aesthetic
 
-/* Dark mode defaults (your app loads dark first) */
-:root {
-  --bg: #1E1E1E;          /* Dark background */
-  --surface: #232323;     /* Card surface */
-  --nav-bg: #252525;      /* Bottom bars / nav visibility */
-  --text-main: #F2F2F2;
-  --text-muted: #B8B8B8;
+  Theme rule:
+  - Default = Dark tokens (script.js default theme: "dark")
+  - Light tokens when body.light is present
+*/
 
-  --accent: #8FA89B;      /* Sage Green */
-  --accent-soft: rgba(143, 168, 155, 0.18);
-
-  --progress-start: #D4E0D9;
-  --progress-end: #8FA89B;
-
-  --card-radius: 30px;
-  --bubble-radius: 24px;
-
-  /* Neumorphic shadow (dark) */
-  --shadow-soft: 8px 8px 16px #131313, -8px -8px 16px #292929;
-
-  /* Glass buttons */
-  --btn-bg: rgba(255, 255, 255, 0.2);
-  --btn-border: rgba(255, 255, 255, 0.18);
-}
-
-/* Light mode variables (when body.light is applied) */
-body.light {
-  --bg: #F0F2F5;          /* Light background */
-  --surface: #F0F2F5;     /* Neumorphism: same as bg */
-  --nav-bg: #F0F2F5;
-  --text-main: #111827;
-  --text-muted: #6B7280;
-
-  --accent: #8FA89B;
-  --accent-soft: rgba(143, 168, 155, 0.18);
-
-  --progress-start: #D4E0D9;
-  --progress-end: #8FA89B;
-
-  /* Neumorphic shadow (light) */
-  --shadow-soft: 8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff;
-
-  --btn-bg: rgba(255, 255, 255, 0.2);
-  --btn-border: rgba(255, 255, 255, 0.55);
-}
-
-*,
-*::before,Z
-*::after {
-  box-sizing: border-box;
-}
-
+/* =====================
+   0) Reset + base
+   ===================== */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { height: 100%; }
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
-    "Segoe UI", sans-serif;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   background: var(--bg);
-  color: var(--text-main);
-
-  /* Layout & Scrolling Fix */
-  overflow-y: auto;
+  color: var(--text);
+  overflow-y: auto; /* allow natural scrolling */
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-/* ===== App Shell ===== */
+:focus-visible {
+  outline: 2px solid rgba(143, 168, 155, 0.55);
+  outline-offset: 3px;
+  border-radius: 999px;
+}
 
+.hidden { display: none !important; }
+
+/* =====================
+   1) Theme tokens
+   ===================== */
+:root {
+  /* Dark mode (default) */
+  --bg: #1E1E1E;                 /* not pure black */
+  --surface: #252525;
+  --surface-2: #2C2C2C;
+
+  --text: #F3F4F6;
+  --muted: rgba(243, 244, 246, 0.65);
+  --edge: rgba(255, 255, 255, 0.06);
+
+  --sage: #8FA89B;                /* muted accent */
+  --progress-start: #D4E0D9;
+  --progress-end: #8FA89B;
+
+  --radius-card: 30px;
+  --radius-pill: 999px;
+
+  /* Neumorphic shadows */
+  --shadow-card: 8px 8px 16px #131313, -8px -8px 16px #292929;
+
+  /* Buttons (glass) */
+  --btn-bg: rgba(255, 255, 255, 0.08);
+  --btn-border: rgba(255, 255, 255, 0.18);
+  --btn-text: var(--text);
+
+  /* Surfaces */
+  --nav-bg: #252525;              /* requested for dark mode */
+
+  /* Layout */
+  --maxw: 880px;
+  --side-pad: 18px;
+  --bottom-pad: 120px;            /* requested */
+}
+
+body.light {
+  /* Light mode */
+  --bg: #F0F2F5;                   /* requested */
+  --surface: #F7F8F6;              /* slightly creamy + matte */
+  --surface-2: #EEF1F4;
+
+  --text: #111827;
+  --muted: rgba(17, 24, 39, 0.62);
+  --edge: rgba(17, 24, 39, 0.04);
+
+  /* Slightly softened highlight to feel more matte (swap back to #ffffff if you want it shinier) */
+  --shadow-card: 8px 8px 16px #d1d9e6, -8px -8px 16px #fbfbfb;
+
+  --btn-bg: rgba(255, 255, 255, 0.35);
+  --btn-border: rgba(255, 255, 255, 0.55);
+  --btn-text: var(--text);
+
+  --nav-bg: rgba(240, 242, 245, 0.86);
+}
+
+/* =====================
+   2) App layout
+   ===================== */
 .app {
-  min-height: 100vh;
-  max-width: 520px;
-  margin: 0 auto;
+  min-height: 100%;
   display: flex;
   flex-direction: column;
 }
 
+.app-main {
+  width: 100%;
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 0 var(--side-pad);
+}
+
+.screen {
+  display: none;
+  padding-bottom: calc(var(--bottom-pad) + env(safe-area-inset-bottom));
+}
+
+.screen.active { display: block; }
+
+/* =====================
+   3) Header
+   ===================== */
 .app-header {
+  width: 100%;
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 18px var(--side-pad) 10px;
   display: flex;
   align-items: center;
-  padding: 16px 18px 10px;
-  gap: 10px;
+  justify-content: space-between;
+  gap: 14px;
 }
 
 .header-title {
@@ -87,1048 +130,386 @@ body {
   min-width: 0;
 }
 
+.header-subtitle {
+  display: block;
+  font-size: 14px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
 .header-main {
   margin: 0;
-  font-size: 1.1rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: 28px;
+  letter-spacing: -0.02em;
 }
 
-.header-subtitle {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-}
-
-/* Icon buttons: soften + neumorphic */
 .icon-button {
-  border: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: 22px;
+  border: none;
+  color: var(--text);
   background: var(--surface);
-  width: 38px;
-  height: 38px;
-  border-radius: 999px;
+  box-shadow: var(--shadow-card);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: var(--text-muted);
-  box-shadow: var(--shadow-soft);
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
-/* Screens */
-.app-main {
-  flex: 1;
-  padding: 4px 16px 16px;
-
-  /* Layout & Scrolling Fix: ensure bottom UI never gets cut */
-  padding-bottom: 120px;
+/* =====================
+   4) Cards
+   ===================== */
+.card,
+.bubble,
+.qa-card,
+.difficult-item {
+  background: var(--surface);
+  border: 1px solid var(--edge); /* soft edge (not a sharp outline) */
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  -webkit-tap-highlight-color: transparent;
+  transform: translateZ(0);     /* reduces hairlines on some GPUs */
 }
 
-/* If you happen to use .container anywhere */
-.container {
-  padding-bottom: 120px;
+.card {
+  width: 100%;
+  text-align: left;
+  padding: 18px 18px;
+  cursor: pointer;
 }
 
-.screen {
-  /* Remove forced height constraints so natural scrolling works */
-  min-height: calc(100vh - 72px);
+.card h3 {
+  margin: 0 0 6px;
+  font-size: 18px;
 }
 
-/* Hero */
+.card p {
+  margin: 0;
+  color: var(--muted);
+}
+
+/* Homepage hero */
 .hero {
-  margin: 8px 2px 18px;
+  padding: 10px 4px 16px;
 }
 
 .hero h2 {
-  margin: 0 0 8px;
-  font-size: 1.4rem;
+  margin: 0 0 6px;
+  font-size: 26px;
+  letter-spacing: -0.02em;
 }
 
 .hero p {
   margin: 0;
-  color: var(--text-muted);
+  color: var(--muted);
 }
-
-/* ===== Neumorphic Cards ===== */
 
 .card-grid {
   display: grid;
   grid-template-columns: 1fr;
   gap: 14px;
+  padding: 10px 0 2px;
 }
 
-.card {
-  border: none; /* Remove borders/outlines */
-  border-radius: var(--card-radius);
-  background: var(--surface);
-  box-shadow: var(--shadow-soft);
-  padding: 18px 20px;
+@media (min-width: 700px) {
+  .card-grid { grid-template-columns: 1fr 1fr; }
 }
 
 .card-select {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
-  cursor: pointer;
+  padding: 22px 20px;
 }
 
-.card-select h3 {
-  margin: 0;
-  font-size: 1.1rem;
-}
-
-.card-select p {
-  margin: 0;
-  font-size: 0.85rem;
-  color: var(--text-muted);
-}
-
+/* Lists */
 .card-list {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding-top: 6px;
-}
-
-.card-chapter {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  cursor: pointer;
+  padding: 6px 0 2px;
 }
 
 .card-chapter-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .card-chapter-title {
-  font-size: 0.98rem;
+  font-size: 18px;
+  font-weight: 600;
 }
 
-.chapter-meta {
-  display: flex;
-  gap: 10px;
-  font-size: 0.8rem;
-  color: var(--text-muted);
+.card-chapter-progress {
+  font-size: 14px;
+  color: var(--muted);
 }
 
-.progress-circle {
-  font-size: 0.8rem;
-  color: var(--accent);
+.card-chapter-sub {
+  margin-top: 8px;
+  font-size: 14px;
+  color: var(--muted);
 }
 
-/* ===== Tabs ===== */
-
+/* =====================
+   5) Tabs + progress
+   ===================== */
 .tabs {
-  display: inline-flex;
-  background: var(--surface);
-  border-radius: 999px;
-  padding: 6px;
-  margin-bottom: 12px;
-  box-shadow: var(--shadow-soft);
+  display: flex;
+  gap: 8px;
+  padding: 10px 0 12px;
 }
 
 .tab {
+  flex: 1;
   border: none;
-  background: transparent;
-  color: var(--text-muted);
-  font-size: 0.82rem;
-  padding: 8px 14px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
+  padding: 12px 10px;
+  background: var(--surface-2);
+  color: var(--muted);
+  box-shadow: var(--shadow-card);
   cursor: pointer;
 }
 
 .tab.active {
-  background: var(--accent-soft);
-  color: var(--accent);
+  background: var(--surface);
+  color: var(--text);
 }
 
-/* ===== Progress ===== */
-
 .progress-wrapper {
-  margin-bottom: 10px;
-  display: flex;
+  display: grid;
+  grid-template-columns: auto 1fr;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+  padding: 0 0 16px;
 }
 
 .progress-label {
-  font-size: 0.78rem;
-  color: var(--text-muted);
-  min-width: 60px;
+  font-size: 14px;
+  color: var(--muted);
+  min-width: 54px;
 }
 
 .progress-bar {
-  flex: 1;
-  height: 6px;
+  height: 10px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(127, 140, 152, 0.18);
   overflow: hidden;
-  box-shadow: var(--shadow-soft);
+  box-shadow: inset 2px 2px 6px rgba(0,0,0,0.08);
 }
 
 body.light .progress-bar {
-  background: rgba(0, 0, 0, 0.06);
+  background: rgba(17, 24, 39, 0.08);
 }
 
 .progress-fill {
-  width: 0%;
   height: 100%;
+  width: 0%;
+  border-radius: 999px;
   background: linear-gradient(90deg, var(--progress-start), var(--progress-end));
-  transition: width 0.3s ease-out;
 }
 
-/* ===== Modes ===== */
-
+/* =====================
+   6) Story mode bubbles
+   ===================== */
 .mode-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  position: relative;
+  padding-bottom: calc(var(--bottom-pad) + env(safe-area-inset-bottom));
 }
-
-/* ===== Story Mode ===== */
 
 .bubble-feed {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-
-  /* Natural scroll if long */
-  overflow-y: auto;
-
-  /* Extra bottom padding so content never collides with buttons */
-  padding-bottom: 120px;
+  gap: 16px;
+  padding: 8px 0 0;
 }
 
 .bubble {
-  max-width: 88%;
-  padding: 12px 14px;
-  border-radius: var(--bubble-radius);
-  background: var(--surface);
-  border: none;
-  box-shadow: var(--shadow-soft);
-  font-size: 0.92rem;
+  padding: 18px 18px;
 }
 
 .bubble-meta {
-  font-size: 0.72rem;
-  color: var(--text-muted);
-  margin-bottom: 6px;
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 8px;
 }
 
 .bubble-text {
-  margin: 0;
+  font-size: 18px;
+  line-height: 1.35;
 }
 
-/* Bottom action bar */
-.bottom-bar {
-  display: flex;
-  gap: 10px;
-  padding: 10px 0 0;
-
-  /* Dark Mode Visibility */
-  background: transparent;
-}
-
-body:not(.light) .bottom-bar {
-  background: var(--nav-bg);
-  padding: 12px 10px;
-  border-radius: 18px;
-  box-shadow: var(--shadow-soft);
-}
-
-/* ===== Buttons (Glassmorphism) ===== */
-
-.btn {
-  border-radius: 999px;
-  padding: 10px 16px;
-  border: 1px solid var(--btn-border);
-  cursor: pointer;
-  font-size: 0.9rem;
-
-  background: var(--btn-bg);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-
-  color: var(--text-main);
-}
-
-.btn:active {
-  transform: translateY(1px);
-}
-
-.btn-primary {
-  /* Keep it glass but accent text */
-  color: var(--text-main);
-}
-
-.btn-ghost {
-  color: var(--text-muted);
-}
-
-/* Button Overhaul: "Show answer" smaller
-   This targets ONLY the Show answer button because it's a direct child of #questionArea.
-*/
-#questionArea > .btn.btn-primary {
-  width: 70%;          /* ~30% smaller width */
-  padding: 7px 12px;   /* ~30% smaller height */
-  font-size: 0.85rem;
-  margin: 0 auto;
-}
-
-/* ===== Question Mode ===== */
-
-.qa-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-
-  /* Natural scroll if needed */
-  overflow-y: auto;
-
-  /* Prevent bottom buttons from being cut off */
-  padding-bottom: 120px;
-}
-
-.qa-card {
-  padding: 14px 16px;
-  border-radius: var(--card-radius);
-  background: var(--surface);
-  border: none;
-  box-shadow: var(--shadow-soft);
-}
-
-.qa-meta {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  margin-bottom: 6px;
-}
-
-.qa-question {
-  font-size: 0.98rem;
-}
-
-.qa-answer-title {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  margin-bottom: 4px;
-}
-
-.qa-answer-text {
-  font-size: 0.98rem;
-}
-
-/* Actions row */
-.qa-actions {
-  display: flex;
-  gap: 10px;
-}
-
-/* ===== Difficult List ===== */
-
-.empty-state {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  margin-top: 12px;
-}
-
-.difficult-list {
-  list-style: none;
-  padding: 0;
-  margin: 8px 0 0;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.difficult-item {
-  padding: 12px 14px;
-  border-radius: var(--card-radius);
-  background: var(--surface);
-  border: none;
-  box-shadow: var(--shadow-soft);
-  font-size: 0.88rem;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  cursor: pointer;
-}
-
-.difficult-meta {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.72rem;
-  color: var(--text-muted);
-}
-
-/* Toast */
-.toast {
-  position: fixed;
-  left: 50%;
-  bottom: 18px;
-  transform: translateX(-50%);
-  background: var(--nav-bg);
-  color: var(--text-main);
-  padding: 9px 14px;
-  border-radius: 999px;
-  font-size: 0.78rem;
-  box-shadow: var(--shadow-soft);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.22s ease-out, transform 0.22s ease-out;
-}
-
-.toast.show {
-  opacity: 1;
-  transform: translateX(-50%) translateY(-2px);
-}
-
-/* Utility */
-.hidden {
-  display: none !important;
-}
-
-/* =========================
-   HOTFIX OVERRIDES (mobile)
-   ========================= */
-
-/* Make sure accent is sage everywhere (kills teal/neon leftovers) */
-:root {
-  --accent: #8FA89B !important;
-  --progress-start: #D4E0D9 !important;
-  --progress-end: #8FA89B !important;
-}
-
-/* Progress bar should never look neon */
-.progress-fill {
-  background: linear-gradient(90deg, var(--progress-start), var(--progress-end)) !important;
-  filter: saturate(0.85) !important;
-}
-
-/* If ANY element still uses the old teal/green as inline background, this softens it */
-button, .btn, .tab.active {
-  accent-color: var(--accent);
-}
-
-/* --- FIX: giant "Show answer" blob --- */
-/* This targets multiple possible selectors so it catches your current element. */
-#showAnswerBtn,
-.show-answer,
-.show-answer-btn,
-.big-button,
-.big-action,
-button.show-answer,
-#questionArea button {
-  width: min(320px, 72vw) !important;      /* smaller */
-  height: auto !important;
-  padding: 10px 14px !important;          /* smaller */
-  border-radius: 999px !important;
-  background: rgba(255, 255, 255, 0.18) !important;   /* glass */
-  border: 1px solid rgba(255, 255, 255, 0.25) !important;
-  backdrop-filter: blur(10px) !important;
-  -webkit-backdrop-filter: blur(10px) !important;
-  box-shadow: var(--shadow-soft) !important;
-  color: var(--text-main) !important;
-}
-
-/* If you’re in light mode, use a slightly clearer glass */
-body.light #showAnswerBtn,
-body.light .show-answer,
-body.light .show-answer-btn,
-body.light .big-button,
-body.light .big-action,
-body.light #questionArea button {
-  background: rgba(255, 255, 255, 0.55) !important;
-  border: 1px solid rgba(255, 255, 255, 0.75) !important;
-}
-
-/* --- FIX: bottom buttons cut off on Android --- */
-/* Make action bars float ABOVE the system nav area */
-.bottom-bar,
-.qa-actions,
-.action-bar {
-  position: fixed !important;
-  left: 50% !important;
-  transform: translateX(-50%) !important;
-  bottom: calc(14px + env(safe-area-inset-bottom)) !important;
-  width: min(520px, calc(100% - 28px)) !important;
-  z-index: 999 !important;
-
-  background: var(--nav-bg) !important;
-  padding: 10px !important;
-  border-radius: 999px !important;
-  box-shadow: var(--shadow-soft) !important;
-}
-
-/* Ensure content never hides behind fixed bar */
-.app-main,
-.container,
-.bubble-feed,
-.qa-wrapper,
-.mode-panel {
-  padding-bottom: calc(170px + env(safe-area-inset-bottom)) !important;
-}
-
-/* Dark mode visibility: nav bg clearly separated */
-body:not(.light) .bottom-bar,
-body:not(.light) .qa-actions,
-body:not(.light) .action-bar {
-  background: #252525 !important;
-}
-
-/* Make primary buttons less "neon" and more sage */
-.btn-primary {
-  background: rgba(143, 168, 155, 0.28) !important;
-  border: 1px solid rgba(143, 168, 155, 0.35) !important;
-  color: var(--text-main) !important;
-}
-
-/* =========================
-   POLISH PACK (contrast + airy + bubble tail fix)
-   Paste at END of style.css
-   ========================= */
-
-/* Core surfaces */
-:root{
-  --bg: #F0F2F5 !important;
-  --surface: #F7F8FA !important;      /* card surface (slightly lighter than bg) */
-  --surface-2: #E9EDF2 !important;    /* chips / tracks */
-  --text: #111827 !important;
-  --muted: #6B7280 !important;
-
-  --accent: #8FA89B !important;
-  --progress-start: #D4E0D9 !important;
-  --progress-end: #8FA89B !important;
-
-  /* super subtle outline (NOT a sharp border) */
-  --hairline: rgba(17, 24, 39, 0.05) !important;
-
-  --shadow-soft: 10px 10px 22px #d1d9e6, -10px -10px 22px #ffffff !important;
-}
-
-body{
-  background: var(--bg) !important;
-  color: var(--text) !important;
-  overflow-y: auto !important;
-}
-
-/* Dark mode: stronger separation + clearer text */
-body:not(.light){
-  --bg: #1E1E1E !important;
-  --surface: #252525 !important;
-  --surface-2: #2E2E2E !important;
-  --text: #F3F4F6 !important;
-  --muted: rgba(243, 244, 246, 0.65) !important;
-  --hairline: rgba(255,255,255,0.06) !important;
-  --shadow-soft: 10px 10px 22px #131313, -10px -10px 22px #292929 !important;
-
-  background: var(--bg) !important;
-  color: var(--text) !important;
-}
-
-/* Make cards/bubbles pop without “borders” */
-.card,
-.bubble,
-.message,
-.qa-card,
-.story-card,
-.mode-card{
-  background: var(--surface) !important;
-  border-radius: 30px !important;
-  box-shadow: var(--shadow-soft) !important;
-  outline: 1px solid var(--hairline) !important;
-}
-
-/* Make text readable everywhere */
-h1,h2,h3,.title{ color: var(--text) !important; }
-.subtitle,.muted,.label{ color: var(--muted) !important; }
-
-/* Tabs / segmented control: more airy + clearer */
-.tabs,
-.segmented,
-.mode-switch{
-  background: var(--surface-2) !important;
-  border-radius: 999px !important;
-  padding: 6px !important;
-  outline: 1px solid var(--hairline) !important;
-  box-shadow: none !important;
-}
-
-.tab,
-.segment,
-.mode-btn{
-  border-radius: 999px !important;
-  padding: 10px 14px !important;
-  color: var(--muted) !important;
-}
-
-.tab.active,
-.segment.active,
-.mode-btn.active{
-  background: var(--surface) !important;
-  color: var(--text) !important;
-  box-shadow: var(--shadow-soft) !important;
-}
-
-/* Progress bar: calm sage */
-.progress-track{
-  background: var(--surface-2) !important;
-  border-radius: 999px !important;
-}
-
-.progress-fill{
-  background: linear-gradient(90deg, var(--progress-start), var(--progress-end)) !important;
-  border-radius: 999px !important;
-  filter: saturate(0.85) !important;
-}
-
-/* Airy layout spacing */
-.container,
-.app-main,
-.mode-panel{
-  padding-top: 18px !important;
-  padding-left: 18px !important;
-  padding-right: 18px !important;
-  padding-bottom: calc(170px + env(safe-area-inset-bottom)) !important;
-}
-
-/* Bottom bar stays visible in dark mode */
-.bottom-bar,
-.qa-actions,
-.action-bar{
-  background: var(--surface) !important;
-  outline: 1px solid var(--hairline) !important;
-  border-radius: 999px !important;
-  box-shadow: var(--shadow-soft) !important;
-}
-
-body:not(.light) .bottom-bar,
-body:not(.light) .qa-actions,
-body:not(.light) .action-bar{
-  background: #252525 !important;
-}
-
-/* ✅ FIX: white triangle “bubble tail”
-   If your bubble uses ::before/::after as a tail, force it to match surface. */
+/* remove legacy tails/triangles (safari + desktop) */
 .bubble::before,
 .bubble::after,
-.message::before,
-.message::after,
-.story-card::before,
-.story-card::after{
-  background: var(--surface) !important;
-}
-
-/* If the triangle is still ugly, uncomment this to REMOVE tails completely */
-
-.bubble::before, .bubble::after,
-.message::before, .message::after,
-.story-card::before, .story-card::after{
-  display:none !important;
-}
-
-/* --- compatibility aliases so older CSS uses new theme tokens --- */
-:root{
-  --text-main: var(--text) !important;
-  --text-muted: var(--muted) !important;
-
-  --bg-elevated: var(--surface) !important;
-  --bg-soft: var(--surface-2) !important;
-}
-
-/* links/buttons sometimes default to black on mobile */
-a, a:visited, button {
-  color: inherit !important;
-}
-
-/* TEMP: remove any pseudo-element tails in cards/messages */
-.card::before, .card::after,
-.message::before, .message::after,
-.story-card::before, .story-card::after,
-.qa-card::before, .qa-card::after {
-  content: none !important;
-  display: none !important;
-}
-
-/* --- Kill all chat tails / corner triangles --- */
-.bubble,
-.message,
-.story-card {
-  position: relative;
-  overflow: hidden; /* clips any leftover tail that sticks outside */
-}
-
-.bubble::before,
-.bubble::after,
-.message::before,
-.message::after,
-.story-card::before,
-.story-card::after {
-  content: none !important;
-  display: none !important;
-  width: 0 !important;
-  height: 0 !important;
-  border: 0 !important;
-  background: transparent !important;
-}
-
-
-/* =========================
-   FIX: remove all bubble "tails" / corner triangles
-   ========================= */
-
-/* 1) Kill pseudo-elements on any card-like thing */
-.bubble::before, .bubble::after,
-.message::before, .message::after,
-.story-card::before, .story-card::after,
-.question-card::before, .question-card::after,
-.answer-card::before, .answer-card::after,
-.card::before, .card::after {
-  content: none !important;
-  display: none !important;
-}
-
-/* 2) In case the shape is made with clipping/masks */
-.bubble, .message, .story-card, .question-card, .answer-card, .card {
-  clip-path: none !important;
-  -webkit-clip-path: none !important;
-  mask: none !important;
-  -webkit-mask: none !important;
-  background-image: none !important; /* only affects if a gradient/image is causing the triangle */
-  border-radius: 30px;
-  background-clip: padding-box;
-}
-
-/* 3) In case there is an actual DOM "tail" element */
-.tail, .bubble-tail, .message-tail, .speech-tail {
-  display: none !important;
-}
-
-/* =========================
-   FIX: remove "triangle glare" + right-side clipped shadow line
-   Paste at VERY END of style.css
-   ========================= */
-
-/* Make sure the page background is truly the background everywhere */
-html, body {
-  background: var(--bg) !important;
-}
-
-/* These wrappers should not paint their own background */
-.container,
-.mode-panel,
-.bubble-feed,
-#storyMode, #questionMode, #difficultMode,
-#storyFeed, #questionFeed, #difficultFeed {
-  background: transparent !important;
-}
-
-/* IMPORTANT: don't clip shadows (clipping = straight vertical line) */
-.container,
-.mode-panel,
-.bubble-feed,
-#storyFeed, #questionFeed, #difficultFeed {
-  overflow: visible !important;
-}
-
-/* Softer neumorphic shadow (keeps the look, removes harsh white corner) */
-body.light {
-  --neu-shadow: 8px 8px 16px #d1d9e6, -8px -8px 16px #f6f8fb; /* NOT pure white */
-}
-body.dark {
-  --neu-shadow: 8px 8px 16px #131313, -8px -8px 16px #2b2b2b; /* slightly softer */
-}
-
-/* Apply the shadow consistently to your bubble/cards */
-.bubble,
-.story-card,
-.question-card,
-.answer-card,
-.card {
-  border: none !important;
-  outline: none !important;
-  background: var(--surface) !important;
-  background-image: none !important;
-  box-shadow: var(--neu-shadow) !important;
-}
-
-/* =========================
-   LIGHT MODE: pop + airy
-   (paste at very bottom)
-   ========================= */
-
-body.light{
-  --bg: #F0F2F5;
-  --surface: #F7F8FA;
-  --surface-2: #EEF1F4;
-  --hairline: rgba(17, 24, 39, 0.06);
-  --text: #111827;
-  --muted: rgba(17, 24, 39, 0.62);
-
-  /* aliases for older variable names in your CSS */
-  --nav-bg: var(--bg);
-  --text-main: var(--text);
-  --text-muted: var(--muted);
-}
-
-
-/* page background */
-body.light {
-  background: var(--bg) !important;
-}
-
-/* make content breathe */
-.container {
-  padding: 26px 20px 150px !important;  /* more airy + safe for bottom buttons */
-}
-
-/* spacing between cards */
-.bubble-feed,
-.mode-panel,
-#storyFeed,
-#questionsFeed {
-  gap: 18px !important;
-}
-
-/* card styling: more separation from background */
-body.light .bubble,
-body.light .story-card,
-body.light .question-card,
-body.light .answer-card,
-body.light .card {
-  background: var(--surface) !important;
-  border: 1px solid var(--hairline) !important;
-  border-radius: 30px !important;
-
-  /* stronger but still soft neumorphism */
-  box-shadow:
-    10px 10px 22px rgba(209, 217, 230, 0.95),
-    -10px -10px 22px rgba(255, 255, 255, 0.95) !important;
-}
-
-/* text contrast */
-body.light .muted,
-body.light .subtext,
-body.light .label {
-  color: var(--muted) !important;
-}
-
-/* =========================
-   LIGHT MODE: MORE POP, LESS GLOSSY (MATTE)
-   ========================= */
-
-body.light {
-  /* keep your bg, but make it slightly calmer */
-  --bg: #F0F2F5;
-  --surface: #F8F9FB;                 /* slightly brighter than bg */
-  --hairline: rgba(17, 24, 39, 0.08); /* tiny border helps "pop" */
-}
-
-/* matte + pop card shadow */
-body.light .bubble,
-body.light .story-card,
-body.light .question-card,
-body.light .answer-card,
-body.light .card {
-  background: var(--surface) !important;
-  border: 1px solid var(--hairline) !important;
-  border-radius: 30px !important;
-
-  /* less glossy: reduce the pure-white lift, deepen the main shadow */
-  box-shadow:
-    14px 14px 28px rgba(170, 182, 204, 0.55),
-    -10px -10px 22px rgba(255, 255, 255, 0.65),
-    inset 1px 1px 2px rgba(255, 255, 255, 0.55),
-    inset -1px -1px 2px rgba(0, 0, 0, 0.03) !important;
-}
-
-/* --- GLOBAL: remove any bubble "tail" triangles everywhere --- */
-.bubble::before,
-.bubble::after,
-.message::before,
-.message::after,
-.story-card::before,
-.story-card::after,
-.question-card::before,
-.question-card::after,
-.qa-card::before,
-.qa-card::after,
-.card::before,
-.card::after {
-  content: none !important;
-  display: none !important;
-  border: 0 !important;
-  background: transparent !important;
-}
-
-/* --- GLOBAL: prevent the weird right-side vertical seam/line --- */
-/* This usually happens from overflow clipping + shadows/pseudo elements */
-.bubble,
-.message,
-.story-card,
-.question-card,
-.qa-card,
-.card {
-  overflow: visible !important;
-  background-clip: padding-box !important;
-  -webkit-mask-image: none !important;
-  mask-image: none !important;
-}
-
-/* If any container is clipping and creating that “edge” */
-.bubble-feed,
-.mode-panel,
-.container,
-#questionMode,
-#storyMode {
-  overflow-x: visible !important;
-}
-
-/* 1) Kill all decorative ::before / ::after stuff inside the feeds
-      (covers both Story + Questions areas) */
-.bubble-feed *::before,
-.bubble-feed *::after {
-  content: none !important;
-  display: none !important;
-  border: 0 !important;
-  background: transparent !important;
-}
-
-/* 2) Stop any clipping / weird edges on the feed container itself */
-.bubble-feed {
-  background: transparent !important;
-  overflow: visible !important;
-  -webkit-mask-image: none !important;
-  mask-image: none !important;
-}
-
-/* Hard kill any tiny tails inside the content area */
-.mode-panel .tail,
-.mode-panel .bubble-tail,
-.mode-panel .message-tail {
-  display: none !important;
-}
-
-/* Ensure feeds themselves don't draw any edges */
-.mode-panel .bubble-feed,
-.mode-panel .bubble-feed > * {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-}
-
-/* =========================================
-   FIX: Question mode triangle + right seam
-   (paste at VERY bottom so it wins)
-========================================= */
-
-/* Make sure question-mode wrappers don't create a different background "strip" */
-#questionMode,
-#questionMode .bubble-feed,
-#questionMode .question-feed,
-#questionMode .qa-feed,
-#questionMode .mode-panel,
-#questionMode .mode-content {
-  background: transparent !important;
-  border: 0 !important;
-  outline: 0 !important;
-  box-shadow: none !important;
-}
-
-/* Force full width so no weird right-side boundary */
-#questionMode .bubble-feed,
-#questionMode .question-feed,
-#questionMode .qa-feed {
-  width: 100% !important;
-  max-width: 100% !important;
-}
-
-/* Nuke any "tail/corner/fold/notch" real elements */
-#questionMode [class*="tail"],
-#questionMode [class*="corner"],
-#questionMode [class*="notch"],
-#questionMode [class*="fold"] {
-  display: none !important;
-}
-
-/* Reset ALL card-like blocks inside question mode */
-#questionMode :is(
-  .bubble, .message, .card, .story-card,
-  .question, .answer, .question-card, .answer-card,
-  [class*="bubble"], [class*="message"], [class*="card"],
-  [class*="question"], [class*="answer"]
-) {
-  background: var(--surface) !important;
-  background-image: none !important;   /* kills folded-corner made by gradients */
-  border: none !important;
-  outline: none !important;
-
-  /* kills that “thin right vertical line” if it's from inset shadow/border */
-  box-shadow: var(--shadow-soft) !important;
-
-  /* kills shape tricks */
-  clip-path: none !important;
-  mask: none !important;
-  -webkit-mask: none !important;
-
-  /* prevents any child background from poking out as a triangle */
-  overflow: hidden !important;
-
-  border-radius: 30px !important;
-}
-
-/* Kill pseudo-elements inside question mode too (even if not shown in search) */
-#questionMode :is(
-  .bubble, .message, .card, .story-card,
-  .question, .answer, .question-card, .answer-card,
-  [class*="bubble"], [class*="message"], [class*="card"],
-  [class*="question"], [class*="answer"]
-)::before,
-#questionMode :is(
-  .bubble, .message, .card, .story-card,
-  .question, .answer, .question-card, .answer-card,
-  [class*="bubble"], [class*="message"], [class*="card"],
-  [class*="question"], [class*="answer"]
-)::after {
-  content: none !important;
-  display: none !important;
-}
-
-/* ================================
-   FINAL OVERRIDES — QA (Question) mode
-   Fix: corner triangle + clipped right edge
-================================ */
-
-/* 1) Make sure shadows are NOT getting clipped (the vertical line) */
-.qa-wrapper,
-#questionArea,
-#questionsMode.mode-panel {
-  overflow: visible !important;
-}
-
-/* Give breathing room so card shadows don't hit the screen edge */
-.qa-wrapper {
-  padding-left: 18px !important;
-  padding-right: 18px !important;
-  gap: 18px !important;              /* airy spacing if flex column */
-}
-
-/* 2) Kill any leftover "tail" pseudo-elements in Question mode (the triangle) */
 .qa-card::before,
 .qa-card::after {
   content: none !important;
   display: none !important;
 }
 
-/* 3) Ensure the QA cards are sized correctly inside the padded wrapper */
+/* =====================
+   7) Question mode
+   ===================== */
+.qa-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 8px 0 0;
+}
+
 .qa-card {
-  width: 100% !important;
-  box-sizing: border-box;
-  border-radius: 30px !important;
-  background: var(--surface) !important;
-  box-shadow: var(--shadow-soft) !important;
-  border: 1px solid rgba(17, 24, 39, 0.06) !important; /* subtle edge = more “pop”, less glossy */
+  padding: 18px 18px;
+}
+
+.qa-meta {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.qa-text {
+  font-size: 18px;
+  line-height: 1.35;
+}
+
+.qa-answer {
+  background: var(--surface-2);
+}
+
+/* the in-between "Show answer" button is a direct child of .qa-wrapper */
+.qa-wrapper > .btn.btn-primary {
+  width: min(520px, 70%);
+  min-height: 38px;             /* ~30% smaller than main buttons */
+  padding: 10px 14px;
+  margin: 8px auto 0;
+}
+
+/* =====================
+   8) Buttons + bottom bars
+   ===================== */
+.btn {
+  border: 1px solid var(--btn-border);
+  border-radius: var(--radius-pill);
+  background: var(--btn-bg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: var(--btn-text);
+  padding: 14px 18px;
+  min-height: 56px;
+  font-size: 16px;
+  cursor: pointer;
+  box-shadow: var(--shadow-card);
+  transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
+}
+
+.btn:active { transform: scale(0.99); }
+
+.btn-ghost {
+  background: rgba(255,255,255,0.06);
+}
+
+body.light .btn-ghost {
+  background: rgba(255,255,255,0.32);
+}
+
+.btn-primary {
+  border-color: rgba(143, 168, 155, 0.45);
+}
+
+/* bottom bars (story + question actions) */
+.bottom-bar,
+.qa-actions {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+  background: var(--nav-bg);
+  padding: 16px var(--side-pad) calc(16px + env(safe-area-inset-bottom));
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.bottom-bar .btn,
+.qa-actions .btn {
+  flex: 1;
+}
+
+/* ensure dark mode bars are visible (requested) */
+body:not(.light) .bottom-bar,
+body:not(.light) .qa-actions {
+  background: #252525;
+}
+
+/* =====================
+   9) Difficult mode
+   ===================== */
+.empty-state {
+  margin-top: 12px;
+  padding: 18px 18px;
+  color: var(--muted);
+  background: var(--surface);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+
+.difficult-list {
+  list-style: none;
+  margin: 0;
+  padding: 12px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.difficult-item {
+  padding: 16px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.difficult-type {
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.difficult-text {
+  font-size: 15px;
+  line-height: 1.25;
+}
+
+.difficult-remove {
+  flex: 0 0 auto;
+  min-height: 40px;
+  padding: 10px 14px;
+}
+
+/* =====================
+   10) Toast
+   ===================== */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(96px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  max-width: min(520px, calc(100vw - 40px));
+  padding: 12px 14px;
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-card);
+  border: 1px solid rgba(255,255,255,0.12);
+}
+
+body.light .toast {
+  border-color: rgba(17,24,39,0.06);
 }
