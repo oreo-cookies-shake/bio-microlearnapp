@@ -105,11 +105,9 @@ body.light {
 }
 
 .screen {
-  display: none;
+  display: block; /* JS uses .hidden, not .active */
   padding-bottom: calc(var(--bottom-pad) + env(safe-area-inset-bottom));
 }
-
-.screen.active { display: block; }
 
 /* =====================
    3) Header
