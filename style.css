@@ -980,3 +980,21 @@ body.light .card {
 #storyMode {
   overflow-x: visible !important;
 }
+
+/* 1) Kill all decorative ::before / ::after stuff inside the feeds
+      (covers both Story + Questions areas) */
+.bubble-feed *::before,
+.bubble-feed *::after {
+  content: none !important;
+  display: none !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+/* 2) Stop any clipping / weird edges on the feed container itself */
+.bubble-feed {
+  background: transparent !important;
+  overflow: visible !important;
+  -webkit-mask-image: none !important;
+  mask-image: none !important;
+}
