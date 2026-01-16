@@ -854,3 +854,58 @@ body.dark {
   background-image: none !important;
   box-shadow: var(--neu-shadow) !important;
 }
+
+/* =========================
+   LIGHT MODE: pop + airy
+   (paste at very bottom)
+   ========================= */
+
+body.light {
+  --bg: #F0F2F5;
+  --surface: #F7F8FA;          /* card face: slightly brighter than bg */
+  --surface-2: #EEF1F4;        /* pills / secondary surfaces */
+  --hairline: rgba(17, 24, 39, 0.06);
+  --text: #111827;
+  --muted: rgba(17, 24, 39, 0.62);
+}
+
+/* page background */
+body.light {
+  background: var(--bg) !important;
+}
+
+/* make content breathe */
+.container {
+  padding: 26px 20px 150px !important;  /* more airy + safe for bottom buttons */
+}
+
+/* spacing between cards */
+.bubble-feed,
+.mode-panel,
+#storyFeed,
+#questionsFeed {
+  gap: 18px !important;
+}
+
+/* card styling: more separation from background */
+body.light .bubble,
+body.light .story-card,
+body.light .question-card,
+body.light .answer-card,
+body.light .card {
+  background: var(--surface) !important;
+  border: 1px solid var(--hairline) !important;
+  border-radius: 30px !important;
+
+  /* stronger but still soft neumorphism */
+  box-shadow:
+    10px 10px 22px rgba(209, 217, 230, 0.95),
+    -10px -10px 22px rgba(255, 255, 255, 0.95) !important;
+}
+
+/* text contrast */
+body.light .muted,
+body.light .subtext,
+body.light .label {
+  color: var(--muted) !important;
+}
