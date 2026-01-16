@@ -1013,3 +1013,80 @@ body.light .card {
   border: none !important;
   box-shadow: none !important;
 }
+
+/* =========================================
+   FIX: Question mode triangle + right seam
+   (paste at VERY bottom so it wins)
+========================================= */
+
+/* Make sure question-mode wrappers don't create a different background "strip" */
+#questionMode,
+#questionMode .bubble-feed,
+#questionMode .question-feed,
+#questionMode .qa-feed,
+#questionMode .mode-panel,
+#questionMode .mode-content {
+  background: transparent !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Force full width so no weird right-side boundary */
+#questionMode .bubble-feed,
+#questionMode .question-feed,
+#questionMode .qa-feed {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Nuke any "tail/corner/fold/notch" real elements */
+#questionMode [class*="tail"],
+#questionMode [class*="corner"],
+#questionMode [class*="notch"],
+#questionMode [class*="fold"] {
+  display: none !important;
+}
+
+/* Reset ALL card-like blocks inside question mode */
+#questionMode :is(
+  .bubble, .message, .card, .story-card,
+  .question, .answer, .question-card, .answer-card,
+  [class*="bubble"], [class*="message"], [class*="card"],
+  [class*="question"], [class*="answer"]
+) {
+  background: var(--surface) !important;
+  background-image: none !important;   /* kills folded-corner made by gradients */
+  border: none !important;
+  outline: none !important;
+
+  /* kills that “thin right vertical line” if it's from inset shadow/border */
+  box-shadow: var(--shadow-soft) !important;
+
+  /* kills shape tricks */
+  clip-path: none !important;
+  mask: none !important;
+  -webkit-mask: none !important;
+
+  /* prevents any child background from poking out as a triangle */
+  overflow: hidden !important;
+
+  border-radius: 30px !important;
+}
+
+/* Kill pseudo-elements inside question mode too (even if not shown in search) */
+#questionMode :is(
+  .bubble, .message, .card, .story-card,
+  .question, .answer, .question-card, .answer-card,
+  [class*="bubble"], [class*="message"], [class*="card"],
+  [class*="question"], [class*="answer"]
+)::before,
+#questionMode :is(
+  .bubble, .message, .card, .story-card,
+  .question, .answer, .question-card, .answer-card,
+  [class*="bubble"], [class*="message"], [class*="card"],
+  [class*="question"], [class*="answer"]
+)::after {
+  content: none !important;
+  display: none !important;
+}
