@@ -287,6 +287,7 @@ body.light .tab.active{
   color: var(--text);
   box-shadow: var(--shadow-card);          /* raised */
   cursor: pointer;
+  opacity: 0.82;
   transition: box-shadow 120ms ease,
               background 120ms ease,
               transform 120ms ease,
@@ -304,6 +305,7 @@ body.light .tab.active{
   color: var(--text);
   box-shadow: var(--shadow-press);         /* pressed */
   transform: translateY(0);
+  opacity: 1;
 }
 
 .progress-wrapper {
