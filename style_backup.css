@@ -1,0 +1,513 @@
+/*
+  Microlearn Bio — clean, consolidated styles
+  Soft Neumorphic / Pinterest-Minimal aesthetic
+
+  Theme rule:
+  - Default = Dark tokens (script.js default theme: "dark")
+  - Light tokens when body.light is present
+*/
+
+/* =====================
+   0) Reset + base
+   ===================== */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow-y: auto; /* allow natural scrolling */
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+:focus-visible {
+  outline: 2px solid rgba(143, 168, 155, 0.55);
+  outline-offset: 3px;
+  border-radius: 999px;
+}
+
+.hidden { display: none !important; }
+
+/* =====================
+   1) Theme tokens
+   ===================== */
+:root {
+  /* Dark mode (default) */
+  --bg: #1E1E1E;                 /* not pure black */
+  --surface: #252525;
+  --surface-2: #2C2C2C;
+
+  --text: #F3F4F6;
+  --muted: rgba(243, 244, 246, 0.65);
+  --edge: rgba(255, 255, 255, 0.06);
+
+  --sage: #8FA89B;                /* muted accent */
+  --progress-start: #D4E0D9;
+  --progress-end: #8FA89B;
+
+  --radius-card: 30px;
+  --radius-pill: 999px;
+
+  /* Neumorphic shadows */
+  --shadow-card: 8px 8px 16px #131313, -8px -8px 16px #292929;
+
+  /* Buttons (glass) */
+  --btn-bg: rgba(255, 255, 255, 0.08);
+  --btn-border: rgba(255, 255, 255, 0.18);
+  --btn-text: var(--text);
+
+  /* Surfaces */
+  --nav-bg: #252525;              /* requested for dark mode */
+
+  /* Layout */
+  --maxw: 880px;
+  --side-pad: 18px;
+  --bottom-pad: 120px;            /* requested */
+}
+
+body.light {
+  /* Light mode */
+  --bg: #F0F2F5;                   /* requested */
+  --surface: #F7F8F6;              /* slightly creamy + matte */
+  --surface-2: #EEF1F4;
+
+  --text: #111827;
+  --muted: rgba(17, 24, 39, 0.62);
+  --edge: rgba(17, 24, 39, 0.04);
+
+  /* Slightly softened highlight to feel more matte (swap back to #ffffff if you want it shinier) */
+  --shadow-card: 8px 8px 16px #d1d9e6, -8px -8px 16px #fbfbfb;
+
+  --btn-bg: rgba(255, 255, 255, 0.35);
+  --btn-border: rgba(255, 255, 255, 0.55);
+  --btn-text: var(--text);
+
+  --nav-bg: rgba(240, 242, 245, 0.86);
+}
+
+/* =====================
+   2) App layout
+   ===================== */
+.app {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-main {
+  width: 100%;
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 0 var(--side-pad);
+}
+
+.screen {
+  display: block; /* JS uses .hidden, not .active */
+  padding-bottom: calc(var(--bottom-pad) + env(safe-area-inset-bottom));
+}
+
+/* =====================
+   3) Header
+   ===================== */
+.app-header {
+  width: 100%;
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 18px var(--side-pad) 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.header-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.header-subtitle {
+  display: block;
+  font-size: 14px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.header-main {
+  margin: 0;
+  font-size: 28px;
+  letter-spacing: -0.02em;
+}
+
+.icon-button {
+  width: 48px;
+  height: 48px;
+  border-radius: 22px;
+  border: none;
+  color: var(--text);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* =====================
+   4) Cards
+   ===================== */
+.card,
+.bubble,
+.qa-card,
+.difficult-item {
+  background: var(--surface);
+  border: 1px solid var(--edge); /* soft edge (not a sharp outline) */
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  -webkit-tap-highlight-color: transparent;
+  transform: translateZ(0);     /* reduces hairlines on some GPUs */
+}
+
+.card {
+  width: 100%;
+  text-align: left;
+  padding: 18px 18px;
+  cursor: pointer;
+}
+
+.card h3 {
+  margin: 0 0 6px;
+  font-size: 18px;
+}
+
+.card p {
+  margin: 0;
+  color: var(--muted);
+}
+
+/* Homepage hero */
+.hero {
+  padding: 10px 4px 16px;
+}
+
+.hero h2 {
+  margin: 0 0 6px;
+  font-size: 26px;
+  letter-spacing: -0.02em;
+}
+
+.hero p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+  padding: 10px 0 2px;
+}
+
+@media (min-width: 700px) {
+  .card-grid { grid-template-columns: 1fr 1fr; }
+}
+
+.card-select {
+  padding: 22px 20px;
+}
+
+/* Lists */
+.card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 6px 0 2px;
+}
+
+.card-chapter-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.card-chapter-title {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.card-chapter-progress {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.card-chapter-sub {
+  margin-top: 8px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+/* =====================
+   5) Tabs + progress
+   ===================== */
+.tabs {
+  display: flex;
+  gap: 8px;
+  padding: 10px 0 12px;
+}
+
+.tab {
+  flex: 1;
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 12px 10px;
+  background: var(--surface-2);
+  color: var(--muted);
+  box-shadow: var(--shadow-card);
+  cursor: pointer;
+}
+
+.tab.active {
+  background: var(--surface);
+  color: var(--text);
+}
+
+.progress-wrapper {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 12px;
+  padding: 0 0 16px;
+}
+
+.progress-label {
+  font-size: 14px;
+  color: var(--muted);
+  min-width: 54px;
+}
+
+.progress-bar {
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(127, 140, 152, 0.18);
+  overflow: hidden;
+  box-shadow: inset 2px 2px 6px rgba(0,0,0,0.08);
+}
+
+body.light .progress-bar {
+  background: rgba(17, 24, 39, 0.08);
+}
+
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--progress-start), var(--progress-end));
+}
+
+/* =====================
+   6) Story mode bubbles
+   ===================== */
+.mode-panel {
+  position: relative;
+  padding-bottom: calc(var(--bottom-pad) + env(safe-area-inset-bottom));
+}
+
+.bubble-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 8px 0 0;
+}
+
+.bubble {
+  padding: 18px 18px;
+}
+
+.bubble-meta {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.bubble-text {
+  font-size: 18px;
+  line-height: 1.35;
+}
+
+/* remove legacy tails/triangles (safari + desktop) */
+.bubble::before,
+.bubble::after,
+.qa-card::before,
+.qa-card::after {
+  content: none !important;
+  display: none !important;
+}
+
+/* =====================
+   7) Question mode
+   ===================== */
+.qa-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 8px 0 0;
+}
+
+.qa-card {
+  padding: 18px 18px;
+}
+
+.qa-meta {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.qa-text {
+  font-size: 18px;
+  line-height: 1.35;
+}
+
+.qa-answer {
+  background: var(--surface-2);
+}
+
+/* the in-between "Show answer" button is a direct child of .qa-wrapper */
+.qa-wrapper > .btn.btn-primary {
+  width: min(520px, 70%);
+  min-height: 38px;             /* ~30% smaller than main buttons */
+  padding: 10px 14px;
+  margin: 8px auto 0;
+}
+
+/* =====================
+   8) Buttons + bottom bars
+   ===================== */
+.btn {
+  border: 1px solid var(--btn-border);
+  border-radius: var(--radius-pill);
+  background: var(--btn-bg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: var(--btn-text);
+  padding: 14px 18px;
+  min-height: 56px;
+  font-size: 16px;
+  cursor: pointer;
+  box-shadow: var(--shadow-card);
+  transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
+}
+
+.btn:active { transform: scale(0.99); }
+
+.btn-ghost {
+  background: rgba(255,255,255,0.06);
+}
+
+body.light .btn-ghost {
+  background: rgba(255,255,255,0.32);
+}
+
+.btn-primary {
+  border-color: rgba(143, 168, 155, 0.45);
+}
+
+/* bottom bars (story + question actions) */
+.bottom-bar,
+.qa-actions {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+  background: var(--nav-bg);
+  padding: 16px var(--side-pad) calc(16px + env(safe-area-inset-bottom));
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.bottom-bar .btn,
+.qa-actions .btn {
+  flex: 1;
+}
+
+/* ensure dark mode bars are visible (requested) */
+body:not(.light) .bottom-bar,
+body:not(.light) .qa-actions {
+  background: #252525;
+}
+
+/* =====================
+   9) Difficult mode
+   ===================== */
+.empty-state {
+  margin-top: 12px;
+  padding: 18px 18px;
+  color: var(--muted);
+  background: var(--surface);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+
+.difficult-list {
+  list-style: none;
+  margin: 0;
+  padding: 12px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.difficult-item {
+  padding: 16px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.difficult-type {
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.difficult-text {
+  font-size: 15px;
+  line-height: 1.25;
+}
+
+.difficult-remove {
+  flex: 0 0 auto;
+  min-height: 40px;
+  padding: 10px 14px;
+}
+
+/* =====================
+   10) Toast
+   ===================== */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(96px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  max-width: min(520px, calc(100vw - 40px));
+  padding: 12px 14px;
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-card);
+  border: 1px solid rgba(255,255,255,0.12);
+}
+
+body.light .toast {
+  border-color: rgba(17,24,39,0.06);
+}

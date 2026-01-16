@@ -1,0 +1,126 @@
+/* =====================
+   8) Buttons + bottom bars
+   ===================== */
+.btn {
+  border: 1px solid var(--btn-border);
+  border-radius: var(--radius-pill);
+  background: var(--btn-bg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: var(--btn-text);
+  padding: 14px 18px;
+  min-height: 56px;
+  font-size: 16px;
+  cursor: pointer;
+  box-shadow: var(--shadow-card);
+  transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
+}
+
+.btn:active { transform: scale(0.99); }
+
+.btn-ghost {
+  background: rgba(255,255,255,0.06);
+}
+
+body.light .btn-ghost {
+  background: rgba(255,255,255,0.32);
+}
+
+.btn-primary {
+  border-color: rgba(143, 168, 155, 0.45);
+}
+
+/* bottom bars (story + question actions) */
+.bottom-bar,
+.qa-actions {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+  background: var(--nav-bg);
+  padding: 16px var(--side-pad) calc(16px + env(safe-area-inset-bottom));
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.bottom-bar .btn,
+.qa-actions .btn {
+  flex: 1;
+}
+
+/* ensure dark mode bars are visible (requested) */
+body:not(.light) .bottom-bar,
+body:not(.light) .qa-actions {
+  background: #252525;
+}
+
+/* =====================
+   9) Difficult mode
+   ===================== */
+.empty-state {
+  margin-top: 12px;
+  padding: 18px 18px;
+  color: var(--muted);
+  background: var(--surface);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+
+.difficult-list {
+  list-style: none;
+  margin: 0;
+  padding: 12px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.difficult-item {
+  padding: 16px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.difficult-type {
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.difficult-text {
+  font-size: 15px;
+  line-height: 1.25;
+}
+
+.difficult-remove {
+  flex: 0 0 auto;
+  min-height: 40px;
+  padding: 10px 14px;
+}
+
+/* =====================
+   10) Toast
+   ===================== */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(96px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  max-width: min(520px, calc(100vw - 40px));
+  padding: 12px 14px;
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-card);
+  border: 1px solid rgba(255,255,255,0.12);
+}
+
+body.light .toast {
+  border-color: rgba(17,24,39,0.06);
+}

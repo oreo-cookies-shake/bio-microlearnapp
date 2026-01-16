@@ -1,0 +1,255 @@
+/*
+  Microlearn Bio — clean, consolidated styles
+  Soft Neumorphic / Pinterest-Minimal aesthetic
+
+  Theme rule:
+  - Default = Dark tokens (script.js default theme: "dark")
+  - Light tokens when body.light is present
+*/
+
+/* =====================
+   0) Reset + base
+   ===================== */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow-y: auto; /* allow natural scrolling */
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+:focus-visible {
+  outline: 2px solid rgba(143, 168, 155, 0.55);
+  outline-offset: 3px;
+  border-radius: 999px;
+}
+
+.hidden { display: none !important; }
+
+/* =====================
+   2) App layout
+   ===================== */
+.app {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-main {
+  width: 100%;
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 0 var(--side-pad);
+}
+
+.screen {
+  /* JS shows/hides screens by toggling the `.hidden` class (not `.active`) */
+  display: block;
+  padding-bottom: calc(var(--bottom-pad) + env(safe-area-inset-bottom));
+}
+
+/* =====================
+   3) Header
+   ===================== */
+.app-header {
+  width: 100%;
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 18px var(--side-pad) 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.header-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.header-subtitle {
+  display: block;
+  font-size: 14px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.header-main {
+  margin: 0;
+  font-size: 28px;
+  letter-spacing: -0.02em;
+}
+
+.icon-button {
+  width: 48px;
+  height: 48px;
+  border-radius: 22px;
+  border: none;
+  color: var(--text);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* =====================
+   4) Cards
+   ===================== */
+.card,
+.bubble,
+.qa-card,
+.difficult-item {
+  background: var(--surface);
+  border: 1px solid var(--edge); /* soft edge (not a sharp outline) */
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  -webkit-tap-highlight-color: transparent;
+  transform: translateZ(0);     /* reduces hairlines on some GPUs */
+}
+
+.card {
+  width: 100%;
+  text-align: left;
+  padding: 18px 18px;
+  cursor: pointer;
+}
+
+.card h3 {
+  margin: 0 0 6px;
+  font-size: 18px;
+}
+
+.card p {
+  margin: 0;
+  color: var(--muted);
+}
+
+/* Homepage hero */
+.hero {
+  padding: 10px 4px 16px;
+}
+
+.hero h2 {
+  margin: 0 0 6px;
+  font-size: 26px;
+  letter-spacing: -0.02em;
+}
+
+.hero p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+  padding: 10px 0 2px;
+}
+
+@media (min-width: 700px) {
+  .card-grid { grid-template-columns: 1fr 1fr; }
+}
+
+.card-select {
+  padding: 22px 20px;
+}
+
+/* Lists */
+.card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 6px 0 2px;
+}
+
+.card-chapter-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.card-chapter-title {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.card-chapter-progress {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.card-chapter-sub {
+  margin-top: 8px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+/* =====================
+   5) Tabs + progress
+   ===================== */
+.tabs {
+  display: flex;
+  gap: 8px;
+  padding: 10px 0 12px;
+}
+
+.tab {
+  flex: 1;
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 12px 10px;
+  background: var(--surface-2);
+  color: var(--muted);
+  box-shadow: var(--shadow-card);
+  cursor: pointer;
+}
+
+.tab.active {
+  background: var(--surface);
+  color: var(--text);
+}
+
+.progress-wrapper {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 12px;
+  padding: 0 0 16px;
+}
+
+.progress-label {
+  font-size: 14px;
+  color: var(--muted);
+  min-width: 54px;
+}
+
+.progress-bar {
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(127, 140, 152, 0.18);
+  overflow: hidden;
+  box-shadow: inset 2px 2px 6px rgba(0,0,0,0.08);
+}
+
+body.light .progress-bar {
+  background: rgba(17, 24, 39, 0.08);
+}
+
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--progress-start), var(--progress-end));
+}
+

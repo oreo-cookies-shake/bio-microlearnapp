@@ -1,10 +1,14 @@
 // Change the v9 to v10 to force your phone to update!
-const CACHE_NAME = "microlearn-bio-v24"; 
+const CACHE_NAME = "microlearn-bio-v25"; 
 
 const ASSETS = [
   "./",
   "./index.html",
   "./style.css",
+  "./theme.css",
+  "./base.css",
+  "./modes.css",
+  "./components.css",
   "./script.js",
   "./manifest.json"
 ];

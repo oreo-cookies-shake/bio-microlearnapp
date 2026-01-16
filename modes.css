@@ -1,0 +1,76 @@
+/* =====================
+   6) Story mode bubbles
+   ===================== */
+.mode-panel {
+  position: relative;
+  padding-bottom: calc(var(--bottom-pad) + env(safe-area-inset-bottom));
+}
+
+.bubble-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 8px 0 0;
+}
+
+.bubble {
+  padding: 18px 18px;
+}
+
+.bubble-meta {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.bubble-text {
+  font-size: 18px;
+  line-height: 1.35;
+}
+
+/* remove legacy tails/triangles (safari + desktop) */
+.bubble::before,
+.bubble::after,
+.qa-card::before,
+.qa-card::after {
+  content: none !important;
+  display: none !important;
+}
+
+/* =====================
+   7) Question mode
+   ===================== */
+.qa-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 8px 0 0;
+}
+
+.qa-card {
+  padding: 18px 18px;
+}
+
+.qa-meta {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.qa-text {
+  font-size: 18px;
+  line-height: 1.35;
+}
+
+.qa-answer {
+  background: var(--surface-2);
+}
+
+/* the in-between "Show answer" button is a direct child of .qa-wrapper */
+.qa-wrapper > .btn.btn-primary {
+  width: min(520px, 70%);
+  min-height: 38px;             /* ~30% smaller than main buttons */
+  padding: 10px 14px;
+  margin: 8px auto 0;
+}
+
