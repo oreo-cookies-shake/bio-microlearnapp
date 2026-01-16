@@ -860,14 +860,20 @@ body.dark {
    (paste at very bottom)
    ========================= */
 
-body.light {
+body.light{
   --bg: #F0F2F5;
-  --surface: #F7F8FA;          /* card face: slightly brighter than bg */
-  --surface-2: #EEF1F4;        /* pills / secondary surfaces */
+  --surface: #F7F8FA;
+  --surface-2: #EEF1F4;
   --hairline: rgba(17, 24, 39, 0.06);
   --text: #111827;
   --muted: rgba(17, 24, 39, 0.62);
+
+  /* aliases for older variable names in your CSS */
+  --nav-bg: var(--bg);
+  --text-main: var(--text);
+  --text-muted: var(--muted);
 }
+
 
 /* page background */
 body.light {
@@ -1089,4 +1095,40 @@ body.light .card {
 )::after {
   content: none !important;
   display: none !important;
+}
+
+/* ================================
+   FINAL OVERRIDES — QA (Question) mode
+   Fix: corner triangle + clipped right edge
+================================ */
+
+/* 1) Make sure shadows are NOT getting clipped (the vertical line) */
+.qa-wrapper,
+#questionArea,
+#questionsMode.mode-panel {
+  overflow: visible !important;
+}
+
+/* Give breathing room so card shadows don't hit the screen edge */
+.qa-wrapper {
+  padding-left: 18px !important;
+  padding-right: 18px !important;
+  gap: 18px !important;              /* airy spacing if flex column */
+}
+
+/* 2) Kill any leftover "tail" pseudo-elements in Question mode (the triangle) */
+.qa-card::before,
+.qa-card::after {
+  content: none !important;
+  display: none !important;
+}
+
+/* 3) Ensure the QA cards are sized correctly inside the padded wrapper */
+.qa-card {
+  width: 100% !important;
+  box-sizing: border-box;
+  border-radius: 30px !important;
+  background: var(--surface) !important;
+  box-shadow: var(--shadow-soft) !important;
+  border: 1px solid rgba(17, 24, 39, 0.06) !important; /* subtle edge = more “pop”, less glossy */
 }
