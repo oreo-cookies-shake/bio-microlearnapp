@@ -121,7 +121,19 @@ body {
   text-align: left;
   padding: 18px 18px;
   cursor: pointer;
+  color: var(--text);
 }
+
+button.card {
+  appearance: none;
+  -webkit-appearance: none;
+  border: 0;
+  background: transparent; /* keeps your .card bg working */
+  font: inherit;
+  text-align: left;
+  color: inherit; /* inherits var(--text) from .card */
+}
+
 
 .card h3 {
   margin: 0 0 6px;
