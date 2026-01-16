@@ -752,3 +752,25 @@ a, a:visited, button {
   content: none !important;
   display: none !important;
 }
+
+/* --- Kill all chat tails / corner triangles --- */
+.bubble,
+.message,
+.story-card {
+  position: relative;
+  overflow: hidden; /* clips any leftover tail that sticks outside */
+}
+
+.bubble::before,
+.bubble::after,
+.message::before,
+.message::after,
+.story-card::before,
+.story-card::after {
+  content: none !important;
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+}
