@@ -249,25 +249,24 @@ button.card:focus-visible {
 /* =====================
    5) Tabs + progress
    ===================== */
+/* Tab row */
 .tabs {
   display: flex;
-  gap: 8px;
-  padding: 10px 0 16px;
-  border-radius: var(--radius-pill);
-  background: var(--surface-2);
-  border: 1px solid var(--edge);
-  box-shadow: var(--shadow-inset);
+  gap: 10px;
+  padding: 16px 0 12px;   /* extra top padding so it breathes above the progress bar */
+  background: transparent;
+  border-radius: 0;
+  border: none;
+  box-shadow: none;
 }
 
-.tab {
-  flex: 1;
-  border: none;
-  border-radius: var(--radius-pill);
-  padding: 12px 10px;
-  background: var(--surface-2);
-  color: var(--muted);
-  box-shadow: var(--shadow-soft);
-  cursor: pointer;
+/* Just in case there is any “wrapper pill” around the tabs */
+.tabs,
+.tab-row,
+.tab-group {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 body.light .tab{
@@ -279,11 +278,32 @@ body.light .tab.active{
   color: var(--text);
 }
 
+.tab {
+  flex: 1;
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 12px 10px;
+  background: var(--surface-2);
+  color: var(--text);
+  box-shadow: var(--shadow-card);          /* raised */
+  cursor: pointer;
+  transition: box-shadow 120ms ease,
+              background 120ms ease,
+              transform 120ms ease,
+              color 120ms ease;
+}
+
+/* Hover: tiny lift for both themes */
+.tab:hover {
+  transform: translateY(-1px);
+}
+
+/* Active tab = pressed in */
 .tab.active {
   background: var(--surface);
   color: var(--text);
-  border: 1px solid var(--edge);
-  box-shadow: var(--shadow-card); /* pop only active */
+  box-shadow: var(--shadow-press);         /* pressed */
+  transform: translateY(0);
 }
 
 .progress-wrapper {
