@@ -2,37 +2,26 @@
    1) Theme tokens
    ===================== */
 :root {
-  /* Dark mode (default) */
-  --bg: #1E1E1E;                 /* not pure black */
-  --surface: #252525;
-  --surface-2: #2C2C2C;
+  /* DARK MODE (default) */
+  --bg: #121212;
+  --surface: #1b1b1b;
+  --surface-2: #202020;
 
-  --text: #F3F4F6;
-  --muted: rgba(243, 244, 246, 0.65);
-  --edge: rgba(255, 255, 255, 0.06);
+  --text: rgba(255,255,255,0.92);
+  --muted: rgba(255,255,255,0.62);
+  --edge: rgba(255,255,255,0.07);
 
-  --sage: #8FA89B;                /* muted accent */
-  --progress-start: #D4E0D9;
-  --progress-end: #8FA89B;
+  --shadow-card: 10px 10px 26px rgba(0,0,0,0.55),
+                 -10px -10px 26px rgba(255,255,255,0.04);
 
-  --radius-card: 30px;
-  --radius-pill: 999px;
+  --shadow-press: inset 2px 2px 10px rgba(0,0,0,0.55),
+                  inset -2px -2px 10px rgba(255,255,255,0.06);
 
-  /* Neumorphic shadows */
-  --shadow-card: 8px 8px 16px #131313, -8px -8px 16px #292929;
-
-  /* Buttons (glass) */
-  --btn-bg: rgba(255, 255, 255, 0.08);
-  --btn-border: rgba(255, 255, 255, 0.18);
+  --btn-bg: rgba(255,255,255,0.06);
+  --btn-border: rgba(255,255,255,0.10);
   --btn-text: var(--text);
 
-  /* Surfaces */
-  --nav-bg: #252525;              /* requested for dark mode */
-
-  /* Layout */
-  --maxw: 880px;
-  --side-pad: 18px;
-  --bottom-pad: 120px;            /* requested */
+  --nav-bg: rgba(18,18,18,0.72);
 }
 
 body.light {
@@ -60,6 +49,10 @@ body.light {
   --btn-text: var(--text);
 
   --nav-bg: rgba(243, 241, 235, 0.86);
+
+  --shadow-press: inset 2px 2px 8px rgba(0,0,0,0.08),
+                  inset -2px -2px 8px rgba(255,255,255,0.80);
+
 }
 
 

@@ -140,6 +140,50 @@ button.card {
   color: var(--muted);
 }
 
+/* Make button cards look like real cards (Home + Chapters list) */
+button.card {
+  appearance: none;
+  -webkit-appearance: none;
+
+  display: block;
+  width: 100%;
+
+  text-align: left;
+  background: var(--surface);
+  color: var(--text);
+
+  border: 1px solid var(--edge);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+
+  transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease;
+}
+
+/* “Clickable” feel */
+button.card:active {
+  transform: translateY(1px) scale(0.995);
+  box-shadow: var(--shadow-press, var(--shadow-card));
+}
+
+/* Desktop hover */
+@media (hover: hover) {
+  button.card:hover {
+    transform: translateY(-1px);
+  }
+}
+
+/* Accessible focus (nice, not ugly outline) */
+button.card:focus {
+  outline: none;
+}
+button.card:focus-visible {
+  outline: 2px solid rgba(143, 168, 155, 0.45);
+  outline-offset: 3px;
+}
+
 /* Homepage hero */
 .hero {
   padding: 10px 4px 16px;

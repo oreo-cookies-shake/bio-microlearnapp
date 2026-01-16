@@ -49,17 +49,11 @@ body.light .btn-ghost {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Icon buttons (back + theme toggle) focus ring */
 .icon-button:focus { outline: none; }
 
 .icon-button:focus-visible {
-  outline: 2px solid rgba(17, 24, 39, 0.18);
-  outline-offset: 3px;
-}
-
-/* Remove default focus outline, keep a soft one for keyboard users */
-.icon-button:focus { outline: none; }
-.icon-button:focus-visible {
-  outline: 2px solid rgba(17, 24, 39, 0.18);
+  outline: 2px solid rgba(143, 168, 155, 0.45);
   outline-offset: 3px;
 }
 
