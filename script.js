@@ -37,7 +37,8 @@ const DATA = {
           {
             id: "Q3",
             question: "What happens to ATP when it releases energy?",
-            answer: "It is hydrolysed to ADP and inorganic phosphate (Pi)."
+            answer:
+              "It is hydrolysed to ADP and inorganic phosphate (Pi)."
           }
         ]
       }
@@ -52,7 +53,10 @@ const DATA = {
         title: "18.1 Respiration overview",
         meta: "Sample A2 chapter",
         storyPoints: [
-          { id: "S1", text: "Respiration releases energy by the breakdown of organic molecules." }
+          {
+            id: "S1",
+            text: "Respiration releases energy by the breakdown of organic molecules."
+          }
         ],
         questions: [
           {
@@ -72,10 +76,10 @@ const STORAGE_KEY = "microlearn-bio-state-v1";
 
 let appState = {
   theme: "dark",
-  currentLevelId: null,  // "as" | "a2"
+  currentLevelId: null, // "as" | "a2"
   currentChapterId: null,
-  currentMode: "story",  // "story" | "questions" | "difficult"
-  chapters: {}           // per-chapter progress
+  currentMode: "story", // "story" | "questions" | "difficult"
+  chapters: {} // per-chapter progress
 };
 
 function loadState() {
@@ -106,8 +110,8 @@ function getChapter(levelId, chapterId) {
 function ensureChapterState(chapterId) {
   if (!appState.chapters[chapterId]) {
     appState.chapters[chapterId] = {
-      storyIndex: 0,          // how many story points have been shown
-      questionIndex: 0,       // current question index
+      storyIndex: 0, // how many story points have been shown
+      questionIndex: 0, // current question index (0-based)
       difficultStoryIds: [],
       difficultQuestionIds: []
     };
@@ -138,9 +142,6 @@ const questionsModePanel = qs("#questionsMode");
 const difficultModePanel = qs("#difficultMode");
 
 const storyFeedEl = qs("#storyFeed");
-const storyNextBtn = qs("#storyNext");
-const storyMarkBtn = qs("#storyMarkDifficult");
-
 const questionAreaEl = qs("#questionArea");
 
 const difficultEmptyEl = qs("#difficultEmpty");
@@ -149,6 +150,15 @@ const difficultListEl = qs("#difficultList");
 const themeToggleBtn = qs("#themeToggle");
 const toastEl = qs("#toast");
 
+// Floating actions (Story + Questions)
+const actionDock = qs("#actionDock");
+const actionLeftBtn = qs("#actionLeft");
+const actionRightBtn = qs("#actionRight");
+
+// Question mode UI state (not persisted)
+let questionRevealed = false;
+let currentAnswerEl = null;
+
 // ---------- Toast ----------
 
 let toastTimeout = null;
@@ -156,12 +166,14 @@ let toastTimeout = null;
 function showToast(message) {
   toastEl.textContent = message;
   toastEl.classList.remove("hidden");
-  toastEl.classList.add("show");
+  toastEl.classList.add("toast--show");
+
   if (toastTimeout) clearTimeout(toastTimeout);
   toastTimeout = setTimeout(() => {
-    toastEl.classList.remove("show");
+    toastEl.classList.remove("toast--show");
+    toastEl.classList.add("hidden");
     toastTimeout = null;
-  }, 1700);
+  }, 1600);
 }
 
 // ---------- Theme ----------
@@ -177,7 +189,7 @@ function applyTheme() {
 }
 
 themeToggleBtn.addEventListener("click", () => {
-  appState.theme = appState.theme === "dark" ? "light" : "dark";
+  appState.theme = appState.theme === "light" ? "dark" : "light";
   applyTheme();
   saveState();
 });
@@ -235,13 +247,12 @@ function initLevelButtons() {
 function renderChapters() {
   const level = DATA[appState.currentLevelId];
   chaptersListEl.innerHTML = "";
+
   level.chapters.forEach((chapter) => {
     const chState = ensureChapterState(chapter.id);
-    const totalItems =
-      (chapter.storyPoints?.length || 0) + (chapter.questions?.length || 0);
+    const totalItems = (chapter.storyPoints?.length || 0) + (chapter.questions?.length || 0);
     const doneItems = chState.storyIndex + chState.questionIndex;
-    const pct =
-      totalItems > 0 ? Math.round((doneItems / totalItems) * 100) : 0;
+    const pct = totalItems > 0 ? Math.round((doneItems / totalItems) * 100) : 0;
 
     const card = document.createElement("button");
     card.className = "card card-chapter";
@@ -275,6 +286,7 @@ function renderChapters() {
 
 function setActiveMode(mode) {
   appState.currentMode = mode;
+
   qsa(".tab").forEach((tab) => {
     tab.classList.toggle("active", tab.dataset.mode === mode);
   });
@@ -286,6 +298,12 @@ function setActiveMode(mode) {
   if (mode === "story") storyModePanel.classList.remove("hidden");
   if (mode === "questions") questionsModePanel.classList.remove("hidden");
   if (mode === "difficult") difficultModePanel.classList.remove("hidden");
+
+  // reset per-mode UI state
+  if (mode !== "questions") {
+    questionRevealed = false;
+    currentAnswerEl = null;
+  }
 
   renderCurrentMode();
 }
@@ -304,20 +322,28 @@ function renderCurrentMode() {
 
   if (appState.currentMode === "story") {
     const total = chapter.storyPoints.length;
+
+    // Auto-show the first point so you land on 1/total
+    if (chState.storyIndex === 0 && total > 0) {
+      chState.storyIndex = 1;
+      saveState();
+    }
+
     const shown = Math.min(chState.storyIndex, total);
     updateProgress(shown, total);
     renderStoryMode(chapter, chState);
   } else if (appState.currentMode === "questions") {
     const total = chapter.questions.length;
-    const idx = Math.min(chState.questionIndex, total);
-    updateProgress(idx, total);
+    const current = total === 0 ? 0 : Math.min(chState.questionIndex + 1, total);
+    updateProgress(current, total);
     renderQuestionMode(chapter, chState);
   } else if (appState.currentMode === "difficult") {
-    const totalHard =
-      chState.difficultStoryIds.length + chState.difficultQuestionIds.length;
+    const totalHard = chState.difficultStoryIds.length + chState.difficultQuestionIds.length;
     updateProgress(totalHard, totalHard || 1);
     renderDifficultMode(chapter, chState);
   }
+
+  syncActionDock(chapter, chState);
 }
 
 function updateProgress(current, total) {
@@ -326,16 +352,85 @@ function updateProgress(current, total) {
   progressFill.style.width = `${pct}%`;
 }
 
+// ---------- Floating action dock ----------
+
+function setRightButton({ label, shape = "circle", disabled = false }) {
+  actionRightBtn.textContent = label;
+  actionRightBtn.disabled = disabled;
+
+  actionRightBtn.classList.toggle("fab--circle", shape === "circle");
+  actionRightBtn.classList.toggle("fab--pill", shape === "pill");
+
+  actionRightBtn.setAttribute("aria-label", label);
+  actionRightBtn.setAttribute("title", label);
+}
+
+function syncActionDock(chapter, chState) {
+  const mode = appState.currentMode;
+
+  // Show in Story + Questions only
+  if (mode === "difficult" || !chapter) {
+    actionDock.classList.add("hidden");
+    return;
+  }
+  actionDock.classList.remove("hidden");
+
+  // Left button is always the book
+  actionLeftBtn.disabled = false;
+
+  if (mode === "story") {
+    const total = chapter.storyPoints.length;
+    const done = chState.storyIndex >= total;
+    setRightButton({ label: "OK", shape: "circle", disabled: total === 0 || done });
+  }
+
+  if (mode === "questions") {
+    const total = chapter.questions.length;
+    const finished = total === 0 || chState.questionIndex >= total;
+
+    if (finished) {
+      actionDock.classList.add("hidden");
+      return;
+    }
+
+    setRightButton({
+      label: questionRevealed ? "Next" : "Reveal",
+      shape: "pill",
+      disabled: false
+    });
+  }
+}
+
+actionLeftBtn.addEventListener("click", () => {
+  const chapter = getChapter(appState.currentLevelId, appState.currentChapterId);
+  if (!chapter) return;
+  const chState = ensureChapterState(chapter.id);
+
+  if (appState.currentMode === "story") {
+    markCurrentStoryDifficult(chapter, chState);
+  } else if (appState.currentMode === "questions") {
+    markCurrentQuestionDifficult(chapter, chState);
+  }
+});
+
+actionRightBtn.addEventListener("click", () => {
+  const chapter = getChapter(appState.currentLevelId, appState.currentChapterId);
+  if (!chapter) return;
+  const chState = ensureChapterState(chapter.id);
+
+  if (appState.currentMode === "story") {
+    advanceStory(chapter, chState);
+  } else if (appState.currentMode === "questions") {
+    handleQuestionPrimary(chapter, chState);
+  }
+});
+
 // ---------- Story mode ----------
 
 function renderStoryMode(chapter, chState) {
   storyFeedEl.innerHTML = "";
 
   const total = chapter.storyPoints.length;
-  if (chState.storyIndex === 0 && total > 0) {
-    chState.storyIndex = 1; // show first point automatically
-    saveState();
-  }
 
   const countToShow = Math.min(chState.storyIndex, total);
   for (let i = 0; i < countToShow; i++) {
@@ -349,26 +444,25 @@ function renderStoryMode(chapter, chState) {
     storyFeedEl.appendChild(bubble);
   }
 
-  storyFeedEl.scrollTop = storyFeedEl.scrollHeight;
-
-  // disable Next if finished
-  storyNextBtn.disabled = chState.storyIndex >= total;
+  // Scroll to the latest bubble
+  const last = storyFeedEl.lastElementChild;
+  if (last) last.scrollIntoView({ block: "end", behavior: "smooth" });
 }
 
-storyNextBtn.addEventListener("click", () => {
-  const chapter = getChapter(appState.currentLevelId, appState.currentChapterId);
-  const chState = ensureChapterState(chapter.id);
-  if (chState.storyIndex < chapter.storyPoints.length) {
+function advanceStory(chapter, chState) {
+  const total = chapter.storyPoints.length;
+  if (total === 0) return;
+
+  if (chState.storyIndex < total) {
     chState.storyIndex += 1;
     saveState();
-    updateProgress(chState.storyIndex, chapter.storyPoints.length);
-    renderStoryMode(chapter, chState);
+    renderCurrentMode();
+  } else {
+    showToast("End of story");
   }
-});
+}
 
-storyMarkBtn.addEventListener("click", () => {
-  const chapter = getChapter(appState.currentLevelId, appState.currentChapterId);
-  const chState = ensureChapterState(chapter.id);
+function markCurrentStoryDifficult(chapter, chState) {
   const idx = Math.max(chState.storyIndex - 1, 0);
   const point = chapter.storyPoints[idx];
   if (!point) return;
@@ -378,19 +472,28 @@ storyMarkBtn.addEventListener("click", () => {
     saveState();
     showToast("Saved to Difficult");
   } else {
-    showToast("Already in Difficult");
+    showToast("Already saved");
   }
-});
+}
 
 // ---------- Question mode ----------
 
 function renderQuestionMode(chapter, chState) {
   questionAreaEl.innerHTML = "";
+  currentAnswerEl = null;
+  questionRevealed = false;
 
   const total = chapter.questions.length;
   if (total === 0) {
     questionAreaEl.innerHTML =
       '<div class="empty-state">No questions yet for this chapter.</div>';
+    return;
+  }
+
+  // Finished all questions
+  if (chState.questionIndex >= total) {
+    questionAreaEl.innerHTML =
+      '<div class="empty-state">You\'re done! Switch to <b>Difficult</b> to revise the items you saved.</div>';
     return;
   }
 
@@ -401,71 +504,60 @@ function renderQuestionMode(chapter, chState) {
   cardQ.className = "qa-card";
   cardQ.innerHTML = `
     <div class="qa-meta">Q${idx + 1} · Question</div>
-    <div class="qa-question">${q.question}</div>
+    <div class="qa-text">${q.question}</div>
   `;
-
-  const showAnsBtn = document.createElement("button");
-  showAnsBtn.className = "btn btn-primary";
-  showAnsBtn.textContent = "Show answer";
-
-  const actionsDiv = document.createElement("div");
-  actionsDiv.className = "qa-actions hidden";
-
-  const rightBtn = document.createElement("button");
-  rightBtn.className = "btn btn-ghost";
-  rightBtn.textContent = "I was right";
-
-  const hardBtn = document.createElement("button");
-  hardBtn.className = "btn btn-primary";
-  hardBtn.textContent = "Still confusing";
-
-  actionsDiv.appendChild(rightBtn);
-  actionsDiv.appendChild(hardBtn);
 
   const answerCard = document.createElement("div");
-  answerCard.className = "qa-card hidden";
+  answerCard.className = "qa-card qa-answer hidden";
   answerCard.innerHTML = `
-    <div class="qa-answer-title">Answer</div>
-    <div class="qa-answer-text">${q.answer}</div>
+    <div class="qa-meta">Answer</div>
+    <div class="qa-text">${q.answer}</div>
   `;
 
-  showAnsBtn.addEventListener("click", () => {
-    showAnsBtn.classList.add("hidden");
-    answerCard.classList.remove("hidden");
-    actionsDiv.classList.remove("hidden");
-  });
-
-  rightBtn.addEventListener("click", () => {
-    advanceQuestion(chapter, chState, false);
-  });
-
-  hardBtn.addEventListener("click", () => {
-    advanceQuestion(chapter, chState, true);
-  });
+  currentAnswerEl = answerCard;
 
   questionAreaEl.appendChild(cardQ);
-  questionAreaEl.appendChild(showAnsBtn);
   questionAreaEl.appendChild(answerCard);
-  questionAreaEl.appendChild(actionsDiv);
 }
 
-function advanceQuestion(chapter, chState, markDifficult) {
+function handleQuestionPrimary(chapter, chState) {
   const total = chapter.questions.length;
-  const idx = Math.min(chState.questionIndex, total - 1);
-  const q = chapter.questions[idx];
+  if (total === 0 || chState.questionIndex >= total) return;
 
-  if (markDifficult && !chState.difficultQuestionIds.includes(q.id)) {
-    chState.difficultQuestionIds.push(q.id);
-    showToast("Saved to Difficult");
+  if (!questionRevealed) {
+    questionRevealed = true;
+    if (currentAnswerEl) currentAnswerEl.classList.remove("hidden");
+    syncActionDock(chapter, chState);
+    return;
   }
 
+  // revealed -> Next
+  advanceQuestion(chapter, chState);
+}
+
+function advanceQuestion(chapter, chState) {
+  const total = chapter.questions.length;
   if (chState.questionIndex < total) {
     chState.questionIndex += 1;
   }
-
   saveState();
-  updateProgress(chState.questionIndex, total);
-  renderQuestionMode(chapter, chState);
+  renderCurrentMode();
+}
+
+function markCurrentQuestionDifficult(chapter, chState) {
+  const total = chapter.questions.length;
+  if (total === 0 || chState.questionIndex >= total) return;
+
+  const idx = Math.min(chState.questionIndex, total - 1);
+  const q = chapter.questions[idx];
+
+  if (!chState.difficultQuestionIds.includes(q.id)) {
+    chState.difficultQuestionIds.push(q.id);
+    saveState();
+    showToast("Saved to Difficult");
+  } else {
+    showToast("Already saved");
+  }
 }
 
 // ---------- Difficult mode ----------
@@ -512,23 +604,19 @@ function renderDifficultMode(chapter, chState) {
     li.className = "difficult-item";
     li.innerHTML = `
       <div class="difficult-meta">
-        <span>${item.type}</span>
+        <span class="difficult-tag">${item.type}</span>
         <button class="icon-button remove-btn" aria-label="Remove">×</button>
       </div>
-      <div>${item.text}</div>
+      <div class="difficult-text">${item.text}</div>
     `;
 
     const removeBtn = li.querySelector(".remove-btn");
     removeBtn.addEventListener("click", (e) => {
       e.stopPropagation();
       if (item.type === "Story") {
-        chState.difficultStoryIds = chState.difficultStoryIds.filter(
-          (x) => x !== item.id
-        );
+        chState.difficultStoryIds = chState.difficultStoryIds.filter((x) => x !== item.id);
       } else {
-        chState.difficultQuestionIds = chState.difficultQuestionIds.filter(
-          (x) => x !== item.id
-        );
+        chState.difficultQuestionIds = chState.difficultQuestionIds.filter((x) => x !== item.id);
       }
       saveState();
       renderDifficultMode(chapter, chState);

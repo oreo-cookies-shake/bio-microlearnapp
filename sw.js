@@ -1,5 +1,5 @@
-// Change the v9 to v10 to force your phone to update!
-const CACHE_NAME = "microlearn-bio-v35"; 
+// Bump the version to force PWAs to update on phones.
+const CACHE_NAME = "microlearn-bio-v36";
 
 const ASSETS = [
   "./",
@@ -13,31 +13,20 @@ const ASSETS = [
   "./manifest.json"
 ];
 
-// Install the Service Worker
 self.addEventListener("install", (event) => {
-  self.skipWaiting(); // Force update immediately
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
-  );
+  self.skipWaiting();
+  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)));
 });
 
-// Clean up old versions
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
-      Promise.all(
-        keys.map((k) => {
-          if (k !== CACHE_NAME) return caches.delete(k);
-        })
-      )
+      Promise.all(keys.map((k) => (k !== CACHE_NAME ? caches.delete(k) : undefined)))
     )
   );
   self.clients.claim();
 });
 
-// Serve files
 self.addEventListener("fetch", (event) => {
-  event.respondWith(
-    fetch(event.request).catch(() => caches.match(event.request))
-  );
+  event.respondWith(fetch(event.request).catch(() => caches.match(event.request)));
 });

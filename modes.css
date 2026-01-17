@@ -1,5 +1,5 @@
 /* =====================
-   6) Story mode bubbles
+   Story mode bubbles
    ===================== */
 .mode-panel {
   position: relative;
@@ -13,8 +13,11 @@
   padding: 8px 0 0;
 }
 
+/* Left-aligned message bubbles (like iMessage, one-sided) */
 .bubble {
   padding: 18px 18px;
+  width: min(640px, 100%);
+  margin-right: auto;
 }
 
 .bubble-meta {
@@ -26,9 +29,10 @@
 .bubble-text {
   font-size: 18px;
   line-height: 1.35;
+  margin: 0;
 }
 
-/* remove legacy tails/triangles (safari + desktop) */
+/* Remove legacy tails/triangles (safari + desktop) */
 .bubble::before,
 .bubble::after,
 .qa-card::before,
@@ -38,17 +42,19 @@
 }
 
 /* =====================
-   7) Question mode
+   Question mode
    ===================== */
 .qa-wrapper {
   display: flex;
   flex-direction: column;
+  align-items: center; /* centered cards */
   gap: 14px;
   padding: 8px 0 0;
 }
 
 .qa-card {
   padding: 18px 18px;
+  width: min(640px, 100%);
 }
 
 .qa-meta {
@@ -65,12 +71,3 @@
 .qa-answer {
   background: var(--surface-2);
 }
-
-/* the in-between "Show answer" button is a direct child of .qa-wrapper */
-.qa-wrapper > .btn.btn-primary {
-  width: min(520px, 70%);
-  min-height: 38px;             /* ~30% smaller than main buttons */
-  padding: 10px 14px;
-  margin: 8px auto 0;
-}
-

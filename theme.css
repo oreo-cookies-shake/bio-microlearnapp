@@ -1,20 +1,20 @@
 /* =====================
-   1) Theme tokens
+   Theme tokens
+   Pinterest-ish soft neumorphism (warm greys, not icy white)
    ===================== */
 :root {
-  /* ✅ Global layout + shape tokens (keep these!) */
+  /* Layout + shape */
   --maxw: 760px;
   --side-pad: 22px;
-  --bottom-pad: 170px;
+  --bottom-pad: 170px; /* keep enough space for the floating buttons */
 
   --radius-card: 28px;
   --radius-pill: 999px;
 
-  /* ✅ Shadow helpers used in base/components */
-  --shadow-soft: 0 18px 50px rgba(0, 0, 0, 0.35);
+  /* Tiny highlight line to make surfaces feel "real" */
   --highlight-line: inset 0 1px 0 rgba(255,255,255,0.06);
 
-  /* ✅ Progress gradient */
+  /* Progress gradient */
   --progress-start: #8FB5A6;
   --progress-end: #C2D2C3;
 
@@ -32,11 +32,10 @@
   --shadow-card: 14px 14px 28px rgba(0,0,0,0.60),
                  -14px -14px 28px rgba(255,255,255,0.03);
 
-  /* (optional press shadow if you use it elsewhere) */
-  --shadow-press: inset 2px 2px 10px rgba(0,0,0,0.55),
-                  inset -2px -2px 10px rgba(255,255,255,0.06);
+  --shadow-press: inset 6px 6px 12px rgba(0,0,0,0.55),
+                  inset -6px -6px 12px rgba(255,255,255,0.06);
 
-  --btn-bg: rgba(255,255,255,0.05);
+  --btn-bg: rgba(255,255,255,0.06);
   --btn-border: rgba(255,255,255,0.10);
   --btn-text: var(--text);
 
@@ -44,26 +43,27 @@
 }
 
 body.light {
-  /* LIGHT MODE – softer, more neutral neumorphism */
-  --bg: #E3E6EC;              /* background grey (like the Pinterest examples) */
-  --surface: #F1F3F8;         /* card face */
-  --surface-2: #E9ECF4;       /* pills / secondary surfaces */
+  /* ----------------------------
+     LIGHT MODE — warm, calm neumorphism
+     (closer to the Pinterest examples)
+     ---------------------------- */
+  --bg: #E7E6E2;      /* warm grey (not bright white) */
+  --surface: #F2F1EE; /* card face */
+  --surface-2: #EBEAE6;
 
   --text: #111827;
   --muted: rgba(17, 24, 39, 0.60);
-  --edge: rgba(255, 255, 255, 0.9);
+  --edge: rgba(17, 24, 39, 0.06);
 
-  /* Raised card shadow */
-  --shadow-card: 10px 10px 24px rgba(163, 177, 198, 0.55),
-                 -10px -10px 24px rgba(255, 255, 255, 0.9);
+  --shadow-card: 10px 10px 22px rgba(167, 173, 177, 0.55),
+                 -10px -10px 22px rgba(255, 255, 255, 0.85);
 
-  /* Pressed-in shadow (for active tabs etc.) */
-  --shadow-press: inset 6px 6px 12px rgba(163, 177, 198, 0.55),
-                  inset -6px -6px 12px rgba(255, 255, 255, 0.9);
+  --shadow-press: inset 6px 6px 12px rgba(167, 173, 177, 0.55),
+                  inset -6px -6px 12px rgba(255, 255, 255, 0.85);
 
-  --btn-bg: #F1F3F8;
-  --btn-border: rgba(255, 255, 255, 0.7);
+  --btn-bg: var(--surface);
+  --btn-border: rgba(255,255,255,0.65);
   --btn-text: var(--text);
 
-  --nav-bg: rgba(227, 231, 238, 0.96);
+  --nav-bg: rgba(231, 230, 226, 0.92);
 }

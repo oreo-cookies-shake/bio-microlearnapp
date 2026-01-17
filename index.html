@@ -4,23 +4,19 @@
   <meta charset="UTF-8" />
   <title>Microlearn Bio</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#0f172a" />
+  <meta name="theme-color" content="#15171A" />
   <link rel="manifest" href="manifest.json" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="app">
     <header class="app-header">
-      <button class="icon-button back-button hidden" id="backButton" aria-label="Back">
-        ←
-      </button>
+      <button class="icon-button back-button hidden" id="backButton" aria-label="Back">←</button>
       <div class="header-title">
         <span id="headerSubtitle" class="header-subtitle"></span>
         <h1 id="headerTitle" class="header-main"></h1>
       </div>
-      <button class="icon-button" id="themeToggle" aria-label="Toggle theme">
-        ☾
-      </button>
+      <button class="icon-button" id="themeToggle" aria-label="Toggle theme">☾</button>
     </header>
 
     <main class="app-main">
@@ -65,35 +61,31 @@
         <!-- Story mode content -->
         <div id="storyMode" class="mode-panel active">
           <div id="storyFeed" class="bubble-feed"></div>
-          <div class="bottom-bar">
-            <button id="storyMarkDifficult" class="btn btn-ghost">
-              Still confusing
-            </button>
-            <button id="storyNext" class="btn btn-primary">
-              Next
-            </button>
-          </div>
         </div>
 
         <!-- Question mode content -->
         <div id="questionsMode" class="mode-panel hidden">
-          <div id="questionArea" class="qa-wrapper">
-            <!-- Question + answer will be injected here -->
-          </div>
+          <div id="questionArea" class="qa-wrapper"></div>
         </div>
 
         <!-- Difficult list content -->
         <div id="difficultMode" class="mode-panel hidden">
           <div id="difficultEmpty" class="empty-state">
-            Nothing here yet. Mark items as “Still confusing” to build your list.
+            Nothing here yet. Tap the <span aria-hidden="true">📘</span> button to save anything you find difficult.
           </div>
           <ul id="difficultList" class="difficult-list"></ul>
+        </div>
+
+        <!-- Floating actions (Story + Questions only) -->
+        <div id="actionDock" class="action-dock hidden" aria-label="Actions">
+          <button id="actionLeft" class="fab fab--circle" aria-label="Add to Difficult" title="Add to Difficult">📘</button>
+          <button id="actionRight" class="fab fab--circle fab--primary" aria-label="OK" title="OK">OK</button>
         </div>
       </section>
     </main>
   </div>
 
-  <div id="toast" class="toast hidden"></div>
+  <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 
   <script src="script.js" defer></script>
 </body>

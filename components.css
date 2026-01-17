@@ -1,45 +1,31 @@
 /* =====================
-   8) Buttons + bottom bars
+   Buttons + controls
    ===================== */
+
+/* Generic pill button (kept for future use) */
 .btn {
   border: 1px solid var(--btn-border);
   border-radius: var(--radius-pill);
   background: var(--btn-bg);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
   color: var(--btn-text);
   padding: 14px 18px;
   min-height: 56px;
   font-size: 16px;
   cursor: pointer;
-  box-shadow: var(--shadow-card);
-  transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
+  box-shadow: var(--shadow-card), var(--highlight-line);
+  transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
-body.light .btn {
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
+.btn:active {
+  transform: translateY(1px) scale(0.985);
+  box-shadow: var(--shadow-press), var(--highlight-line);
 }
 
-/* Light mode: avoid foggy/muddy blur */
-body.light .btn{
-  background: var(--surface);
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-}
-
-.btn:active { transform: scale(0.99); }
-
-.btn-ghost {
-  background: rgba(255,255,255,0.06);
-}
-
-body.light .btn-ghost {
-  background: rgba(255,255,255,0.32);
-}
-
-.btn-primary {
-  border-color: rgba(143, 168, 155, 0.45);
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  box-shadow: var(--shadow-press);
 }
 
 /* Icon buttons (back + theme toggle) */
@@ -52,16 +38,21 @@ body.light .btn-ghost {
   appearance: none;
   color: var(--text);
   background: var(--surface);
-  box-shadow: var(--shadow-card);
+  box-shadow: var(--shadow-card), var(--highlight-line);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
+  transition: transform 140ms ease, box-shadow 140ms ease;
 }
 
-/* Icon buttons (back + theme toggle) focus ring */
+.icon-button:active {
+  transform: translateY(1px) scale(0.985);
+  box-shadow: var(--shadow-press), var(--highlight-line);
+}
+
 .icon-button:focus { outline: none; }
 
 .icon-button:focus-visible {
@@ -69,34 +60,75 @@ body.light .btn-ghost {
   outline-offset: 3px;
 }
 
-/* bottom bars (story + question actions) */
-.bottom-bar,
-.qa-actions {
+/* =====================
+   Floating action buttons (Story + Questions)
+   ===================== */
+.action-dock {
   position: fixed;
-  left: 0;
-  right: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(var(--maxw), 100%);
   bottom: 0;
-  z-index: 20;
-  background: var(--nav-bg);
-  padding: 16px var(--side-pad) calc(16px + env(safe-area-inset-bottom));
+  z-index: 40;
+  padding: 14px var(--side-pad) calc(16px + env(safe-area-inset-bottom));
   display: flex;
-  gap: 12px;
+  align-items: center;
   justify-content: space-between;
+  gap: 14px;
+  pointer-events: none; /* only the buttons should be clickable */
 }
 
-.bottom-bar .btn,
-.qa-actions .btn {
-  flex: 1;
+.action-dock .fab { pointer-events: auto; }
+
+.fab {
+  border: 1px solid var(--btn-border);
+  background: var(--btn-bg);
+  color: var(--btn-text);
+  box-shadow: var(--shadow-card), var(--highlight-line);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  cursor: pointer;
+  transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease;
 }
 
-/* ensure dark mode bars are visible (requested) */
-body:not(.light) .bottom-bar,
-body:not(.light) .qa-actions {
-  background: #252525;
+.fab--circle {
+  width: 64px;
+  height: 64px;
+  border-radius: 999px;
+  font-size: 18px;
+}
+
+.fab--pill {
+  height: 64px;
+  border-radius: 999px;
+  padding: 0 22px;
+  min-width: 140px;
+  font-size: 16px;
+}
+
+.fab--primary {
+  border-color: rgba(143, 168, 155, 0.55);
+}
+
+.fab:active {
+  transform: translateY(1px) scale(0.985);
+  box-shadow: var(--shadow-press), var(--highlight-line);
+}
+
+.fab:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: var(--shadow-press);
 }
 
 /* =====================
-   9) Difficult mode
+   Difficult mode
    ===================== */
 .empty-state {
   margin-top: 12px;
@@ -104,7 +136,7 @@ body:not(.light) .qa-actions {
   color: var(--muted);
   background: var(--surface);
   border-radius: var(--radius-card);
-  box-shadow: var(--shadow-card);
+  box-shadow: var(--shadow-card), var(--highlight-line);
 }
 
 .difficult-list {
@@ -119,75 +151,77 @@ body:not(.light) .qa-actions {
 .difficult-item {
   padding: 16px 16px;
   display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.difficult-meta {
+  display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-}
-
-.difficult-type {
-  font-size: 12px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
   color: var(--muted);
-  margin-bottom: 6px;
+  font-size: 13px;
 }
 
-.difficult-text {
-  font-size: 15px;
-  line-height: 1.25;
-}
-
-.difficult-remove {
-  flex: 0 0 auto;
-  min-height: 40px;
-  padding: 10px 14px;
+.remove-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 18px;
 }
 
 /* =====================
-   10) Toast
+   Toast
    ===================== */
 .toast {
   position: fixed;
   left: 50%;
-  bottom: calc(96px + env(safe-area-inset-bottom));
-  transform: translateX(-50%);
+  transform: translateX(-50%) translateY(8px);
+  bottom: calc(108px + env(safe-area-inset-bottom));
   max-width: min(520px, calc(100vw - 40px));
   padding: 12px 14px;
   border-radius: var(--radius-pill);
   background: var(--surface);
   color: var(--text);
-  box-shadow: var(--shadow-card);
+  box-shadow: var(--shadow-card), var(--highlight-line);
   border: 1px solid rgba(255,255,255,0.12);
+  opacity: 0;
+  transition: opacity 160ms ease, transform 160ms ease;
 }
 
 body.light .toast {
   border-color: rgba(17,24,39,0.06);
 }
 
-/* === Force clickable cards to look airy again (home + chapter list) === */
+.toast.toast--show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* === Keep clickable cards airy (home + chapter list) === */
 .card-grid {
   display: grid;
-  gap: 16px;              /* space between AS/A2 cards */
+  gap: 16px;
   margin-top: 14px;
 }
 
-button.card,
-.card.card-select,
-.chapter-item,
-button.chapter-item {
-  background: var(--surface);
-  border: 1px solid var(--edge);
-  border-radius: var(--radius-card);
-  box-shadow: var(--shadow-card);
-  padding: 20px 18px;
-}
-
-/* Chapter list spacing (the 12.1 Energy row) */
-.chapter-list,
-#chapterList {
-  display: grid;
+.chapter-meta {
+  display: flex;
   gap: 14px;
-  margin-top: 14px;
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 13px;
 }
 
-
+.progress-circle {
+  min-width: 56px;
+  height: 38px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  color: var(--muted);
+  background: var(--surface-2);
+  box-shadow: var(--shadow-press);
+}
