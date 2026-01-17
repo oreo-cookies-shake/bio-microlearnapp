@@ -148,6 +148,7 @@ const difficultEmptyEl = qs("#difficultEmpty");
 const difficultListEl = qs("#difficultList");
 
 const themeToggleBtn = qs("#themeToggle");
+const appHeaderEl = document.querySelector(".app-header");
 const toastEl = qs("#toast");
 
 // Floating actions (Story + Questions)
@@ -201,11 +202,15 @@ function showScreen(name) {
   screenChapters.classList.add("hidden");
   screenChapter.classList.add("hidden");
 
+  // Header layout variant
+  appHeaderEl.classList.remove("header--home");
+
   if (name === "levels") {
     screenLevels.classList.remove("hidden");
     backButton.classList.add("hidden");
     headerSubtitleEl.textContent = "";
-    headerTitleEl.textContent = "Home";
+    headerTitleEl.textContent = "";
+    appHeaderEl.classList.add("header--home");
   } else if (name === "chapters") {
     screenChapters.classList.remove("hidden");
     backButton.classList.remove("hidden");
@@ -500,24 +505,19 @@ function renderQuestionMode(chapter, chState) {
   const idx = Math.min(chState.questionIndex, total - 1);
   const q = chapter.questions[idx];
 
-  const cardQ = document.createElement("div");
-  cardQ.className = "qa-card";
-  cardQ.innerHTML = `
+  const card = document.createElement("div");
+  card.className = "qa-card";
+  card.innerHTML = `
     <div class="qa-meta">Q${idx + 1} · Question</div>
     <div class="qa-text">${q.question}</div>
+    <div class="qa-answer hidden">
+      <div class="qa-meta">Answer</div>
+      <div class="qa-text">${q.answer}</div>
+    </div>
   `;
 
-  const answerCard = document.createElement("div");
-  answerCard.className = "qa-card qa-answer hidden";
-  answerCard.innerHTML = `
-    <div class="qa-meta">Answer</div>
-    <div class="qa-text">${q.answer}</div>
-  `;
-
-  currentAnswerEl = answerCard;
-
-  questionAreaEl.appendChild(cardQ);
-  questionAreaEl.appendChild(answerCard);
+  currentAnswerEl = card.querySelector(".qa-answer");
+  questionAreaEl.appendChild(card);
 }
 
 function handleQuestionPrimary(chapter, chState) {
@@ -605,7 +605,7 @@ function renderDifficultMode(chapter, chState) {
     li.innerHTML = `
       <div class="difficult-meta">
         <span class="difficult-tag">${item.type}</span>
-        <button class="icon-button remove-btn" aria-label="Remove">×</button>
+        <button class="icon-button icon-button--flat remove-btn" aria-label="Remove">×</button>
       </div>
       <div class="difficult-text">${item.text}</div>
     `;
