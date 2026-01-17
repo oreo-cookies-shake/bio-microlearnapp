@@ -204,6 +204,8 @@ function showScreen(name) {
 
   // Header layout variant
   appHeaderEl.classList.remove("header--home");
+  appHeaderEl.classList.remove("header--chapter");
+  appHeaderEl.classList.remove("header--list");
 
   if (name === "levels") {
     screenLevels.classList.remove("hidden");
@@ -213,11 +215,13 @@ function showScreen(name) {
     appHeaderEl.classList.add("header--home");
   } else if (name === "chapters") {
     screenChapters.classList.remove("hidden");
+    appHeaderEl.classList.add("header--list");
     backButton.classList.remove("hidden");
     headerTitleEl.textContent = DATA[appState.currentLevelId].label;
     headerSubtitleEl.textContent = "Choose a chapter";
   } else if (name === "chapter") {
     screenChapter.classList.remove("hidden");
+    appHeaderEl.classList.add("header--chapter");
     backButton.classList.remove("hidden");
     const chapter = getChapter(appState.currentLevelId, appState.currentChapterId);
     headerTitleEl.textContent = chapter.title;
@@ -441,9 +445,9 @@ function renderStoryMode(chapter, chState) {
   for (let i = 0; i < countToShow; i++) {
     const point = chapter.storyPoints[i];
     const bubble = document.createElement("div");
-    bubble.className = "bubble";
+    bubble.className = "bubble bubble--left";
     bubble.innerHTML = `
-      <div class="bubble-meta">Point ${i + 1} · Story</div>
+      <div class="bubble-num">${i + 1}</div>
       <p class="bubble-text">${point.text}</p>
     `;
     storyFeedEl.appendChild(bubble);

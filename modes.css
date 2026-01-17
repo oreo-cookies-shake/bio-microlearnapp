@@ -1,5 +1,5 @@
 /* =====================
-   Story mode bubbles
+   Story mode (chat bubbles)
    ===================== */
 .mode-panel {
   position: relative;
@@ -9,37 +9,60 @@
 .bubble-feed {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding: 14px 0 0;
+  gap: 12px;
+  padding: 12px 0 0;
 }
 
-/* Left-aligned message bubbles (like iMessage, one-sided) */
+/* One-sided, left-aligned chat bubbles */
 .bubble {
-  padding: 16px 16px;
-  width: min(620px, 100%);
+  position: relative;
+  align-self: flex-start;
+  width: fit-content;
+  max-width: min(520px, 86%);
   margin-right: auto;
+  padding: 14px 16px;
+  border-radius: 22px;
+  border-top-left-radius: 16px;
+  overflow: visible;
 }
 
-.bubble-meta {
-  font-size: 12.5px;
+.bubble-num {
+  font-size: 12px;
   font-weight: 650;
   color: var(--muted);
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .bubble-text {
-  font-size: 17px;
-  line-height: 1.45;
+  font-size: 16.5px;
+  line-height: 1.55;
   margin: 0;
 }
 
-/* Remove legacy tails/triangles (safari + desktop) */
-.bubble::before,
-.bubble::after,
-.qa-card::before,
-.qa-card::after {
-  content: none !important;
-  display: none !important;
+/* Tail (two-layer triangle to match fill + edge) */
+.bubble--left::before,
+.bubble--left::after {
+  content: "";
+  position: absolute;
+  top: 18px;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  pointer-events: none;
+}
+
+/* Edge behind */
+.bubble--left::before {
+  left: -11px;
+  border-width: 8px 11px 8px 0;
+  border-color: transparent var(--content-edge) transparent transparent;
+}
+
+/* Fill on top */
+.bubble--left::after {
+  left: -10px;
+  border-width: 8px 11px 8px 0;
+  border-color: transparent var(--content-bg) transparent transparent;
 }
 
 /* =====================

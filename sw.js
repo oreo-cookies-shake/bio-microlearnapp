@@ -1,5 +1,5 @@
 // Bump the version to force PWAs to update on phones.
-const CACHE_NAME = "microlearn-bio-v37";
+const CACHE_NAME = "microlearn-bio-v38";
 
 const ASSETS = [
   "./",

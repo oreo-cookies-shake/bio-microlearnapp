@@ -94,16 +94,12 @@ body {
   letter-spacing: -0.02em;
 }
 
-.tab {
-  flex: 1;
-  border: none;
-  border-radius: var(--radius-pill);
-  padding: 12px 10px;
-  background: transparent;        /* key */
-  color: var(--muted);
-  box-shadow: none;               /* key */
-  cursor: pointer;
+/* Chapter screen: slightly smaller title for cleaner hierarchy */
+.app-header.header--chapter .header-main {
+  font-size: 24px;
 }
+
+
 
 /* =====================
    4) Cards
@@ -265,22 +261,23 @@ button.card:focus-visible {
   color: var(--muted);
 }
 
+
 /* =====================
    5) Tabs + progress
    ===================== */
-/* Tab row */
-/* Mode row — minimal text + small dot indicator (cleaner than pills) */
+/* Mode row — clean text + small dot indicator */
 .tabs {
   display: flex;
   justify-content: space-between;
-  gap: 18px;
-  padding: 18px 0 8px;
+  align-items: flex-end;
+  gap: 0;
+  padding: 14px 0 6px;
   background: transparent;
   border: none;
   box-shadow: none;
 }
 
-/* Just in case there is any “wrapper pill” around the tabs */
+/* Ensure no wrapper pills/backgrounds */
 .tabs,
 .tab-row,
 .tab-group {
@@ -289,24 +286,17 @@ button.card:focus-visible {
   box-shadow: none !important;
 }
 
-body.light .tab{
-  background: var(--surface-2);
-  color: var(--muted);
-}
-body.light .tab.active{
-  background: var(--surface);
-  color: var(--text);
-}
-
 .tab {
   flex: 1;
   position: relative;
   border: none;
   background: transparent;
+  border-radius: 0;
   color: var(--muted);
-  padding: 10px 6px 16px;
+  padding: 8px 6px 16px;
   cursor: pointer;
-  font-size: 16px;
+  text-align: center;
+  font-size: 18px;
   font-weight: 650;
   letter-spacing: -0.01em;
   -webkit-tap-highlight-color: transparent;
@@ -326,12 +316,11 @@ body.light .tab.active{
   position: absolute;
   left: 50%;
   bottom: 6px;
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 999px;
   background: var(--accent);
   transform: translateX(-50%);
-  box-shadow: none;
 }
 
 .progress-wrapper {
