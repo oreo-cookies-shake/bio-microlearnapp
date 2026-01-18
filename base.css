@@ -61,7 +61,7 @@ body {
   width: 100%;
   max-width: var(--maxw);
   margin: 0 auto;
-  padding: 18px var(--side-pad) 10px;
+  padding: 14px var(--side-pad) 8px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -83,7 +83,7 @@ body {
 
 .header-subtitle {
   display: block;
-  font-size: 14px;
+  font-size: 12px;
   color: var(--muted);
   margin-bottom: 4px;
 }
@@ -96,7 +96,7 @@ body {
 
 /* Chapter screen: slightly smaller title for cleaner hierarchy */
 .app-header.header--chapter .header-main {
-  font-size: 24px;
+  font-size: 20px;
 }
 
 
@@ -147,7 +147,7 @@ button.card {
 
 .card h3 {
   margin: 0 0 6px;
-  font-size: 18px;
+  font-size: 14px;
 }
 
 .card p {
@@ -246,18 +246,18 @@ button.card:focus-visible {
 }
 
 .card-chapter-title {
-  font-size: 18px;
+  font-size: 14px;
   font-weight: 600;
 }
 
 .card-chapter-progress {
-  font-size: 14px;
+  font-size: 12px;
   color: var(--muted);
 }
 
 .card-chapter-sub {
   margin-top: 8px;
-  font-size: 14px;
+  font-size: 12px;
   color: var(--muted);
 }
 
@@ -271,7 +271,7 @@ button.card:focus-visible {
   justify-content: space-between;
   align-items: flex-end;
   gap: 0;
-  padding: 14px 0 6px;
+  padding: 10px 0 4px;
   background: transparent;
   border: none;
   box-shadow: none;
@@ -293,10 +293,10 @@ button.card:focus-visible {
   background: transparent;
   border-radius: 0;
   color: var(--muted);
-  padding: 8px 6px 16px;
+  padding: 6px 6px 12px;
   cursor: pointer;
   text-align: center;
-  font-size: 18px;
+  font-size: 14px;
   font-weight: 650;
   letter-spacing: -0.01em;
   -webkit-tap-highlight-color: transparent;
@@ -315,9 +315,9 @@ button.card:focus-visible {
   content: "";
   position: absolute;
   left: 50%;
-  bottom: 6px;
-  width: 7px;
-  height: 7px;
+  bottom: 5px;
+  width: 5px;
+  height: 5px;
   border-radius: 999px;
   background: var(--accent);
   transform: translateX(-50%);
@@ -328,17 +328,17 @@ button.card:focus-visible {
   grid-template-columns: auto 1fr;
   align-items: center;
   gap: 12px;
-  padding: 4px 0 18px;
+  padding: 2px 0 12px;
 }
 
 .progress-label {
-  font-size: 14px;
+  font-size: 12px;
   color: var(--muted);
   min-width: 54px;
 }
 
 .progress-bar {
-  height: 8px;
+  height: 6px;
   border-radius: 999px;
   background: rgba(127, 140, 152, 0.14);
   overflow: hidden;

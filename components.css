@@ -9,8 +9,8 @@
   background: var(--btn-bg);
   color: var(--btn-text);
   padding: 14px 18px;
-  min-height: 56px;
-  font-size: 16px;
+  min-height: 54px;
+  font-size: 15px;
   cursor: pointer;
   box-shadow: var(--shadow-card), var(--highlight-line);
   transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease;
@@ -82,7 +82,7 @@
   width: min(var(--maxw), 100%);
   bottom: 0;
   z-index: 40;
-  padding: 14px var(--side-pad) calc(16px + env(safe-area-inset-bottom));
+  padding: 10px var(--side-pad) calc(12px + env(safe-area-inset-bottom));
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -109,19 +109,20 @@
 }
 
 .fab--circle {
-  width: 64px;
-  height: 64px;
+  width: 60px;
+  height: 60px;
   border-radius: 999px;
   font-size: 18px;
 }
 
 .fab--pill {
-  height: 64px;
+  height: 60px;
   border-radius: 999px;
-  padding: 0 22px;
-  min-width: 140px;
-  font-size: 16px;
+  padding: 0 16px;
+  min-width: 104px;
+  font-size: 14px;
 }
+
 
 .fab--primary {
   border-color: rgba(143, 181, 166, 0.55);
@@ -144,11 +145,8 @@
   stroke: var(--accent);
 }
 
-/* Secondary FAB (left book) — quieter + slightly smaller */
+/* Secondary FAB (left book) */
 .fab--secondary {
-  width: 56px;
-  height: 56px;
-  font-size: 16px;
   opacity: 0.95;
 }
 
@@ -238,7 +236,7 @@
 }
 
 .difficult-text {
-  font-size: 16px;
+  font-size: 15px;
   line-height: 1.45;
 }
 

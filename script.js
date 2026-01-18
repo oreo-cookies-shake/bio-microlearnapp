@@ -160,6 +160,25 @@ const actionRightBtn = qs("#actionRight");
 let questionRevealed = false;
 let currentAnswerEl = null;
 
+const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function scrollToLatestContent() {
+  // Keep the newest card/bubble visible after advancing.
+  const behavior = prefersReducedMotion ? "auto" : "smooth";
+  if (screenChapter.classList.contains("hidden")) return;
+
+  if (appState.currentMode === "story") {
+    const last = storyFeedEl?.lastElementChild?.lastElementChild || storyFeedEl?.lastElementChild;
+    if (last) last.scrollIntoView({ block: "end", behavior });
+  }
+
+  if (appState.currentMode === "questions") {
+    const wrapper = questionAreaEl?.firstElementChild;
+    const last = wrapper?.lastElementChild;
+    if (last) last.scrollIntoView({ block: "end", behavior });
+  }
+}
+
 // ---------- Toast ----------
 
 let toastTimeout = null;
@@ -285,6 +304,7 @@ function renderChapters() {
       setActiveMode(appState.currentMode);
       showScreen("chapter");
       renderCurrentMode();
+  requestAnimationFrame(scrollToLatestContent);
     });
 
     chaptersListEl.appendChild(card);
@@ -315,6 +335,7 @@ function setActiveMode(mode) {
   }
 
   renderCurrentMode();
+  requestAnimationFrame(scrollToLatestContent);
 }
 
 modeTabs.addEventListener("click", (e) => {
@@ -437,26 +458,29 @@ actionRightBtn.addEventListener("click", () => {
 // ---------- Story mode ----------
 
 function renderStoryMode(chapter, chState) {
-  storyFeedEl.innerHTML = "";
+  const feed = document.createElement("div");
+  feed.className = "bubble-feed";
 
   const total = chapter.storyPoints.length;
-
   const countToShow = Math.min(chState.storyIndex, total);
-  for (let i = 0; i < countToShow; i++) {
-    const point = chapter.storyPoints[i];
+  const visible = chapter.storyPoints.slice(0, countToShow);
+
+  visible.forEach((p) => {
     const bubble = document.createElement("div");
     bubble.className = "bubble bubble--left";
     bubble.innerHTML = `
-      <div class="bubble-num">${i + 1}</div>
-      <p class="bubble-text">${point.text}</p>
+      <p class="bubble-text">${p.text}</p>
     `;
-    storyFeedEl.appendChild(bubble);
-  }
+    feed.appendChild(bubble);
+  });
 
-  // Scroll to the latest bubble
-  const last = storyFeedEl.lastElementChild;
-  if (last) last.scrollIntoView({ block: "end", behavior: "smooth" });
+  storyFeedEl.innerHTML = "";
+  storyFeedEl.appendChild(feed);
+
+  // auto scroll to latest bubble
+  requestAnimationFrame(scrollToLatestContent);
 }
+
 
 function advanceStory(chapter, chState) {
   const total = chapter.storyPoints.length;
@@ -487,42 +511,83 @@ function markCurrentStoryDifficult(chapter, chState) {
 
 // ---------- Question mode ----------
 
-function renderQuestionMode(chapter, chState) {
-  questionAreaEl.innerHTML = "";
-  currentAnswerEl = null;
-  questionRevealed = false;
-
-  const total = chapter.questions.length;
-  if (total === 0) {
-    questionAreaEl.innerHTML =
-      '<div class="empty-state">No questions yet for this chapter.</div>';
-    return;
-  }
-
-  // Finished all questions
-  if (chState.questionIndex >= total) {
-    questionAreaEl.innerHTML =
-      '<div class="empty-state">You\'re done! Switch to <b>Difficult</b> to revise the items you saved.</div>';
-    return;
-  }
-
-  const idx = Math.min(chState.questionIndex, total - 1);
-  const q = chapter.questions[idx];
-
+function makeQuestionCard(q, index, showAnswer) {
   const card = document.createElement("div");
   card.className = "qa-card";
-  card.innerHTML = `
-    <div class="qa-meta">Q${idx + 1} · Question</div>
-    <div class="qa-text">${q.question}</div>
-    <div class="qa-answer hidden">
-      <div class="qa-meta">Answer</div>
-      <div class="qa-text">${q.answer}</div>
-    </div>
-  `;
 
-  currentAnswerEl = card.querySelector(".qa-answer");
-  questionAreaEl.appendChild(card);
+  // Small label (keeps orientation but doesn't dominate)
+  const meta = document.createElement("div");
+  meta.className = "qa-meta";
+  meta.textContent = `Q${index + 1}`;
+
+  const qText = document.createElement("div");
+  qText.className = "qa-text";
+  qText.textContent = q.question;
+
+  card.appendChild(meta);
+  card.appendChild(qText);
+
+  if (q.answer) {
+    const ans = document.createElement("div");
+    ans.className = "qa-answer";
+    ans.textContent = q.answer;
+
+    if (!showAnswer) {
+      ans.classList.add("hidden");
+    }
+
+    card.appendChild(ans);
+
+    // If this is the current (unrevealed) question, wire up global pointer
+    if (!showAnswer) {
+      currentAnswerEl = ans;
+    }
+  }
+
+  return card;
 }
+
+function renderQuestionMode(chapter, chState) {
+  const wrapper = document.createElement("div");
+  wrapper.className = "qa-wrapper";
+
+  const total = chapter.questions.length;
+
+  if (total === 0) {
+    questionAreaEl.innerHTML = "";
+    questionAreaEl.appendChild(wrapper);
+    return;
+  }
+
+  // Build a scrollable feed:
+  // - all completed questions stay visible (with answers)
+  // - current question appears at the bottom (answer hidden until Reveal)
+  questionRevealed = false;
+  currentAnswerEl = null;
+
+  const completedCount = Math.min(chState.questionIndex, total);
+
+  for (let i = 0; i < completedCount; i++) {
+    const q = chapter.questions[i];
+    wrapper.appendChild(makeQuestionCard(q, i, true));
+  }
+
+  if (chState.questionIndex < total) {
+    const q = chapter.questions[chState.questionIndex];
+    wrapper.appendChild(makeQuestionCard(q, chState.questionIndex, false));
+  } else {
+    const done = document.createElement("div");
+    done.className = "qa-card";
+    done.innerHTML = `<div class="qa-meta">Done</div><div class="qa-text">You’ve reached the end of this set.</div>`;
+    wrapper.appendChild(done);
+  }
+
+  questionAreaEl.innerHTML = "";
+  questionAreaEl.appendChild(wrapper);
+
+  requestAnimationFrame(scrollToLatestContent);
+}
+
 
 function handleQuestionPrimary(chapter, chState) {
   const total = chapter.questions.length;
