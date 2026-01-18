@@ -5,67 +5,39 @@ const DATA = {
     id: "as",
     label: "AS Level",
     chapters: [
-      {
-        id: "as-12-1",
-        title: "12.1 Energy",
-        meta: "Sample · replace with real",
-        storyPoints: [
-          {
-            id: "S1",
-            text: "ATP is the immediate energy source for cell processes."
-          },
-          {
-            id: "S2",
-            text: "ATP releases small, manageable amounts of energy when hydrolysed."
-          },
-          {
-            id: "S3",
-            text: "ATP is not used for long-term energy storage in cells."
-          }
-        ],
-        questions: [
-          {
-            id: "Q1",
-            question: "Name the immediate energy source in cells.",
-            answer: "ATP"
-          },
-          {
-            id: "Q2",
-            question: "Where in the cell does glycolysis occur?",
-            answer: "In the cytoplasm."
-          },
-          {
-            id: "Q3",
-            question: "What happens to ATP when it releases energy?",
-            answer:
-              "It is hydrolysed to ADP and inorganic phosphate (Pi)."
-          }
-        ]
-      }
+      { id: "as-1", title: "1 Cell structure", storyPoints: [], questions: [] },
+      { id: "as-2", title: "2 Biological molecules", storyPoints: [], questions: [] },
+      { id: "as-3", title: "3 Enzymes", storyPoints: [], questions: [] },
+      { id: "as-4", title: "4 Cell membranes and transport", storyPoints: [], questions: [] },
+      { id: "as-5", title: "5 The mitotic cell cycle", storyPoints: [], questions: [] },
+      { id: "as-6", title: "6 Nucleic acids and protein synthesis", storyPoints: [], questions: [] },
+      { id: "as-7", title: "7 Transport in plants", storyPoints: [], questions: [] },
+      { id: "as-8", title: "8 Transport in mammals", storyPoints: [], questions: [] },
+      { id: "as-9", title: "9 Gas exchange", storyPoints: [], questions: [] },
+      { id: "as-10", title: "10 Infectious diseases", storyPoints: [], questions: [] },
+      { id: "as-11", title: "11 Immunity", storyPoints: [], questions: [] },
     ]
   },
   a2: {
     id: "a2",
     label: "A2 Level",
     chapters: [
-      {
-        id: "a2-18-1",
-        title: "18.1 Respiration overview",
-        meta: "Sample A2 chapter",
-        storyPoints: [
-          {
-            id: "S1",
-            text: "Respiration releases energy by the breakdown of organic molecules."
-          }
-        ],
-        questions: [
-          {
-            id: "Q1",
-            question: "Which molecule links glycolysis to the Krebs cycle?",
-            answer: "Acetyl CoA."
-          }
-        ]
-      }
+      { id: "a2-12", title: "12 Energy and respiration", storyPoints: [
+    { id: "a2-12-s1", text: "ATP is the immediate energy source for cell processes." },
+    { id: "a2-12-s2", text: "ATP releases small, manageable amounts of energy when hydrolysed." },
+    { id: "a2-12-s3", text: "ATP is not used for long-term energy storage in cells." }
+  ], questions: [
+    { id: "a2-12-q1", question: "Name the immediate energy source in cells.", answer: "ATP." },
+    { id: "a2-12-q2", question: "Where in the cell does glycolysis occur?", answer: "In the cytoplasm." },
+    { id: "a2-12-q3", question: "What happens to ATP when it releases energy?", answer: "It is hydrolysed to ADP and inorganic phosphate (Pi)." }
+  ] },
+      { id: "a2-13", title: "13 Photosynthesis", storyPoints: [], questions: [] },
+      { id: "a2-14", title: "14 Homeostasis", storyPoints: [], questions: [] },
+      { id: "a2-15", title: "15 Control and coordination", storyPoints: [], questions: [] },
+      { id: "a2-16", title: "16 Inheritance", storyPoints: [], questions: [] },
+      { id: "a2-17", title: "17 Selection and evolution", storyPoints: [], questions: [] },
+      { id: "a2-18", title: "18 Classification, biodiversity and conservation", storyPoints: [], questions: [] },
+      { id: "a2-19", title: "19 Genetic technology", storyPoints: [], questions: [] },
     ]
   }
 };
@@ -278,9 +250,16 @@ function renderChapters() {
 
   level.chapters.forEach((chapter) => {
     const chState = ensureChapterState(chapter.id);
-    const totalItems = (chapter.storyPoints?.length || 0) + (chapter.questions?.length || 0);
-    const doneItems = chState.storyIndex + chState.questionIndex;
+    const totalStory = chapter.storyPoints?.length || 0;
+    const totalQ = chapter.questions?.length || 0;
+    const totalItems = totalStory + totalQ;
+
+    const shownStory = Math.min(chState.storyIndex, totalStory);
+    const doneItems = shownStory + chState.questionIndex;
     const pct = totalItems > 0 ? Math.round((doneItems / totalItems) * 100) : 0;
+
+    const isSoon = totalItems === 0;
+    const badge = isSoon ? "Soon" : `${pct}%`;
 
     const card = document.createElement("button");
     card.className = "card card-chapter";
@@ -289,22 +268,26 @@ function renderChapters() {
     card.innerHTML = `
       <div class="card-chapter-header">
         <div class="card-chapter-title">${chapter.title}</div>
-        <div class="progress-circle">${pct}%</div>
+        <div class="progress-circle">${badge}</div>
       </div>
       <div class="chapter-meta">
-        <span>${chapter.storyPoints.length} story points</span>
-        <span>${chapter.questions.length} questions</span>
+        ${isSoon ? "<span>Coming soon</span>" : `<span>${totalStory} story points</span><span>${totalQ} questions</span>`}
       </div>
     `;
 
     card.addEventListener("click", () => {
+      if (isSoon) {
+        showToast("Coming soon");
+        return;
+      }
+
       appState.currentChapterId = chapter.id;
       appState.currentMode = appState.currentMode || "story";
       saveState();
       setActiveMode(appState.currentMode);
       showScreen("chapter");
       renderCurrentMode();
-  requestAnimationFrame(scrollToLatestContent);
+      requestAnimationFrame(scrollToLatestContent);
     });
 
     chaptersListEl.appendChild(card);
@@ -369,7 +352,15 @@ function renderCurrentMode() {
     renderQuestionMode(chapter, chState);
   } else if (appState.currentMode === "difficult") {
     const totalHard = chState.difficultStoryIds.length + chState.difficultQuestionIds.length;
-    updateProgress(totalHard, totalHard || 1);
+
+    // More meaningful label when there's nothing saved yet
+    if (totalHard === 0) {
+      progressLabel.textContent = "0 saved";
+      progressFill.style.width = "0%";
+    } else {
+      updateProgress(totalHard, totalHard);
+    }
+
     renderDifficultMode(chapter, chState);
   }
 
@@ -377,8 +368,14 @@ function renderCurrentMode() {
 }
 
 function updateProgress(current, total) {
+  if (total === 0) {
+    progressLabel.textContent = "—";
+    progressFill.style.width = "0%";
+    return;
+  }
+
   progressLabel.textContent = `${current} / ${total}`;
-  const pct = total > 0 ? (current / total) * 100 : 0;
+  const pct = (current / total) * 100;
   progressFill.style.width = `${pct}%`;
 }
 
@@ -458,10 +455,25 @@ actionRightBtn.addEventListener("click", () => {
 // ---------- Story mode ----------
 
 function renderStoryMode(chapter, chState) {
+  const total = chapter.storyPoints.length;
+
+  if (total === 0) {
+    const feed = document.createElement("div");
+    feed.className = "bubble-feed";
+
+    const bubble = document.createElement("div");
+    bubble.className = "bubble bubble--left";
+    bubble.innerHTML = `<p class="bubble-text">Coming soon.</p>`;
+
+    feed.appendChild(bubble);
+    storyFeedEl.innerHTML = "";
+    storyFeedEl.appendChild(feed);
+    return;
+  }
+
   const feed = document.createElement("div");
   feed.className = "bubble-feed";
 
-  const total = chapter.storyPoints.length;
   const countToShow = Math.min(chState.storyIndex, total);
   const visible = chapter.storyPoints.slice(0, countToShow);
 
@@ -554,6 +566,11 @@ function renderQuestionMode(chapter, chState) {
   const total = chapter.questions.length;
 
   if (total === 0) {
+    const done = document.createElement("div");
+    done.className = "qa-card";
+    done.innerHTML = `<div class="qa-meta">Coming soon</div><div class="qa-text">Questions for this chapter are being added.</div>`;
+    wrapper.appendChild(done);
+
     questionAreaEl.innerHTML = "";
     questionAreaEl.appendChild(wrapper);
     return;

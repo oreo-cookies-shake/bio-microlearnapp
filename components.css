@@ -278,7 +278,7 @@
   box-shadow: 0 14px 30px rgba(17, 24, 39, 0.14);
 
   /* optional but makes it feel “premium” */
-  backdrop-filter: blur(0px);
+  backdrop-filter: blur(10px);
 
   opacity: 0;
   transition: opacity 160ms ease, transform 160ms ease;
