@@ -24,7 +24,7 @@ body {
 }
 
 :focus-visible {
-  outline: 2px solid rgba(143, 168, 155, 0.55);
+  outline: 2px solid rgba(143, 181, 166, 0.55);
   outline-offset: 3px;
   border-radius: 999px;
 }
@@ -50,7 +50,8 @@ body {
 .screen {
   /* JS shows/hides screens by toggling the `.hidden` class (not `.active`) */
   display: block;
-  padding-bottom: calc(var(--bottom-pad) + env(safe-area-inset-bottom));
+  /* Keep general screens airy, without reserving space for the chapter action dock */
+  padding-bottom: calc(40px + env(safe-area-inset-bottom));
 }
 
 /* =====================
@@ -60,18 +61,19 @@ body {
   width: 100%;
   max-width: var(--maxw);
   margin: 0 auto;
-  padding: 18px var(--side-pad) 10px;
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  background: var(--nav-bg);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border-bottom: 1px solid var(--edge);
+  padding: 10px var(--side-pad) 6px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 14px;
+  gap: 12px;
+}
+
+/* Home screen header: keep it minimal (just the theme toggle) */
+.app-header.header--home {
+  justify-content: flex-end;
+}
+.app-header.header--home .header-title {
+  display: none;
 }
 
 .header-title {
@@ -81,39 +83,45 @@ body {
 
 .header-subtitle {
   display: block;
-  font-size: 14px;
+  font-size: 11px;
   color: var(--muted);
   margin-bottom: 4px;
 }
 
 .header-main {
   margin: 0;
-  font-size: 28px;
+  font-size: 26px;
   letter-spacing: -0.02em;
 }
 
-.tab {
-  flex: 1;
-  border: none;
-  border-radius: var(--radius-pill);
-  padding: 12px 10px;
-  background: transparent;        /* key */
-  color: var(--muted);
-  box-shadow: none;               /* key */
-  cursor: pointer;
+/* Chapter screen: slightly smaller title for cleaner hierarchy */
+.app-header.header--chapter .header-main {
+  font-size: 18px;
 }
+
+
 
 /* =====================
    4) Cards
    ===================== */
-.card,
-.bubble,
-.qa-card,
-.difficult-item {
+/* Clickable cards keep neumorphism (levels + chapters) */
+.card {
   background: var(--surface);
   border: 1px solid var(--edge);
   border-radius: var(--radius-card);
-  box-shadow: var(--shadow-surface), var(--highlight-line);
+  box-shadow: var(--shadow-card), var(--highlight-line);
+  -webkit-tap-highlight-color: transparent;
+  transform: translateZ(0);
+}
+
+/* Content should feel like content: flatter surfaces with a clean edge */
+.bubble,
+.qa-card,
+.difficult-item {
+  background: var(--content-bg);
+  border: 1px solid var(--content-edge);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-soft);
   -webkit-tap-highlight-color: transparent;
   transform: translateZ(0);
 }
@@ -139,7 +147,12 @@ button.card {
 
 .card h3 {
   margin: 0 0 6px;
-  font-size: 18px;
+  font-size: 15px;
+}
+
+/* Make AS / A2 on the home screen feel more tappable */
+.card-select h3 {
+  font-size: 16px;
 }
 
 .card p {
@@ -161,7 +174,7 @@ button.card {
 
   border: 1px solid var(--edge);
   border-radius: var(--radius-card);
-  box-shadow: var(--shadow-surface);
+  box-shadow: var(--shadow-card), var(--highlight-line);
 
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
@@ -187,7 +200,7 @@ button.card:focus {
   outline: none;
 }
 button.card:focus-visible {
-  outline: 2px solid rgba(143, 168, 155, 0.45);
+  outline: 2px solid rgba(143, 181, 166, 0.45);
   outline-offset: 3px;
 }
 
@@ -238,36 +251,38 @@ button.card:focus-visible {
 }
 
 .card-chapter-title {
-  font-size: 18px;
+  font-size: 14px;
   font-weight: 600;
 }
 
 .card-chapter-progress {
-  font-size: 14px;
+  font-size: 12px;
   color: var(--muted);
 }
 
 .card-chapter-sub {
   margin-top: 8px;
-  font-size: 14px;
+  font-size: 12px;
   color: var(--muted);
 }
+
 
 /* =====================
    5) Tabs + progress
    ===================== */
-/* Tab row */
+/* Mode row — clean text + small dot indicator */
 .tabs {
   display: flex;
-  gap: 10px;
-  padding: 16px 0 12px;   /* extra top padding so it breathes above the progress bar */
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 0;
+  padding: 6px 0 2px;
   background: transparent;
-  border-radius: 0;
   border: none;
   box-shadow: none;
 }
 
-/* Just in case there is any “wrapper pill” around the tabs */
+/* Ensure no wrapper pills/backgrounds */
 .tabs,
 .tab-row,
 .tab-group {
@@ -276,63 +291,63 @@ button.card:focus-visible {
   box-shadow: none !important;
 }
 
-body.light .tab{
-  background: var(--surface-2);
-  color: var(--muted);
-}
-body.light .tab.active{
-  background: var(--surface);
-  color: var(--text);
-}
-
 .tab {
   flex: 1;
+  position: relative;
   border: none;
-  border-radius: var(--radius-pill);
-  padding: 12px 10px;
-  background: var(--surface-2);
+  background: transparent;
+  border-radius: 0;
   color: var(--muted);
-  box-shadow: var(--shadow-card); /* RAISED default */
+  padding: 4px 6px 10px;
   cursor: pointer;
-  opacity: 0.92;
-  transition: box-shadow 120ms, background 120ms, color 120ms, opacity 120ms;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 120ms ease, transform 120ms ease;
 }
 
-/* On hover, a tiny lift */
-.tab:hover {
-  transform: translateY(-1px);
-  opacity: 1;
+.tab:active {
+  transform: translateY(1px);
 }
 
-/* The active mode: pressed-in look */
 .tab.active {
-  background: var(--surface);
-  color: var(--text);
-  box-shadow: var(--shadow-press); /* PRESSED */
-  transform: none;
-  opacity: 1;
+  color: var(--accent);
+}
+
+.tab.active::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 4px;
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--accent);
+  transform: translateX(-50%);
 }
 
 .progress-wrapper {
   display: grid;
   grid-template-columns: auto 1fr;
   align-items: center;
-  gap: 12px;
-  padding:10px 0 22px;
+  gap: 10px;
+  padding: 2px 0 8px;
 }
 
 .progress-label {
-  font-size: 14px;
+  font-size: 12px;
   color: var(--muted);
   min-width: 54px;
 }
 
 .progress-bar {
-  height: 10px;
+  height: 6px;
   border-radius: 999px;
-  background: rgba(127, 140, 152, 0.18);
+  background: rgba(127, 140, 152, 0.14);
   overflow: hidden;
-  box-shadow: inset 2px 2px 6px rgba(0,0,0,0.08);
+  box-shadow: none;
 }
 
 body.light .progress-bar {
