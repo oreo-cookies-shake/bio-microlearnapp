@@ -5,39 +5,67 @@ const DATA = {
     id: "as",
     label: "AS Level",
     chapters: [
-      { id: "as-1", title: "1 Cell structure", storyPoints: [], questions: [] },
-      { id: "as-2", title: "2 Biological molecules", storyPoints: [], questions: [] },
-      { id: "as-3", title: "3 Enzymes", storyPoints: [], questions: [] },
-      { id: "as-4", title: "4 Cell membranes and transport", storyPoints: [], questions: [] },
-      { id: "as-5", title: "5 The mitotic cell cycle", storyPoints: [], questions: [] },
-      { id: "as-6", title: "6 Nucleic acids and protein synthesis", storyPoints: [], questions: [] },
-      { id: "as-7", title: "7 Transport in plants", storyPoints: [], questions: [] },
-      { id: "as-8", title: "8 Transport in mammals", storyPoints: [], questions: [] },
-      { id: "as-9", title: "9 Gas exchange", storyPoints: [], questions: [] },
-      { id: "as-10", title: "10 Infectious diseases", storyPoints: [], questions: [] },
-      { id: "as-11", title: "11 Immunity", storyPoints: [], questions: [] },
+      {
+        id: "as-12-1",
+        title: "12.1 Energy",
+        meta: "Sample · replace with real",
+        storyPoints: [
+          {
+            id: "S1",
+            text: "ATP is the immediate energy source for cell processes."
+          },
+          {
+            id: "S2",
+            text: "ATP releases small, manageable amounts of energy when hydrolysed."
+          },
+          {
+            id: "S3",
+            text: "ATP is not used for long-term energy storage in cells."
+          }
+        ],
+        questions: [
+          {
+            id: "Q1",
+            question: "Name the immediate energy source in cells.",
+            answer: "ATP"
+          },
+          {
+            id: "Q2",
+            question: "Where in the cell does glycolysis occur?",
+            answer: "In the cytoplasm."
+          },
+          {
+            id: "Q3",
+            question: "What happens to ATP when it releases energy?",
+            answer:
+              "It is hydrolysed to ADP and inorganic phosphate (Pi)."
+          }
+        ]
+      }
     ]
   },
   a2: {
     id: "a2",
     label: "A2 Level",
     chapters: [
-      { id: "a2-12", title: "12 Energy and respiration", storyPoints: [
-    { id: "a2-12-s1", text: "ATP is the immediate energy source for cell processes." },
-    { id: "a2-12-s2", text: "ATP releases small, manageable amounts of energy when hydrolysed." },
-    { id: "a2-12-s3", text: "ATP is not used for long-term energy storage in cells." }
-  ], questions: [
-    { id: "a2-12-q1", question: "Name the immediate energy source in cells.", answer: "ATP." },
-    { id: "a2-12-q2", question: "Where in the cell does glycolysis occur?", answer: "In the cytoplasm." },
-    { id: "a2-12-q3", question: "What happens to ATP when it releases energy?", answer: "It is hydrolysed to ADP and inorganic phosphate (Pi)." }
-  ] },
-      { id: "a2-13", title: "13 Photosynthesis", storyPoints: [], questions: [] },
-      { id: "a2-14", title: "14 Homeostasis", storyPoints: [], questions: [] },
-      { id: "a2-15", title: "15 Control and coordination", storyPoints: [], questions: [] },
-      { id: "a2-16", title: "16 Inheritance", storyPoints: [], questions: [] },
-      { id: "a2-17", title: "17 Selection and evolution", storyPoints: [], questions: [] },
-      { id: "a2-18", title: "18 Classification, biodiversity and conservation", storyPoints: [], questions: [] },
-      { id: "a2-19", title: "19 Genetic technology", storyPoints: [], questions: [] },
+      {
+        id: "a2-18-1",
+        title: "18.1 Respiration overview",
+        meta: "Sample A2 chapter",
+        storyPoints: [
+          {
+            id: "S1",
+            text: "Respiration releases energy by the breakdown of organic molecules."
+          }
+        ],
+        questions: [
+          {
+            id: "Q1",
+            question: "Which molecule links glycolysis to the Krebs cycle?",
+            answer: "Acetyl CoA."
+          }
+        ]
+      }
     ]
   }
 };
@@ -79,17 +107,75 @@ function getChapter(levelId, chapterId) {
   return level.chapters.find((c) => c.id === chapterId);
 }
 
+function makeDifficultKey(type, id) {
+  return `${type}:${id}`;
+}
+
+function normalizeChapterState(st) {
+  if (!st || typeof st !== "object") return st;
+
+  if (typeof st.storyIndex !== "number" || st.storyIndex < 0) st.storyIndex = 0;
+  if (typeof st.questionIndex !== "number" || st.questionIndex < 0) st.questionIndex = 0;
+
+  if (!Array.isArray(st.difficultStoryIds)) st.difficultStoryIds = [];
+  if (!Array.isArray(st.difficultQuestionIds)) st.difficultQuestionIds = [];
+  if (!Array.isArray(st.difficultItems)) st.difficultItems = [];
+
+  if (!st.difficultUi || typeof st.difficultUi !== "object") st.difficultUi = {};
+  if (!st.difficultUi.view) st.difficultUi.view = "revise"; // "revise" | "list" | "session"
+
+  if (!st.difficultSessions || typeof st.difficultSessions !== "object") st.difficultSessions = {};
+  if (!st.difficultSessions.story) st.difficultSessions.story = null;
+  if (!st.difficultSessions.question) st.difficultSessions.question = null;
+
+  // Migrate legacy arrays -> unified ordered list
+  if (st.difficultItems.length === 0 && (st.difficultStoryIds.length || st.difficultQuestionIds.length)) {
+    for (const id of st.difficultStoryIds) {
+      st.difficultItems.push({ key: makeDifficultKey("story", id), type: "story", id });
+    }
+    for (const id of st.difficultQuestionIds) {
+      st.difficultItems.push({ key: makeDifficultKey("question", id), type: "question", id });
+    }
+  }
+
+  // De-dupe + sanitize
+  const seen = new Set();
+  st.difficultItems = st.difficultItems
+    .filter((it) => it && typeof it === "object" && it.type && it.id)
+    .map((it) => {
+      const type = it.type === "questions" ? "question" : it.type;
+      return { ...it, type, key: it.key || makeDifficultKey(type, it.id) };
+    })
+    .filter((it) => {
+      if (seen.has(it.key)) return false;
+      seen.add(it.key);
+      return true;
+    });
+
+  // Keep legacy arrays in sync (some UI uses them)
+  st.difficultStoryIds = st.difficultItems.filter((it) => it.type === "story").map((it) => it.id);
+  st.difficultQuestionIds = st.difficultItems.filter((it) => it.type === "question").map((it) => it.id);
+
+  return st;
+}
+
 function ensureChapterState(chapterId) {
   if (!appState.chapters[chapterId]) {
-    appState.chapters[chapterId] = {
+    appState.chapters[chapterId] = normalizeChapterState({
       storyIndex: 0, // how many story points have been shown
       questionIndex: 0, // current question index (0-based)
       difficultStoryIds: [],
-      difficultQuestionIds: []
-    };
+      difficultQuestionIds: [],
+      difficultItems: [],
+      difficultUi: { view: "revise" },
+      difficultSessions: { story: null, question: null }
+    });
+  } else {
+    appState.chapters[chapterId] = normalizeChapterState(appState.chapters[chapterId]);
   }
   return appState.chapters[chapterId];
 }
+
 
 // ---------- DOM helpers ----------
 
@@ -118,9 +204,12 @@ const questionAreaEl = qs("#questionArea");
 
 const difficultEmptyEl = qs("#difficultEmpty");
 const difficultListEl = qs("#difficultList");
+const difficultControlsEl = qs("#difficultControls");
+const difficultListViewEl = qs("#difficultListView");
+const difficultReviseViewEl = qs("#difficultReviseView");
+const difficultSessionViewEl = qs("#difficultSessionView");
 
 const themeToggleBtn = qs("#themeToggle");
-const appHeaderEl = document.querySelector(".app-header");
 const toastEl = qs("#toast");
 
 // Floating actions (Story + Questions)
@@ -131,25 +220,6 @@ const actionRightBtn = qs("#actionRight");
 // Question mode UI state (not persisted)
 let questionRevealed = false;
 let currentAnswerEl = null;
-
-const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-function scrollToLatestContent() {
-  // Keep the newest card/bubble visible after advancing.
-  const behavior = prefersReducedMotion ? "auto" : "smooth";
-  if (screenChapter.classList.contains("hidden")) return;
-
-  if (appState.currentMode === "story") {
-    const last = storyFeedEl?.lastElementChild?.lastElementChild || storyFeedEl?.lastElementChild;
-    if (last) last.scrollIntoView({ block: "end", behavior });
-  }
-
-  if (appState.currentMode === "questions") {
-    const wrapper = questionAreaEl?.firstElementChild;
-    const last = wrapper?.lastElementChild;
-    if (last) last.scrollIntoView({ block: "end", behavior });
-  }
-}
 
 // ---------- Toast ----------
 
@@ -193,26 +263,18 @@ function showScreen(name) {
   screenChapters.classList.add("hidden");
   screenChapter.classList.add("hidden");
 
-  // Header layout variant
-  appHeaderEl.classList.remove("header--home");
-  appHeaderEl.classList.remove("header--chapter");
-  appHeaderEl.classList.remove("header--list");
-
   if (name === "levels") {
     screenLevels.classList.remove("hidden");
     backButton.classList.add("hidden");
     headerSubtitleEl.textContent = "";
-    headerTitleEl.textContent = "";
-    appHeaderEl.classList.add("header--home");
+    headerTitleEl.textContent = "Home";
   } else if (name === "chapters") {
     screenChapters.classList.remove("hidden");
-    appHeaderEl.classList.add("header--list");
     backButton.classList.remove("hidden");
     headerTitleEl.textContent = DATA[appState.currentLevelId].label;
     headerSubtitleEl.textContent = "Choose a chapter";
   } else if (name === "chapter") {
     screenChapter.classList.remove("hidden");
-    appHeaderEl.classList.add("header--chapter");
     backButton.classList.remove("hidden");
     const chapter = getChapter(appState.currentLevelId, appState.currentChapterId);
     headerTitleEl.textContent = chapter.title;
@@ -250,16 +312,9 @@ function renderChapters() {
 
   level.chapters.forEach((chapter) => {
     const chState = ensureChapterState(chapter.id);
-    const totalStory = chapter.storyPoints?.length || 0;
-    const totalQ = chapter.questions?.length || 0;
-    const totalItems = totalStory + totalQ;
-
-    const shownStory = Math.min(chState.storyIndex, totalStory);
-    const doneItems = shownStory + chState.questionIndex;
+    const totalItems = (chapter.storyPoints?.length || 0) + (chapter.questions?.length || 0);
+    const doneItems = chState.storyIndex + chState.questionIndex;
     const pct = totalItems > 0 ? Math.round((doneItems / totalItems) * 100) : 0;
-
-    const isSoon = totalItems === 0;
-    const badge = isSoon ? "Soon" : `${pct}%`;
 
     const card = document.createElement("button");
     card.className = "card card-chapter";
@@ -268,26 +323,21 @@ function renderChapters() {
     card.innerHTML = `
       <div class="card-chapter-header">
         <div class="card-chapter-title">${chapter.title}</div>
-        <div class="progress-circle">${badge}</div>
+        <div class="progress-circle">${pct}%</div>
       </div>
       <div class="chapter-meta">
-        ${isSoon ? "<span>Coming soon</span>" : `<span>${totalStory} story points</span><span>${totalQ} questions</span>`}
+        <span>${chapter.storyPoints.length} story points</span>
+        <span>${chapter.questions.length} questions</span>
       </div>
     `;
 
     card.addEventListener("click", () => {
-      if (isSoon) {
-        showToast("Coming soon");
-        return;
-      }
-
       appState.currentChapterId = chapter.id;
       appState.currentMode = appState.currentMode || "story";
       saveState();
       setActiveMode(appState.currentMode);
       showScreen("chapter");
       renderCurrentMode();
-      requestAnimationFrame(scrollToLatestContent);
     });
 
     chaptersListEl.appendChild(card);
@@ -318,7 +368,6 @@ function setActiveMode(mode) {
   }
 
   renderCurrentMode();
-  requestAnimationFrame(scrollToLatestContent);
 }
 
 modeTabs.addEventListener("click", (e) => {
@@ -351,16 +400,8 @@ function renderCurrentMode() {
     updateProgress(current, total);
     renderQuestionMode(chapter, chState);
   } else if (appState.currentMode === "difficult") {
-    const totalHard = chState.difficultStoryIds.length + chState.difficultQuestionIds.length;
-
-    // More meaningful label when there's nothing saved yet
-    if (totalHard === 0) {
-      progressLabel.textContent = "0 saved";
-      progressFill.style.width = "0%";
-    } else {
-      updateProgress(totalHard, totalHard);
-    }
-
+    const { current, total } = getDifficultProgress(chapter, chState);
+    updateProgress(current, total);
     renderDifficultMode(chapter, chState);
   }
 
@@ -368,14 +409,8 @@ function renderCurrentMode() {
 }
 
 function updateProgress(current, total) {
-  if (total === 0) {
-    progressLabel.textContent = "—";
-    progressFill.style.width = "0%";
-    return;
-  }
-
   progressLabel.textContent = `${current} / ${total}`;
-  const pct = (current / total) * 100;
+  const pct = total > 0 ? (current / total) * 100 : 0;
   progressFill.style.width = `${pct}%`;
 }
 
@@ -455,44 +490,26 @@ actionRightBtn.addEventListener("click", () => {
 // ---------- Story mode ----------
 
 function renderStoryMode(chapter, chState) {
+  storyFeedEl.innerHTML = "";
+
   const total = chapter.storyPoints.length;
 
-  if (total === 0) {
-    const feed = document.createElement("div");
-    feed.className = "bubble-feed";
-
+  const countToShow = Math.min(chState.storyIndex, total);
+  for (let i = 0; i < countToShow; i++) {
+    const point = chapter.storyPoints[i];
     const bubble = document.createElement("div");
-    bubble.className = "bubble bubble--left";
-    bubble.innerHTML = `<p class="bubble-text">Coming soon.</p>`;
-
-    feed.appendChild(bubble);
-    storyFeedEl.innerHTML = "";
-    storyFeedEl.appendChild(feed);
-    return;
+    bubble.className = "bubble";
+    bubble.innerHTML = `
+      <div class="bubble-meta">Point ${i + 1} · Story</div>
+      <p class="bubble-text">${point.text}</p>
+    `;
+    storyFeedEl.appendChild(bubble);
   }
 
-  const feed = document.createElement("div");
-  feed.className = "bubble-feed";
-
-  const countToShow = Math.min(chState.storyIndex, total);
-  const visible = chapter.storyPoints.slice(0, countToShow);
-
-  visible.forEach((p) => {
-    const bubble = document.createElement("div");
-    bubble.className = "bubble bubble--left";
-    bubble.innerHTML = `
-      <p class="bubble-text">${p.text}</p>
-    `;
-    feed.appendChild(bubble);
-  });
-
-  storyFeedEl.innerHTML = "";
-  storyFeedEl.appendChild(feed);
-
-  // auto scroll to latest bubble
-  requestAnimationFrame(scrollToLatestContent);
+  // Scroll to the latest bubble
+  const last = storyFeedEl.lastElementChild;
+  if (last) last.scrollIntoView({ block: "end", behavior: "smooth" });
 }
-
 
 function advanceStory(chapter, chState) {
   const total = chapter.storyPoints.length;
@@ -508,103 +525,69 @@ function advanceStory(chapter, chState) {
 }
 
 function markCurrentStoryDifficult(chapter, chState) {
-  const idx = Math.max(chState.storyIndex - 1, 0);
+  normalizeChapterState(chState);
+  const idx = chState.storyIndex - 1;
   const point = chapter.storyPoints[idx];
-  if (!point) return;
-
-  if (!chState.difficultStoryIds.includes(point.id)) {
-    chState.difficultStoryIds.push(point.id);
-    saveState();
-    showToast("Saved to Difficult");
-  } else {
-    showToast("Already saved");
-  }
-}
-
-// ---------- Question mode ----------
-
-function makeQuestionCard(q, index, showAnswer) {
-  const card = document.createElement("div");
-  card.className = "qa-card";
-
-  // Small label (keeps orientation but doesn't dominate)
-  const meta = document.createElement("div");
-  meta.className = "qa-meta";
-  meta.textContent = `Q${index + 1}`;
-
-  const qText = document.createElement("div");
-  qText.className = "qa-text";
-  qText.textContent = q.question;
-
-  card.appendChild(meta);
-  card.appendChild(qText);
-
-  if (q.answer) {
-    const ans = document.createElement("div");
-    ans.className = "qa-answer";
-    ans.textContent = q.answer;
-
-    if (!showAnswer) {
-      ans.classList.add("hidden");
-    }
-
-    card.appendChild(ans);
-
-    // If this is the current (unrevealed) question, wire up global pointer
-    if (!showAnswer) {
-      currentAnswerEl = ans;
-    }
-  }
-
-  return card;
-}
-
-function renderQuestionMode(chapter, chState) {
-  const wrapper = document.createElement("div");
-  wrapper.className = "qa-wrapper";
-
-  const total = chapter.questions.length;
-
-  if (total === 0) {
-    const done = document.createElement("div");
-    done.className = "qa-card";
-    done.innerHTML = `<div class="qa-meta">Coming soon</div><div class="qa-text">Questions for this chapter are being added.</div>`;
-    wrapper.appendChild(done);
-
-    questionAreaEl.innerHTML = "";
-    questionAreaEl.appendChild(wrapper);
+  if (!point) {
+    showToast("Nothing to save yet");
     return;
   }
 
-  // Build a scrollable feed:
-  // - all completed questions stay visible (with answers)
-  // - current question appears at the bottom (answer hidden until Reveal)
-  questionRevealed = false;
-  currentAnswerEl = null;
-
-  const completedCount = Math.min(chState.questionIndex, total);
-
-  for (let i = 0; i < completedCount; i++) {
-    const q = chapter.questions[i];
-    wrapper.appendChild(makeQuestionCard(q, i, true));
-  }
-
-  if (chState.questionIndex < total) {
-    const q = chapter.questions[chState.questionIndex];
-    wrapper.appendChild(makeQuestionCard(q, chState.questionIndex, false));
+  const added = addToDifficult(chState, "story", point.id);
+  if (added) {
+    showToast("Saved to Difficult");
+    saveState();
+    // If user is in difficult mode already, refresh
+    if (appState.currentMode === "difficult") renderCurrentMode();
   } else {
-    const done = document.createElement("div");
-    done.className = "qa-card";
-    done.innerHTML = `<div class="qa-meta">Done</div><div class="qa-text">You’ve reached the end of this set.</div>`;
-    wrapper.appendChild(done);
+    showToast("Already in Difficult");
   }
-
-  questionAreaEl.innerHTML = "";
-  questionAreaEl.appendChild(wrapper);
-
-  requestAnimationFrame(scrollToLatestContent);
 }
 
+
+// ---------- Question mode ----------
+
+function renderQuestionMode(chapter, chState) {
+  questionAreaEl.innerHTML = "";
+  currentAnswerEl = null;
+  questionRevealed = false;
+
+  const total = chapter.questions.length;
+  if (total === 0) {
+    questionAreaEl.innerHTML =
+      '<div class="empty-state">No questions yet for this chapter.</div>';
+    return;
+  }
+
+  // Finished all questions
+  if (chState.questionIndex >= total) {
+    questionAreaEl.innerHTML =
+      '<div class="empty-state">You\'re done! Switch to <b>Difficult</b> to revise the items you saved.</div>';
+    return;
+  }
+
+  const idx = Math.min(chState.questionIndex, total - 1);
+  const q = chapter.questions[idx];
+
+  const cardQ = document.createElement("div");
+  cardQ.className = "qa-card";
+  cardQ.innerHTML = `
+    <div class="qa-meta">Q${idx + 1} · Question</div>
+    <div class="qa-text">${q.question}</div>
+  `;
+
+  const answerCard = document.createElement("div");
+  answerCard.className = "qa-card qa-answer hidden";
+  answerCard.innerHTML = `
+    <div class="qa-meta">Answer</div>
+    <div class="qa-text">${q.answer}</div>
+  `;
+
+  currentAnswerEl = answerCard;
+
+  questionAreaEl.appendChild(cardQ);
+  questionAreaEl.appendChild(answerCard);
+}
 
 function handleQuestionPrimary(chapter, chState) {
   const total = chapter.questions.length;
@@ -631,87 +614,586 @@ function advanceQuestion(chapter, chState) {
 }
 
 function markCurrentQuestionDifficult(chapter, chState) {
-  const total = chapter.questions.length;
-  if (total === 0 || chState.questionIndex >= total) return;
+  normalizeChapterState(chState);
+  const q = chapter.questions[chState.questionIndex];
+  if (!q) {
+    showToast("No question to save");
+    return;
+  }
 
-  const idx = Math.min(chState.questionIndex, total - 1);
-  const q = chapter.questions[idx];
-
-  if (!chState.difficultQuestionIds.includes(q.id)) {
-    chState.difficultQuestionIds.push(q.id);
-    saveState();
+  const added = addToDifficult(chState, "question", q.id);
+  if (added) {
     showToast("Saved to Difficult");
+    saveState();
+    if (appState.currentMode === "difficult") renderCurrentMode();
   } else {
-    showToast("Already saved");
+    showToast("Already in Difficult");
   }
 }
 
+
 // ---------- Difficult mode ----------
 
-function renderDifficultMode(chapter, chState) {
+function addToDifficult(chState, type, id) {
+  normalizeChapterState(chState);
+  const key = makeDifficultKey(type, id);
+  if (chState.difficultItems.some((it) => it.key === key)) return false;
+
+  chState.difficultItems.push({
+    key,
+    type,
+    id,
+    addedAt: Date.now()
+  });
+
+  // keep legacy arrays in sync
+  chState.difficultStoryIds = chState.difficultItems
+    .filter((it) => it.type === "story")
+    .map((it) => it.id);
+  chState.difficultQuestionIds = chState.difficultItems
+    .filter((it) => it.type === "question")
+    .map((it) => it.id);
+
+  return true;
+}
+
+function removeFromDifficult(chState, key) {
+  normalizeChapterState(chState);
+  chState.difficultItems = chState.difficultItems.filter((it) => it.key !== key);
+
+  // remove from any saved sessions too
+  for (const kind of ["story", "question"]) {
+    const s = chState.difficultSessions[kind];
+    if (!s || !Array.isArray(s.keys)) continue;
+    const beforeLen = s.keys.length;
+    s.keys = s.keys.filter((k) => k !== key);
+    if (s.index >= s.keys.length) s.index = s.keys.length; // allow "done" state
+    if (beforeLen !== s.keys.length) {
+      s.updatedAt = Date.now();
+      if (kind === "question") s.revealed = false;
+    }
+  }
+
+  // keep legacy arrays in sync
+  chState.difficultStoryIds = chState.difficultItems
+    .filter((it) => it.type === "story")
+    .map((it) => it.id);
+  chState.difficultQuestionIds = chState.difficultItems
+    .filter((it) => it.type === "question")
+    .map((it) => it.id);
+}
+
+function clearChapterDifficult(chState) {
+  normalizeChapterState(chState);
+  chState.difficultItems = [];
+  chState.difficultStoryIds = [];
+  chState.difficultQuestionIds = [];
+  chState.difficultSessions = { story: null, question: null };
+  chState.difficultUi = { view: "list", kind: "story" };
+}
+
+
+function resolveDifficultItem(chapter, item) {
+  if (!item) return null;
+  if (item.type === "story") {
+    const p = chapter.storyPoints.find((x) => x.id === item.id);
+    if (!p) return null;
+    return { key: item.key, type: "story", label: "Story", text: p.text };
+  }
+
+  if (item.type === "question") {
+    const q = chapter.questions.find((x) => x.id === item.id);
+    if (!q) return null;
+    return { key: item.key, type: "question", label: "Question", question: q.question, answer: q.answer };
+  }
+
+  return null;
+}
+
+function getDifficultCounts(chState) {
+  normalizeChapterState(chState);
+  const story = chState.difficultItems.filter((it) => it.type === "story").length;
+  const question = chState.difficultItems.filter((it) => it.type === "question").length;
+  return { story, question, total: story + question };
+}
+
+function getDifficultProgress(chapter, chState) {
+  normalizeChapterState(chState);
+  const counts = getDifficultCounts(chState);
+
+  // If in session, show session progress
+  if (chState.difficultUi.view === "session" && chState.difficultUi.kind) {
+    const kind = chState.difficultUi.kind;
+    const s = chState.difficultSessions[kind];
+    if (s && Array.isArray(s.keys) && s.keys.length > 0) {
+      const total = s.keys.length;
+      const current = Math.min(s.index + 1, total);
+      return { current, total };
+    }
+  }
+
+  // Otherwise show count of saved items
+  if (counts.total === 0) return { current: 0, total: 1 };
+  return { current: counts.total, total: counts.total };
+}
+
+function setDifficultView(chState, view, kind = null) {
+  normalizeChapterState(chState);
+  chState.difficultUi.view = view;
+  if (kind) chState.difficultUi.kind = kind;
+  saveState();
+  renderCurrentMode();
+}
+
+function startDifficultSession(chapter, chState, kind, size) {
+  normalizeChapterState(chState);
+
+  const keys = chState.difficultItems
+    .filter((it) => it.type === kind)
+    .map((it) => it.key);
+
+  let sessionKeys = keys;
+  if (size !== "all") {
+    const n = Math.max(1, Number(size) || 1);
+    sessionKeys = keys.slice(0, n);
+  }
+
+  chState.difficultSessions[kind] = {
+    keys: sessionKeys,
+    index: 0,
+    size,
+    revealed: false,
+    updatedAt: Date.now()
+  };
+
+  chState.difficultUi.view = "session";
+  chState.difficultUi.kind = kind;
+  saveState();
+  renderCurrentMode();
+}
+
+function continueDifficultSession(chState, kind) {
+  normalizeChapterState(chState);
+  chState.difficultUi.view = "session";
+  chState.difficultUi.kind = kind;
+  saveState();
+  renderCurrentMode();
+}
+
+function clearDifficultSession(chState, kind) {
+  normalizeChapterState(chState);
+  chState.difficultSessions[kind] = null;
+  saveState();
+  renderCurrentMode();
+}
+
+
+function renderDifficultControls(chapter, chState) {
+  if (!difficultControlsEl) return;
+
+  normalizeChapterState(chState);
+  const counts = getDifficultCounts(chState);
+  const view = chState.difficultUi.view || "revise";
+
+  difficultControlsEl.innerHTML = "";
+
+  // Segmented: Revise / List
+  const seg = document.createElement("div");
+  seg.className = "difficult-seg";
+
+  const makeSegBtn = (label, targetView) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = label;
+    if (view === targetView) b.classList.add("is-active");
+    b.addEventListener("click", () => setDifficultView(chState, targetView, chState.difficultUi.kind || "story"));
+    return b;
+  };
+
+  seg.appendChild(makeSegBtn("Revise", "revise"));
+  seg.appendChild(makeSegBtn("List", "list"));
+
+  // Hint
+  const hint = document.createElement("div");
+  hint.className = "difficult-hint";
+  if (counts.total === 0) {
+    hint.textContent = "No saved items yet";
+  } else {
+    const parts = [];
+    if (counts.story) parts.push(`${counts.story} story`);
+    if (counts.question) parts.push(`${counts.question} questions`);
+    hint.textContent = `Saved: ${parts.join(" · ")}`;
+  }
+
+  // Actions
+  const actions = document.createElement("div");
+  actions.className = "difficult-actions";
+
+  if (counts.total > 0) {
+    const clearBtn = document.createElement("button");
+    clearBtn.type = "button";
+    clearBtn.className = "btn btn-ghost btn-small";
+    clearBtn.textContent = "Clear";
+    clearBtn.addEventListener("click", () => {
+      if (!confirm("Clear all saved Difficult items for this chapter?")) return;
+      clearChapterDifficult(chState);
+      saveState();
+      renderCurrentMode();
+    });
+    actions.appendChild(clearBtn);
+  }
+
+  difficultControlsEl.appendChild(seg);
+  difficultControlsEl.appendChild(hint);
+  difficultControlsEl.appendChild(actions);
+}
+
+
+
+function renderDifficultListView(chapter, chState) {
+  if (!difficultListViewEl) return;
   difficultListEl.innerHTML = "";
 
-  const storyMap = new Map(chapter.storyPoints.map((p) => [p.id, p]));
-  const qMap = new Map(chapter.questions.map((q) => [q.id, q]));
+  const resolved = chState.difficultItems
+    .map((it) => resolveDifficultItem(chapter, it))
+    .filter(Boolean);
 
-  const items = [];
-
-  chState.difficultStoryIds.forEach((id) => {
-    const p = storyMap.get(id);
-    if (p) {
-      items.push({
-        type: "Story",
-        id,
-        text: p.text
-      });
-    }
-  });
-
-  chState.difficultQuestionIds.forEach((id) => {
-    const q = qMap.get(id);
-    if (q) {
-      items.push({
-        type: "Question",
-        id,
-        text: q.question
-      });
-    }
-  });
-
-  if (items.length === 0) {
+  if (resolved.length === 0) {
     difficultEmptyEl.classList.remove("hidden");
     return;
   }
 
   difficultEmptyEl.classList.add("hidden");
 
-  items.forEach((item) => {
+  resolved.forEach((item) => {
     const li = document.createElement("li");
     li.className = "difficult-item";
+
+    const mainText = item.type === "story" ? item.text : item.question;
+
     li.innerHTML = `
       <div class="difficult-meta">
-        <span class="difficult-tag">${item.type}</span>
-        <button class="icon-button icon-button--flat remove-btn" aria-label="Remove">×</button>
+        <span class="difficult-tag">${item.label}</span>
+        <button class="icon-button remove-btn" aria-label="Remove">×</button>
       </div>
-      <div class="difficult-text">${item.text}</div>
+      <div class="difficult-text">${mainText}</div>
     `;
 
-    const removeBtn = li.querySelector(".remove-btn");
-    removeBtn.addEventListener("click", (e) => {
+    li.querySelector(".remove-btn").addEventListener("click", (e) => {
       e.stopPropagation();
-      if (item.type === "Story") {
-        chState.difficultStoryIds = chState.difficultStoryIds.filter((x) => x !== item.id);
-      } else {
-        chState.difficultQuestionIds = chState.difficultQuestionIds.filter((x) => x !== item.id);
-      }
+      removeFromDifficult(chState, item.key);
       saveState();
-      renderDifficultMode(chapter, chState);
+      renderCurrentMode();
     });
 
     difficultListEl.appendChild(li);
   });
 }
 
+
+function renderDifficultReviseView(chapter, chState) {
+  if (!difficultReviseViewEl) return;
+
+  normalizeChapterState(chState);
+  const storyTotal = chState.difficultItems.filter((it) => it.type === "story").length;
+  const qTotal = chState.difficultItems.filter((it) => it.type === "question").length;
+
+  const storySession = chState.difficultSessions.story;
+  const qSession = chState.difficultSessions.question;
+
+  const storyProgress =
+    storySession && Array.isArray(storySession.keys)
+      ? `${Math.min(storySession.index + 1, storySession.keys.length)}/${storySession.keys.length}`
+      : null;
+
+  const qProgress =
+    qSession && Array.isArray(qSession.keys)
+      ? `${Math.min(qSession.index + 1, qSession.keys.length)}/${qSession.keys.length}`
+      : null;
+
+  const storyOptions = [
+    { value: "all", label: `All (${storyTotal})` },
+    { value: "10", label: "10" },
+    { value: "20", label: "20" },
+  ];
+
+  const qOptions = [
+    { value: "all", label: `All (${qTotal})` },
+    { value: "10", label: "10" },
+    { value: "20", label: "20" },
+  ];
+
+  difficultReviseViewEl.innerHTML = `
+    <div class="difficult-session-card">
+      <div class="difficult-card-title">Story session</div>
+      <div class="difficult-card-sub">
+        ${storyTotal === 0 ? "Save story facts first (book icon)" : `${storyTotal} saved${storyProgress ? ` · In progress: ${storyProgress}` : ""}`}
+      </div>
+
+      <div class="difficult-row">
+        <label class="label" for="storySessionSize">How many</label>
+        <select class="select" id="storySessionSize" ${storyTotal === 0 ? "disabled" : ""}>
+          ${storyOptions.map(o => `<option value="${o.value}">${o.label}</option>`).join("")}
+        </select>
+      </div>
+
+      <div class="btn-row">
+        ${storySession
+          ? `<button class="btn btn-ghost" id="resumeStory">Resume</button>
+             <button class="btn btn-primary" id="restartStory">Restart</button>`
+          : `<button class="btn btn-primary" id="startStory" ${storyTotal === 0 ? "disabled" : ""}>Start</button>`
+        }
+      </div>
+    </div>
+
+    <div class="difficult-session-card">
+      <div class="difficult-card-title">Questions session</div>
+      <div class="difficult-card-sub">
+        ${qTotal === 0 ? "Save questions first (book icon)" : `${qTotal} saved${qProgress ? ` · In progress: ${qProgress}` : ""}`}
+      </div>
+
+      <div class="difficult-row">
+        <label class="label" for="questionSessionSize">How many</label>
+        <select class="select" id="questionSessionSize" ${qTotal === 0 ? "disabled" : ""}>
+          ${qOptions.map(o => `<option value="${o.value}">${o.label}</option>`).join("")}
+        </select>
+      </div>
+
+      <div class="btn-row">
+        ${qSession
+          ? `<button class="btn btn-ghost" id="resumeQuestion">Resume</button>
+             <button class="btn btn-primary" id="restartQuestion">Restart</button>`
+          : `<button class="btn btn-primary" id="startQuestion" ${qTotal === 0 ? "disabled" : ""}>Start</button>`
+        }
+      </div>
+    </div>
+
+    ${storySession || qSession
+      ? `<div class="btn-row" style="margin-top: 10px;">
+           <button class="btn btn-ghost" id="resetSessions">Reset sessions</button>
+         </div>`
+      : ""
+    }
+  `;
+
+  const storySizeSel = difficultReviseViewEl.querySelector("#storySessionSize");
+  const qSizeSel = difficultReviseViewEl.querySelector("#questionSessionSize");
+
+  const bind = (id, fn) => {
+    const el = difficultReviseViewEl.querySelector(`#${id}`);
+    if (el) el.addEventListener("click", fn);
+  };
+
+  bind("startStory", () => {
+    const size = storySizeSel ? storySizeSel.value : "all";
+    startDifficultSession(chapter, chState, "story", size);
+  });
+
+  bind("resumeStory", () => {
+    setDifficultView(chState, "session", "story");
+  });
+
+  bind("restartStory", () => {
+    const size = storySizeSel ? storySizeSel.value : "all";
+    startDifficultSession(chapter, chState, "story", size);
+  });
+
+  bind("startQuestion", () => {
+    const size = qSizeSel ? qSizeSel.value : "all";
+    startDifficultSession(chapter, chState, "question", size);
+  });
+
+  bind("resumeQuestion", () => {
+    setDifficultView(chState, "session", "question");
+  });
+
+  bind("restartQuestion", () => {
+    const size = qSizeSel ? qSizeSel.value : "all";
+    startDifficultSession(chapter, chState, "question", size);
+  });
+
+  bind("resetSessions", () => {
+    if (!confirm("Reset both Story and Questions sessions for this chapter?")) return;
+    chState.difficultSessions.story = null;
+    chState.difficultSessions.question = null;
+    saveState();
+    renderCurrentMode();
+  });
+}
+
+
+
+function renderDifficultSessionView(chapter, chState) {
+  if (!difficultSessionViewEl) return;
+
+  const kind = chState.difficultUi.kind;
+  const session = chState.difficultSessions[kind];
+
+  if (!kind || !session || !Array.isArray(session.keys) || session.keys.length === 0) {
+    difficultSessionViewEl.innerHTML = `
+      <div class="empty-state">No session found. Start a session from the Revise tab.</div>
+      <button class="btn btn-primary" id="backToRevise">Back</button>
+    `;
+    difficultSessionViewEl.querySelector("#backToRevise")?.addEventListener("click", () => {
+      setDifficultView(chState, "revise");
+    });
+    return;
+  }
+
+  // Skip missing items (if they were removed)
+  while (session.index < session.keys.length) {
+    const key = session.keys[session.index];
+    const it = chState.difficultItems.find((x) => x.key === key);
+    if (it) break;
+    session.index += 1;
+  }
+
+  if (session.index >= session.keys.length) {
+    difficultSessionViewEl.innerHTML = `
+      <div class="difficult-done">Session complete 🎉</div>
+      <div class="btn-row">
+        <button class="btn" id="restartSession">Restart</button>
+        <button class="btn btn-primary" id="backToRevise">Back</button>
+      </div>
+    `;
+    difficultSessionViewEl.querySelector("#restartSession")?.addEventListener("click", () => {
+      startDifficultSession(chapter, chState, kind, session.size || "all");
+    });
+    difficultSessionViewEl.querySelector("#backToRevise")?.addEventListener("click", () => {
+      setDifficultView(chState, "revise");
+    });
+    return;
+  }
+
+  const key = session.keys[session.index];
+  const item = resolveDifficultItem(chapter, chState.difficultItems.find((x) => x.key === key));
+
+  if (!item) {
+    session.index += 1;
+    saveState();
+    renderCurrentMode();
+    return;
+  }
+
+  const title = kind === "story" ? "Story" : "Questions";
+  const progress = `${session.index + 1} / ${session.keys.length}`;
+
+  if (kind === "story") {
+    difficultSessionViewEl.innerHTML = `
+      <div class="difficult-session-header">
+        <div class="difficult-session-title">${title} · ${progress}</div>
+        <button class="btn btn-ghost" id="exitSession">Exit</button>
+      </div>
+
+      <div class="bubble">
+        <div class="bubble-meta">Difficult · Story</div>
+        <p class="bubble-text">${item.text}</p>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn" id="mastered">Mastered</button>
+        <button class="btn btn-primary" id="next">OK</button>
+      </div>
+    `;
+
+    difficultSessionViewEl.querySelector("#exitSession")?.addEventListener("click", () => {
+      setDifficultView(chState, "revise");
+    });
+
+    difficultSessionViewEl.querySelector("#next")?.addEventListener("click", () => {
+      session.index += 1;
+      saveState();
+      renderCurrentMode();
+    });
+
+    difficultSessionViewEl.querySelector("#mastered")?.addEventListener("click", () => {
+      removeFromDifficult(chState, item.key);
+      showToast("Removed from Difficult");
+      saveState();
+      renderCurrentMode();
+    });
+
+    return;
+  }
+
+  // question session
+  const revealed = !!session.revealed;
+  difficultSessionViewEl.innerHTML = `
+    <div class="difficult-session-header">
+      <div class="difficult-session-title">${title} · ${progress}</div>
+      <button class="btn btn-ghost" id="exitSession">Exit</button>
+    </div>
+
+    <div class="qa-card">
+      <div class="qa-meta">Difficult · Question</div>
+      <div class="qa-text">${item.question}</div>
+    </div>
+
+    <div class="qa-card qa-answer ${revealed ? "" : "hidden"}" id="sessionAnswer">
+      <div class="qa-meta">Answer</div>
+      <div class="qa-text">${item.answer}</div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn" id="mastered">Mastered</button>
+      <button class="btn btn-primary" id="primary">${revealed ? "Next" : "Reveal"}</button>
+    </div>
+  `;
+
+  difficultSessionViewEl.querySelector("#exitSession")?.addEventListener("click", () => {
+    setDifficultView(chState, "revise");
+  });
+
+  difficultSessionViewEl.querySelector("#mastered")?.addEventListener("click", () => {
+    removeFromDifficult(chState, item.key);
+    showToast("Removed from Difficult");
+    // After removal, keep the same index (next item will slide in)
+    session.revealed = false;
+    saveState();
+    renderCurrentMode();
+  });
+
+  difficultSessionViewEl.querySelector("#primary")?.addEventListener("click", () => {
+    if (!session.revealed) {
+      session.revealed = true;
+      saveState();
+      renderCurrentMode();
+      return;
+    }
+
+    // Next
+    session.revealed = false;
+    session.index += 1;
+    saveState();
+    renderCurrentMode();
+  });
+}
+
+function renderDifficultMode(chapter, chState) {
+  normalizeChapterState(chState);
+
+  // Default view: encourage Revise if there are items, otherwise show List
+  const counts = getDifficultCounts(chState);
+  if (!chState.difficultUi || !chState.difficultUi.view) {
+    chState.difficultUi = { view: counts.total > 0 ? "revise" : "list", kind: "story" };
+  }
+
+  renderDifficultControls(chapter, chState);
+
+  const view = chState.difficultUi.view || "revise";
+
+  difficultListViewEl?.classList.toggle("hidden", view !== "list");
+  difficultReviseViewEl?.classList.toggle("hidden", view !== "revise");
+  difficultSessionViewEl?.classList.toggle("hidden", view !== "session");
+
+  if (view === "list") {
+    renderDifficultListView(chapter, chState);
+  } else if (view === "revise") {
+    renderDifficultReviseView(chapter, chState);
+  } else if (view === "session") {
+    renderDifficultSessionView(chapter, chState);
+  }
+}
 // ---------- PWA service worker ----------
 
 if ("serviceWorker" in navigator) {
