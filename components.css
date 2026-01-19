@@ -405,3 +405,70 @@ body.dark .difficult-session-type{
   font-weight: 700;
   letter-spacing: 0.01em;
 }
+
+/* =====================
+   Difficult review (Option A)
+   ===================== */
+
+.difficult-subtabs {
+  display: flex;
+  gap: 18px;
+  align-items: flex-end;
+  margin: 4px 0 14px;
+}
+
+.difficult-subtab-btn {
+  position: relative;
+  border: 0;
+  background: transparent;
+  padding: 8px 6px;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  color: var(--muted);
+}
+
+.difficult-subtab-btn .count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 18px;
+  padding: 0 8px;
+  margin-left: 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 900;
+  background: var(--surface-2);
+  border: 1px solid var(--edge);
+  color: var(--muted);
+}
+
+.difficult-subtab-btn.is-active {
+  color: var(--text);
+}
+
+.difficult-subtab-btn.is-active::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -2px;
+  transform: translateX(-50%);
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--progress-start);
+}
+
+.difficult-review {
+  margin-top: 6px;
+}
+
+.difficult-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.difficult-actions .btn {
+  flex: 1;
+}
