@@ -24,7 +24,7 @@
       <section id="screenLevels" class="screen active">
         <div class="hero">
           <h2>Microlearning for A-Level Biology</h2>
-          <p>Tiny lessons. Fast recall.</p>
+          <p>Swipe-style revision in tiny, human-sized pieces.</p>
         </div>
         <div class="card-grid">
           <button class="card card-select" data-level="as">
@@ -67,30 +67,51 @@
         <div id="questionsMode" class="mode-panel hidden">
           <div id="questionArea" class="qa-wrapper"></div>
         </div>
-
-        <!-- Difficult list content -->
+        <!-- Difficult mode -->
         <div id="difficultMode" class="mode-panel hidden">
-          <div id="difficultEmpty" class="empty-state">
-            Nothing here yet. Tap the
-            <span class="inline-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M2.5 5.5A2.5 2.5 0 0 1 5 3h6a2 2 0 0 1 2 2v16a2 2 0 0 0-2-2H5a2.5 2.5 0 0 0-2.5 2.5V5.5z" />
-                <path d="M21.5 5.5A2.5 2.5 0 0 0 19 3h-6a2 2 0 0 0-2 2v16a2 2 0 0 1 2-2h6a2.5 2.5 0 0 1 2.5 2.5V5.5z" />
-              </svg>
-            </span>
-            button to save anything you find difficult.
+          <!-- List view -->
+          <div id="difficultListView">
+            <div class="difficult-revise">
+              <div class="difficult-revise-top">
+                <div class="difficult-revise-title">Revision session</div>
+                <div class="difficult-revise-sub">Practice your saved items, one by one.</div>
+              </div>
+
+              <div class="difficult-revise-actions">
+                <button id="difficultReviseStory" class="revise-btn" type="button">Revise Story</button>
+                <button id="difficultReviseQuestions" class="revise-btn" type="button">Revise Questions</button>
+              </div>
+
+              <div class="difficult-revise-count">
+                <span class="difficult-revise-label">How many</span>
+                <div id="difficultCountSeg" class="segmented" role="group" aria-label="How many items to revise">
+                  <button class="seg-btn is-active" type="button" data-count="all">All</button>
+                  <button class="seg-btn" type="button" data-count="10">10</button>
+                  <button class="seg-btn" type="button" data-count="20">20</button>
+                  <button class="seg-btn" type="button" data-count="30">30</button>
+                </div>
+              </div>
+            </div>
+
+            <div id="difficultEmpty" class="empty-state">
+              Nothing here yet. Tap the <span aria-hidden="true">📘</span> button to save anything you find difficult.
+            </div>
+            <ul id="difficultList" class="difficult-list"></ul>
           </div>
-          <ul id="difficultList" class="difficult-list"></ul>
+
+          <!-- Revision session view -->
+          <div id="difficultSessionView" class="hidden">
+            <div id="difficultSessionFeed" class="bubble-feed hidden"></div>
+            <div id="difficultSessionQA" class="qa-wrapper hidden"></div>
+            <div id="difficultSessionDone" class="empty-state hidden">
+              Session complete. Tap <span aria-hidden="true">←</span> to return to your list.
+            </div>
+          </div>
         </div>
 
         <!-- Floating actions (Story + Questions only) -->
         <div id="actionDock" class="action-dock hidden" aria-label="Actions">
-          <button id="actionLeft" class="fab fab--circle fab--secondary" aria-label="Add to Difficult" title="Add to Difficult">
-            <svg class="fab__icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M2.5 5.5A2.5 2.5 0 0 1 5 3h6a2 2 0 0 1 2 2v16a2 2 0 0 0-2-2H5a2.5 2.5 0 0 0-2.5 2.5V5.5z" />
-              <path d="M21.5 5.5A2.5 2.5 0 0 0 19 3h-6a2 2 0 0 0-2 2v16a2 2 0 0 1 2-2h6a2.5 2.5 0 0 1 2.5 2.5V5.5z" />
-            </svg>
-          </button>
+          <button id="actionLeft" class="fab fab--circle" aria-label="Add to Difficult" title="Add to Difficult">📘</button>
           <button id="actionRight" class="fab fab--circle fab--primary" aria-label="OK" title="OK">OK</button>
         </div>
       </section>

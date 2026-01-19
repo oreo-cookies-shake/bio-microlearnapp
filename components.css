@@ -17,31 +17,6 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Button variants */
-.btn-small{
-  min-height: 40px;
-  padding: 10px 12px;
-  font-size: 14px;
-}
-
-.btn-ghost{
-  background: transparent;
-  box-shadow: none;
-}
-
-.btn-primary{
-  border-color: rgba(143, 168, 155, 0.55);
-  background: rgba(143, 168, 155, 0.14);
-}
-
-body.light .btn-primary{
-  background: rgba(143, 168, 155, 0.18);
-}
-
-body.dark .btn-ghost{
-  border-color: rgba(255,255,255,0.14);
-}
-
 .btn:active {
   transform: translateY(1px) scale(0.985);
   box-shadow: var(--shadow-press), var(--highlight-line);
@@ -251,157 +226,98 @@ body.light .toast {
   box-shadow: var(--shadow-press);
 }
 
-/* ---------- Difficult: list vs revise vs session ---------- */
-.difficult-controls {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-top: 10px;
-  margin-bottom: 8px;
-}
 
-.difficult-seg {
-  display: inline-flex;
-  gap: 4px;
-  padding: 4px;
-  border-radius: 999px;
+/* Difficult: revise session */
+.difficult-revise {
+  margin: 8px 0 16px;
+  padding: 14px;
+  border-radius: var(--radius-card);
+  border: 1px solid var(--border);
   background: var(--surface);
-  border: 1px solid var(--edge);
-  box-shadow: var(--shadow-press);
 }
 
-.difficult-seg button {
-  appearance: none;
-  border: 0;
-  background: transparent;
-  color: var(--muted);
-  padding: 8px 12px;
-  border-radius: 999px;
-  font-weight: 700;
+.difficult-revise-top {
+  display: grid;
+  gap: 4px;
+}
+
+.difficult-revise-title {
   font-size: 13px;
-  cursor: pointer;
+  font-weight: 750;
 }
 
-.difficult-seg button.is-active {
+.difficult-revise-sub {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.difficult-revise-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.revise-btn {
+  width: 100%;
+  padding: 12px 12px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
   background: var(--surface-2);
   color: var(--text);
-  box-shadow: var(--shadow-card);
-}
-
-.difficult-hint {
-  color: var(--muted);
-  font-size: 13px;
-  white-space: nowrap;
-}
-
-.select {
-  appearance: none;
-  border: 1px solid var(--edge);
-  background: var(--surface);
-  color: var(--text);
-  padding: 10px 12px;
-  border-radius: 999px;
+  font-weight: 700;
   font-size: 14px;
-  box-shadow: var(--shadow-press);
-}
-
-.difficult-session-card {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  justify-content: flex-start;
-  gap: 12px;
-  padding: 14px 16px;
-  border-radius: 24px;
-  background: var(--surface);
-  border: 1px solid var(--edge);
-  box-shadow: var(--shadow-card);
-  margin: 10px 0;
-}
-
-.difficult-card-title {
-  font-weight: 800;
-  font-size: 16px;
-}
-
-.difficult-card-sub {
-  margin-top: 6px;
-  color: var(--muted);
-  font-size: 13px;
-}
-
-.difficult-card-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.difficult-session-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-top: 8px;
-  margin-bottom: 10px;
-}
-
-.difficult-session-type{
-  display:inline-flex;
-  align-items:center;
-  height:24px;
-  padding:0 10px;
-  border-radius:999px;
-  font-size:12px;
-  letter-spacing:0.2px;
-  background: rgba(143,168,155,0.14);
-  border: 1px solid rgba(0,0,0,0.06);
-  color: var(--text-muted);
-}
-body.dark .difficult-session-type{
-  background: rgba(143,168,155,0.10);
-  border-color: rgba(255,255,255,0.10);
-}
-
-.difficult-session-title {
-  font-weight: 900;
   letter-spacing: -0.01em;
+  cursor: pointer;
+  transition: transform 120ms ease, filter 160ms ease;
 }
 
-.difficult-session-progress {
-  color: var(--muted);
-  font-size: 13px;
+.revise-btn:active {
+  transform: translateY(1px);
 }
 
-.btn-row {
+.revise-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.difficult-revise-count {
   display: flex;
+  align-items: center;
   justify-content: space-between;
   gap: 12px;
   margin-top: 12px;
 }
 
-.btn-row .btn {
-  flex: 1;
-}
-
-.difficult-meta {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-
-.difficult-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 10px;
-  border-radius: 999px;
-  background: var(--surface-2);
-  border: 1px solid var(--edge);
-  color: var(--muted);
+.difficult-revise-label {
   font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.01em;
+  color: var(--muted);
+}
+
+.segmented {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.seg-btn {
+  padding: 8px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  font-weight: 650;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.seg-btn.is-active {
+  border-color: var(--accent);
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+#difficultSessionView {
+  padding-top: 8px;
 }
