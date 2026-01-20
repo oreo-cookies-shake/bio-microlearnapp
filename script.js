@@ -174,6 +174,11 @@ const toastEl = qs("#toast");
 const actionDock = qs("#actionDock");
 const actionLeftBtn = qs("#actionLeft");
 const actionRightBtn = qs("#actionRight");
+const revisionSwitchDialog = qs("#revisionSwitchDialog");
+const revisionSwitchCancelBtn = qs("#revisionSwitchCancel");
+const revisionSwitchConfirmBtn = qs("#revisionSwitchConfirm");
+
+const actionLeftDefaultHtml = actionLeftBtn.innerHTML;
 
 // Question mode UI state (not persisted)
 let questionRevealed = false;
@@ -187,6 +192,7 @@ let revisionQuestionRevealed = false;
 let revisionConfigOpen = false;
 let revisionSelectedCount = null;
 let revisionOrder = "in-order";
+let pendingRevisionSubMode = null;
 
 const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -391,12 +397,17 @@ modeTabs.addEventListener("click", (e) => {
 
 qsa("[data-revision-submode]").forEach((btn) => {
   btn.addEventListener("click", () => {
-    if (btn.dataset.revisionSubmode) {
-      appState.currentRevisionSubMode = btn.dataset.revisionSubmode;
-      revisionConfigOpen = false;
-      saveState();
-      renderCurrentMode();
+    if (!btn.dataset.revisionSubmode) return;
+
+    if (isRevisionSessionActive && btn.dataset.revisionSubmode !== appState.currentRevisionSubMode) {
+      openRevisionSwitchDialog(btn.dataset.revisionSubmode);
+      return;
     }
+
+    appState.currentRevisionSubMode = btn.dataset.revisionSubmode;
+    revisionConfigOpen = false;
+    saveState();
+    renderCurrentMode();
   });
 });
 
@@ -485,6 +496,21 @@ function setRightButton({ label, shape = "circle", disabled = false }) {
   actionRightBtn.setAttribute("title", label);
 }
 
+function setLeftButton({ label, shape = "circle", disabled = false, useIcon = false }) {
+  actionLeftBtn.disabled = disabled;
+  actionLeftBtn.classList.toggle("fab--circle", shape === "circle");
+  actionLeftBtn.classList.toggle("fab--pill", shape === "pill");
+
+  if (useIcon) {
+    actionLeftBtn.innerHTML = actionLeftDefaultHtml;
+  } else {
+    actionLeftBtn.textContent = label;
+  }
+
+  actionLeftBtn.setAttribute("aria-label", label);
+  actionLeftBtn.setAttribute("title", label);
+}
+
 function syncActionDock(chapter, chState) {
   const mode = appState.currentMode;
 
@@ -496,7 +522,7 @@ function syncActionDock(chapter, chState) {
 
   if (mode === "revision" && isRevisionSessionActive) {
     actionDock.classList.remove("hidden");
-    actionLeftBtn.classList.add("hidden");
+    actionLeftBtn.classList.remove("hidden");
 
     const total = revisionSessionQueue.length;
     const done = revisionSessionIndex >= total;
@@ -506,8 +532,10 @@ function syncActionDock(chapter, chState) {
     }
 
     if (appState.currentRevisionSubMode === "story") {
+      setLeftButton({ label: "Exit", shape: "circle" });
       setRightButton({ label: "OK", shape: "circle", disabled: false });
     } else {
+      setLeftButton({ label: "Exit", shape: "pill" });
       setRightButton({
         label: revisionQuestionRevealed ? "Next" : "Reveal",
         shape: "pill",
@@ -525,6 +553,7 @@ function syncActionDock(chapter, chState) {
   actionDock.classList.remove("hidden");
   actionLeftBtn.classList.remove("hidden");
   actionLeftBtn.disabled = false;
+  setLeftButton({ label: "Add to Revision", shape: "circle", useIcon: true });
 
   if (mode === "story") {
     const total = chapter.storyPoints.length;
@@ -558,6 +587,9 @@ actionLeftBtn.addEventListener("click", () => {
     markCurrentStoryRevision(chapter, chState);
   } else if (appState.currentMode === "questions") {
     markCurrentQuestionRevision(chapter, chState);
+  } else if (appState.currentMode === "revision" && isRevisionSessionActive) {
+    resetRevisionSession();
+    renderCurrentMode();
   }
 });
 
@@ -828,6 +860,8 @@ function renderRevisionMode(chapter, chState) {
   qsa("[data-revision-submode]").forEach((btn) => {
     const isActive = btn.dataset.revisionSubmode === subMode;
     btn.setAttribute("aria-pressed", isActive ? "true" : "false");
+    btn.setAttribute("aria-disabled", isRevisionSessionActive ? "true" : "false");
+    btn.classList.toggle("segmented__btn--locked", isRevisionSessionActive);
   });
 
   if (isRevisionSessionActive) {
@@ -980,15 +1014,15 @@ function renderRevisionSession() {
     const doneCard = document.createElement("div");
     doneCard.className = "qa-card";
     doneCard.innerHTML = `
-      <div class="qa-meta">Revision done</div>
-      <div class="qa-text">You’ve reached the end of this revision session.</div>
+      <div class="qa-meta">Session complete</div>
+      <div class="qa-text">You’ve finished this revision set.</div>
     `;
 
     const actions = document.createElement("div");
     actions.className = "revision-session-actions";
     const backBtn = document.createElement("button");
     backBtn.className = "btn";
-    backBtn.textContent = "Back to Revision list";
+    backBtn.textContent = "Back to Revision";
     backBtn.addEventListener("click", () => {
       resetRevisionSession();
       renderCurrentMode();
@@ -1006,6 +1040,11 @@ function renderRevisionSession() {
   updateProgress(revisionSessionIndex + 1, total);
 
   const current = revisionSessionQueue[revisionSessionIndex];
+  if (!current) {
+    revisionSessionIndex = total;
+    renderRevisionSession();
+    return;
+  }
   if (appState.currentRevisionSubMode === "story") {
     const bubble = document.createElement("div");
     bubble.className = "bubble bubble--left";
@@ -1056,5 +1095,35 @@ function init() {
   initLevelButtons();
   showScreen("levels");
 }
+
+// ---------- Revision mode switch dialog ----------
+
+function openRevisionSwitchDialog(targetSubMode) {
+  pendingRevisionSubMode = targetSubMode;
+  revisionSwitchDialog.classList.remove("hidden");
+}
+
+function closeRevisionSwitchDialog() {
+  pendingRevisionSubMode = null;
+  revisionSwitchDialog.classList.add("hidden");
+}
+
+revisionSwitchCancelBtn.addEventListener("click", () => {
+  closeRevisionSwitchDialog();
+});
+
+revisionSwitchConfirmBtn.addEventListener("click", () => {
+  if (!pendingRevisionSubMode) {
+    closeRevisionSwitchDialog();
+    return;
+  }
+
+  resetRevisionSession();
+  appState.currentRevisionSubMode = pendingRevisionSubMode;
+  revisionConfigOpen = true;
+  saveState();
+  closeRevisionSwitchDialog();
+  renderCurrentMode();
+});
 
 init();

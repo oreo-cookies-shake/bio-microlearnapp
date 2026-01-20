@@ -66,6 +66,15 @@
   background: rgba(143, 181, 166, 0.18);
 }
 
+.segmented__btn--locked {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.segmented__btn--locked:active {
+  transform: none;
+}
+
 .segmented__btn:active {
   transform: translateY(1px) scale(0.98);
 }
@@ -387,6 +396,44 @@
 .revision-session-actions {
   display: flex;
   justify-content: center;
+}
+
+/* =====================
+   Modal
+   ===================== */
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(9, 12, 18, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 60;
+}
+
+.modal__card {
+  width: min(420px, 100%);
+  background: var(--content-bg);
+  border: 1px solid var(--content-edge);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modal__title {
+  font-size: 15px;
+  font-weight: 650;
+  color: var(--text);
+}
+
+.modal__actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
 }
 
 /* =====================
