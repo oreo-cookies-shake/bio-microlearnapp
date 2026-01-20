@@ -44,12 +44,12 @@
         <div id="chaptersList" class="card-list"></div>
       </section>
 
-      <!-- Screen 3: Chapter modes (Story / Questions / Difficult) -->
+      <!-- Screen 3: Chapter modes (Story / Questions / Revision) -->
       <section id="screenChapter" class="screen hidden">
         <div class="tabs" id="modeTabs">
           <button class="tab active" data-mode="story">Story</button>
           <button class="tab" data-mode="questions">Questions</button>
-          <button class="tab" data-mode="difficult">Difficult</button>
+          <button class="tab" data-mode="revision">Revision</button>
         </div>
 
         <div class="progress-wrapper">
@@ -69,24 +69,63 @@
           <div id="questionArea" class="qa-wrapper"></div>
         </div>
 
-        <!-- Difficult list content -->
-        <div id="difficultMode" class="mode-panel hidden">
-          <div id="difficultEmpty" class="empty-state">
-            Nothing here yet. Tap the
-            <span class="inline-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M2.5 5.5A2.5 2.5 0 0 1 5 3h6a2 2 0 0 1 2 2v16a2 2 0 0 0-2-2H5a2.5 2.5 0 0 0-2.5 2.5V5.5z" />
-                <path d="M21.5 5.5A2.5 2.5 0 0 0 19 3h-6a2 2 0 0 0-2 2v16a2 2 0 0 1 2-2h6a2.5 2.5 0 0 1 2.5 2.5V5.5z" />
-              </svg>
-            </span>
-            button to save anything you find difficult.
+        <!-- Revision content -->
+        <div id="revisionMode" class="mode-panel hidden">
+          <div class="revision-header">
+            <div class="segmented" role="tablist" aria-label="Revision type">
+              <button class="segmented__btn" data-revision-submode="story" aria-pressed="true">Story</button>
+              <button class="segmented__btn" data-revision-submode="questions" aria-pressed="false">Questions</button>
+            </div>
           </div>
-          <ul id="difficultList" class="difficult-list"></ul>
+
+          <div id="revisionHub">
+            <div id="revisionEmpty" class="empty-state">
+              Nothing saved yet. Tap the
+              <span class="inline-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M2.5 5.5A2.5 2.5 0 0 1 5 3h6a2 2 0 0 1 2 2v16a2 2 0 0 0-2-2H5a2.5 2.5 0 0 0-2.5 2.5V5.5z" />
+                  <path d="M21.5 5.5A2.5 2.5 0 0 0 19 3h-6a2 2 0 0 0-2 2v16a2 2 0 0 1 2-2h6a2.5 2.5 0 0 1 2.5 2.5V5.5z" />
+                </svg>
+              </span>
+              button to save items for revision.
+            </div>
+            <ul id="revisionList" class="revision-list"></ul>
+            <div class="revision-actions">
+              <button id="revisionStartBtn" class="btn" disabled>Start revision</button>
+            </div>
+          </div>
+
+          <div id="revisionConfig" class="revision-config hidden">
+            <div class="revision-config-card">
+              <div class="revision-config-section">
+                <div class="revision-config-title">How many items?</div>
+                <div class="pill-group" id="revisionCountOptions">
+                  <button class="pill" data-count="5">5</button>
+                  <button class="pill" data-count="10">10</button>
+                  <button class="pill" data-count="15">15</button>
+                  <button class="pill" data-count="all">All</button>
+                </div>
+              </div>
+              <div class="revision-config-section">
+                <div class="revision-config-title">Order</div>
+                <div class="segmented" id="revisionOrderOptions" role="group" aria-label="Revision order">
+                  <button class="segmented__btn" data-order="in-order" aria-pressed="true">In order</button>
+                  <button class="segmented__btn" data-order="random" aria-pressed="false">Random</button>
+                </div>
+              </div>
+              <div class="revision-config-actions">
+                <button id="revisionConfigCancel" class="btn btn--ghost">Cancel</button>
+                <button id="revisionConfigStart" class="btn">Start</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="revisionSession" class="revision-session hidden"></div>
         </div>
 
-        <!-- Floating actions (Story + Questions only) -->
+        <!-- Floating actions (Story + Questions only, plus Revision sessions) -->
         <div id="actionDock" class="action-dock hidden" aria-label="Actions">
-          <button id="actionLeft" class="fab fab--circle fab--secondary" aria-label="Add to Difficult" title="Add to Difficult">
+          <button id="actionLeft" class="fab fab--circle fab--secondary" aria-label="Add to Revision" title="Add to Revision">
             <svg class="fab__icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M2.5 5.5A2.5 2.5 0 0 1 5 3h6a2 2 0 0 1 2 2v16a2 2 0 0 0-2-2H5a2.5 2.5 0 0 0-2.5 2.5V5.5z" />
               <path d="M21.5 5.5A2.5 2.5 0 0 0 19 3h-6a2 2 0 0 0-2 2v16a2 2 0 0 1 2-2h6a2.5 2.5 0 0 1 2.5 2.5V5.5z" />

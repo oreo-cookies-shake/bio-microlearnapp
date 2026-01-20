@@ -50,7 +50,8 @@ let appState = {
   theme: "dark",
   currentLevelId: null, // "as" | "a2"
   currentChapterId: null,
-  currentMode: "story", // "story" | "questions" | "difficult"
+  currentMode: "story", // "story" | "questions" | "revision"
+  currentRevisionSubMode: "story",
   chapters: {} // per-chapter progress
 };
 
@@ -61,9 +62,38 @@ function loadState() {
       const parsed = JSON.parse(raw);
       appState = { ...appState, ...parsed };
     }
+    migrateState();
   } catch (e) {
     console.warn("Could not load state", e);
   }
+}
+
+function migrateState() {
+  if (!appState.currentRevisionSubMode) {
+    appState.currentRevisionSubMode = "story";
+  }
+  if (appState.currentMode === "difficult") {
+    appState.currentMode = "revision";
+  }
+
+  if (!appState.chapters) {
+    appState.chapters = {};
+    return;
+  }
+
+  Object.values(appState.chapters).forEach((chState) => {
+    if (!Array.isArray(chState.revisionStoryIds)) {
+      chState.revisionStoryIds = Array.isArray(chState.difficultStoryIds)
+        ? [...chState.difficultStoryIds]
+        : [];
+    }
+    if (!Array.isArray(chState.revisionQuestionIds)) {
+      chState.revisionQuestionIds = Array.isArray(chState.difficultQuestionIds)
+        ? [...chState.difficultQuestionIds]
+        : [];
+    }
+  });
+  saveState();
 }
 
 function saveState() {
@@ -84,11 +114,20 @@ function ensureChapterState(chapterId) {
     appState.chapters[chapterId] = {
       storyIndex: 0, // how many story points have been shown
       questionIndex: 0, // current question index (0-based)
-      difficultStoryIds: [],
-      difficultQuestionIds: []
+      revisionStoryIds: [],
+      revisionQuestionIds: []
     };
   }
-  return appState.chapters[chapterId];
+  const chState = appState.chapters[chapterId];
+  if (!Array.isArray(chState.revisionStoryIds)) chState.revisionStoryIds = [];
+  if (!Array.isArray(chState.revisionQuestionIds)) chState.revisionQuestionIds = [];
+  if (Array.isArray(chState.difficultStoryIds) && chState.revisionStoryIds.length === 0) {
+    chState.revisionStoryIds = [...chState.difficultStoryIds];
+  }
+  if (Array.isArray(chState.difficultQuestionIds) && chState.revisionQuestionIds.length === 0) {
+    chState.revisionQuestionIds = [...chState.difficultQuestionIds];
+  }
+  return chState;
 }
 
 // ---------- DOM helpers ----------
@@ -111,13 +150,21 @@ const progressFill = qs("#progressFill");
 
 const storyModePanel = qs("#storyMode");
 const questionsModePanel = qs("#questionsMode");
-const difficultModePanel = qs("#difficultMode");
+const revisionModePanel = qs("#revisionMode");
 
 const storyFeedEl = qs("#storyFeed");
 const questionAreaEl = qs("#questionArea");
 
-const difficultEmptyEl = qs("#difficultEmpty");
-const difficultListEl = qs("#difficultList");
+const revisionEmptyEl = qs("#revisionEmpty");
+const revisionListEl = qs("#revisionList");
+const revisionHubEl = qs("#revisionHub");
+const revisionConfigEl = qs("#revisionConfig");
+const revisionSessionEl = qs("#revisionSession");
+const revisionStartBtn = qs("#revisionStartBtn");
+const revisionCountOptionsEl = qs("#revisionCountOptions");
+const revisionOrderOptionsEl = qs("#revisionOrderOptions");
+const revisionConfigStartBtn = qs("#revisionConfigStart");
+const revisionConfigCancelBtn = qs("#revisionConfigCancel");
 
 const themeToggleBtn = qs("#themeToggle");
 const appHeaderEl = document.querySelector(".app-header");
@@ -131,6 +178,15 @@ const actionRightBtn = qs("#actionRight");
 // Question mode UI state (not persisted)
 let questionRevealed = false;
 let currentAnswerEl = null;
+
+// Revision session state (not persisted)
+let isRevisionSessionActive = false;
+let revisionSessionQueue = [];
+let revisionSessionIndex = 0;
+let revisionQuestionRevealed = false;
+let revisionConfigOpen = false;
+let revisionSelectedCount = null;
+let revisionOrder = "in-order";
 
 const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -305,16 +361,20 @@ function setActiveMode(mode) {
 
   storyModePanel.classList.add("hidden");
   questionsModePanel.classList.add("hidden");
-  difficultModePanel.classList.add("hidden");
+  revisionModePanel.classList.add("hidden");
 
   if (mode === "story") storyModePanel.classList.remove("hidden");
   if (mode === "questions") questionsModePanel.classList.remove("hidden");
-  if (mode === "difficult") difficultModePanel.classList.remove("hidden");
+  if (mode === "revision") revisionModePanel.classList.remove("hidden");
 
   // reset per-mode UI state
   if (mode !== "questions") {
     questionRevealed = false;
     currentAnswerEl = null;
+  }
+  if (mode !== "revision") {
+    resetRevisionSession();
+    revisionConfigOpen = false;
   }
 
   renderCurrentMode();
@@ -327,6 +387,49 @@ modeTabs.addEventListener("click", (e) => {
   const mode = btn.dataset.mode;
   setActiveMode(mode);
   saveState();
+});
+
+qsa("[data-revision-submode]").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    if (btn.dataset.revisionSubmode) {
+      appState.currentRevisionSubMode = btn.dataset.revisionSubmode;
+      revisionConfigOpen = false;
+      saveState();
+      renderCurrentMode();
+    }
+  });
+});
+
+revisionStartBtn.addEventListener("click", () => {
+  if (revisionStartBtn.disabled) return;
+  revisionConfigOpen = true;
+  renderCurrentMode();
+});
+
+revisionConfigCancelBtn.addEventListener("click", () => {
+  revisionConfigOpen = false;
+  renderCurrentMode();
+});
+
+revisionConfigStartBtn.addEventListener("click", () => {
+  const chapter = getChapter(appState.currentLevelId, appState.currentChapterId);
+  if (!chapter) return;
+  const chState = ensureChapterState(chapter.id);
+  startRevisionSession(chapter, chState);
+});
+
+revisionCountOptionsEl.addEventListener("click", (e) => {
+  const btn = e.target.closest(".pill");
+  if (!btn || btn.disabled) return;
+  revisionSelectedCount = btn.dataset.count;
+  renderCurrentMode();
+});
+
+revisionOrderOptionsEl.addEventListener("click", (e) => {
+  const btn = e.target.closest(".segmented__btn");
+  if (!btn) return;
+  revisionOrder = btn.dataset.order;
+  renderCurrentMode();
 });
 
 function renderCurrentMode() {
@@ -350,18 +453,8 @@ function renderCurrentMode() {
     const current = total === 0 ? 0 : Math.min(chState.questionIndex + 1, total);
     updateProgress(current, total);
     renderQuestionMode(chapter, chState);
-  } else if (appState.currentMode === "difficult") {
-    const totalHard = chState.difficultStoryIds.length + chState.difficultQuestionIds.length;
-
-    // More meaningful label when there's nothing saved yet
-    if (totalHard === 0) {
-      progressLabel.textContent = "0 saved";
-      progressFill.style.width = "0%";
-    } else {
-      updateProgress(totalHard, totalHard);
-    }
-
-    renderDifficultMode(chapter, chState);
+  } else if (appState.currentMode === "revision") {
+    renderRevisionMode(chapter, chState);
   }
 
   syncActionDock(chapter, chState);
@@ -395,14 +488,42 @@ function setRightButton({ label, shape = "circle", disabled = false }) {
 function syncActionDock(chapter, chState) {
   const mode = appState.currentMode;
 
-  // Show in Story + Questions only
-  if (mode === "difficult" || !chapter) {
+  // Show in Story + Questions + active Revision sessions only
+  if (!chapter) {
     actionDock.classList.add("hidden");
     return;
   }
-  actionDock.classList.remove("hidden");
 
-  // Left button is always the book
+  if (mode === "revision" && isRevisionSessionActive) {
+    actionDock.classList.remove("hidden");
+    actionLeftBtn.classList.add("hidden");
+
+    const total = revisionSessionQueue.length;
+    const done = revisionSessionIndex >= total;
+    if (done) {
+      actionDock.classList.add("hidden");
+      return;
+    }
+
+    if (appState.currentRevisionSubMode === "story") {
+      setRightButton({ label: "OK", shape: "circle", disabled: false });
+    } else {
+      setRightButton({
+        label: revisionQuestionRevealed ? "Next" : "Reveal",
+        shape: "pill",
+        disabled: false
+      });
+    }
+    return;
+  }
+
+  if (mode === "revision") {
+    actionDock.classList.add("hidden");
+    return;
+  }
+
+  actionDock.classList.remove("hidden");
+  actionLeftBtn.classList.remove("hidden");
   actionLeftBtn.disabled = false;
 
   if (mode === "story") {
@@ -434,9 +555,9 @@ actionLeftBtn.addEventListener("click", () => {
   const chState = ensureChapterState(chapter.id);
 
   if (appState.currentMode === "story") {
-    markCurrentStoryDifficult(chapter, chState);
+    markCurrentStoryRevision(chapter, chState);
   } else if (appState.currentMode === "questions") {
-    markCurrentQuestionDifficult(chapter, chState);
+    markCurrentQuestionRevision(chapter, chState);
   }
 });
 
@@ -449,6 +570,8 @@ actionRightBtn.addEventListener("click", () => {
     advanceStory(chapter, chState);
   } else if (appState.currentMode === "questions") {
     handleQuestionPrimary(chapter, chState);
+  } else if (appState.currentMode === "revision") {
+    handleRevisionPrimary();
   }
 });
 
@@ -507,15 +630,15 @@ function advanceStory(chapter, chState) {
   }
 }
 
-function markCurrentStoryDifficult(chapter, chState) {
+function markCurrentStoryRevision(chapter, chState) {
   const idx = Math.max(chState.storyIndex - 1, 0);
   const point = chapter.storyPoints[idx];
   if (!point) return;
 
-  if (!chState.difficultStoryIds.includes(point.id)) {
-    chState.difficultStoryIds.push(point.id);
+  if (!chState.revisionStoryIds.includes(point.id)) {
+    chState.revisionStoryIds.push(point.id);
     saveState();
-    showToast("Saved to Difficult");
+    showToast("Saved to Revision");
   } else {
     showToast("Already saved");
   }
@@ -630,86 +753,289 @@ function advanceQuestion(chapter, chState) {
   renderCurrentMode();
 }
 
-function markCurrentQuestionDifficult(chapter, chState) {
+function markCurrentQuestionRevision(chapter, chState) {
   const total = chapter.questions.length;
   if (total === 0 || chState.questionIndex >= total) return;
 
   const idx = Math.min(chState.questionIndex, total - 1);
   const q = chapter.questions[idx];
 
-  if (!chState.difficultQuestionIds.includes(q.id)) {
-    chState.difficultQuestionIds.push(q.id);
+  if (!chState.revisionQuestionIds.includes(q.id)) {
+    chState.revisionQuestionIds.push(q.id);
     saveState();
-    showToast("Saved to Difficult");
+    showToast("Saved to Revision");
   } else {
     showToast("Already saved");
   }
 }
 
-// ---------- Difficult mode ----------
+// ---------- Revision mode ----------
 
-function renderDifficultMode(chapter, chState) {
-  difficultListEl.innerHTML = "";
+function resetRevisionSession() {
+  isRevisionSessionActive = false;
+  revisionSessionQueue = [];
+  revisionSessionIndex = 0;
+  revisionQuestionRevealed = false;
+}
+
+function getRevisionDeck(chapter, chState, subMode) {
+  if (subMode === "questions") {
+    const qMap = new Map(chapter.questions.map((q) => [q.id, q]));
+    return chState.revisionQuestionIds
+      .map((id) => qMap.get(id))
+      .filter(Boolean)
+      .map((q) => ({
+        id: q.id,
+        type: "Question",
+        question: q.question,
+        answer: q.answer
+      }));
+  }
 
   const storyMap = new Map(chapter.storyPoints.map((p) => [p.id, p]));
-  const qMap = new Map(chapter.questions.map((q) => [q.id, q]));
+  return chState.revisionStoryIds
+    .map((id) => storyMap.get(id))
+    .filter(Boolean)
+    .map((p) => ({
+      id: p.id,
+      type: "Story",
+      text: p.text
+    }));
+}
 
-  const items = [];
-
-  chState.difficultStoryIds.forEach((id) => {
-    const p = storyMap.get(id);
-    if (p) {
-      items.push({
-        type: "Story",
-        id,
-        text: p.text
-      });
-    }
-  });
-
-  chState.difficultQuestionIds.forEach((id) => {
-    const q = qMap.get(id);
-    if (q) {
-      items.push({
-        type: "Question",
-        id,
-        text: q.question
-      });
-    }
-  });
-
-  if (items.length === 0) {
-    difficultEmptyEl.classList.remove("hidden");
+function setRevisionProgress(count) {
+  if (count === 0) {
+    progressLabel.textContent = "0 saved";
+    progressFill.style.width = "0%";
     return;
   }
 
-  difficultEmptyEl.classList.add("hidden");
+  updateProgress(count, count);
+}
 
-  items.forEach((item) => {
+function renderRevisionMode(chapter, chState) {
+  const storyDeck = getRevisionDeck(chapter, chState, "story");
+  const questionDeck = getRevisionDeck(chapter, chState, "questions");
+
+  let subMode = appState.currentRevisionSubMode || "story";
+  if (subMode === "questions" && questionDeck.length === 0 && storyDeck.length > 0) {
+    subMode = "story";
+    appState.currentRevisionSubMode = subMode;
+    saveState();
+  }
+  const deck = subMode === "questions" ? questionDeck : storyDeck;
+
+  qsa("[data-revision-submode]").forEach((btn) => {
+    const isActive = btn.dataset.revisionSubmode === subMode;
+    btn.setAttribute("aria-pressed", isActive ? "true" : "false");
+  });
+
+  if (isRevisionSessionActive) {
+    revisionHubEl.classList.add("hidden");
+    revisionConfigEl.classList.add("hidden");
+    renderRevisionSession();
+    syncActionDock(chapter, chState);
+    return;
+  }
+
+  revisionSessionEl.classList.add("hidden");
+  revisionHubEl.classList.remove("hidden");
+  if (deck.length === 0) {
+    revisionConfigOpen = false;
+  }
+  revisionConfigEl.classList.toggle("hidden", !revisionConfigOpen);
+
+  setRevisionProgress(deck.length);
+
+  revisionListEl.innerHTML = "";
+  revisionStartBtn.disabled = deck.length === 0;
+
+  if (deck.length === 0) {
+    revisionEmptyEl.classList.remove("hidden");
+  } else {
+    revisionEmptyEl.classList.add("hidden");
+  }
+
+  deck.forEach((item) => {
     const li = document.createElement("li");
-    li.className = "difficult-item";
+    li.className = "revision-item";
     li.innerHTML = `
-      <div class="difficult-meta">
-        <span class="difficult-tag">${item.type}</span>
+      <div class="revision-meta">
+        <span class="revision-tag">${item.type}</span>
         <button class="icon-button icon-button--flat remove-btn" aria-label="Remove">×</button>
       </div>
-      <div class="difficult-text">${item.text}</div>
+      <div class="revision-text revision-text--clamp">${item.type === "Story" ? item.text : item.question}</div>
     `;
 
     const removeBtn = li.querySelector(".remove-btn");
     removeBtn.addEventListener("click", (e) => {
       e.stopPropagation();
       if (item.type === "Story") {
-        chState.difficultStoryIds = chState.difficultStoryIds.filter((x) => x !== item.id);
+        chState.revisionStoryIds = chState.revisionStoryIds.filter((x) => x !== item.id);
       } else {
-        chState.difficultQuestionIds = chState.difficultQuestionIds.filter((x) => x !== item.id);
+        chState.revisionQuestionIds = chState.revisionQuestionIds.filter((x) => x !== item.id);
       }
       saveState();
-      renderDifficultMode(chapter, chState);
+      renderRevisionMode(chapter, chState);
     });
 
-    difficultListEl.appendChild(li);
+    revisionListEl.appendChild(li);
   });
+
+  if (revisionConfigOpen) {
+    renderRevisionConfig(deck.length);
+  }
+}
+
+function renderRevisionConfig(deckSize) {
+  revisionConfigEl.classList.toggle("hidden", !revisionConfigOpen);
+  if (!revisionConfigOpen) return;
+
+  const countButtons = Array.from(revisionCountOptionsEl.querySelectorAll(".pill"));
+  let availableCounts = [];
+
+  countButtons.forEach((btn) => {
+    const countValue = btn.dataset.count;
+    if (countValue === "all") {
+      btn.disabled = deckSize === 0;
+      if (deckSize > 0) availableCounts.push("all");
+    } else {
+      const num = Number(countValue);
+      const isAvailable = num <= deckSize;
+      btn.disabled = !isAvailable;
+      if (isAvailable) availableCounts.push(countValue);
+    }
+  });
+
+  if (!availableCounts.includes(revisionSelectedCount)) {
+    revisionSelectedCount = availableCounts[0] || "all";
+  }
+
+  countButtons.forEach((btn) => {
+    btn.classList.toggle("is-selected", btn.dataset.count === revisionSelectedCount);
+  });
+
+  const orderButtons = Array.from(revisionOrderOptionsEl.querySelectorAll(".segmented__btn"));
+  orderButtons.forEach((btn) => {
+    const isActive = btn.dataset.order === revisionOrder;
+    btn.setAttribute("aria-pressed", isActive ? "true" : "false");
+  });
+}
+
+function shuffleArray(items) {
+  for (let i = items.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [items[i], items[j]] = [items[j], items[i]];
+  }
+  return items;
+}
+
+function startRevisionSession(chapter, chState) {
+  const subMode = appState.currentRevisionSubMode || "story";
+  const deck = getRevisionDeck(chapter, chState, subMode);
+  if (deck.length === 0) return;
+
+  let queue = deck.slice();
+  if (revisionOrder === "random") {
+    queue = shuffleArray(queue);
+  }
+
+  let count = revisionSelectedCount === "all" ? queue.length : Number(revisionSelectedCount);
+  if (!count || Number.isNaN(count)) {
+    count = Math.min(queue.length, 5);
+  }
+
+  revisionSessionQueue = queue.slice(0, count);
+  revisionSessionIndex = 0;
+  revisionQuestionRevealed = false;
+  isRevisionSessionActive = true;
+  revisionConfigOpen = false;
+  renderCurrentMode();
+}
+
+function handleRevisionPrimary() {
+  if (!isRevisionSessionActive) return;
+  const total = revisionSessionQueue.length;
+  if (revisionSessionIndex >= total) return;
+
+  if (appState.currentRevisionSubMode === "questions") {
+    if (!revisionQuestionRevealed) {
+      revisionQuestionRevealed = true;
+      renderCurrentMode();
+      return;
+    }
+  }
+
+  revisionSessionIndex += 1;
+  revisionQuestionRevealed = false;
+  renderCurrentMode();
+}
+
+function renderRevisionSession() {
+  revisionSessionEl.classList.remove("hidden");
+  revisionSessionEl.innerHTML = "";
+
+  const total = revisionSessionQueue.length;
+  if (revisionSessionIndex >= total) {
+    const doneCard = document.createElement("div");
+    doneCard.className = "qa-card";
+    doneCard.innerHTML = `
+      <div class="qa-meta">Revision done</div>
+      <div class="qa-text">You’ve reached the end of this revision session.</div>
+    `;
+
+    const actions = document.createElement("div");
+    actions.className = "revision-session-actions";
+    const backBtn = document.createElement("button");
+    backBtn.className = "btn";
+    backBtn.textContent = "Back to Revision list";
+    backBtn.addEventListener("click", () => {
+      resetRevisionSession();
+      renderCurrentMode();
+    });
+    actions.appendChild(backBtn);
+
+    revisionSessionEl.appendChild(doneCard);
+    revisionSessionEl.appendChild(actions);
+
+    progressLabel.textContent = "Done";
+    progressFill.style.width = "100%";
+    return;
+  }
+
+  updateProgress(revisionSessionIndex + 1, total);
+
+  const current = revisionSessionQueue[revisionSessionIndex];
+  if (appState.currentRevisionSubMode === "story") {
+    const bubble = document.createElement("div");
+    bubble.className = "bubble bubble--left";
+    bubble.innerHTML = `<p class="bubble-text">${current.text}</p>`;
+    revisionSessionEl.appendChild(bubble);
+  } else {
+    const card = document.createElement("div");
+    card.className = "qa-card";
+
+    const meta = document.createElement("div");
+    meta.className = "qa-meta";
+    meta.textContent = "Question";
+
+    const qText = document.createElement("div");
+    qText.className = "qa-text";
+    qText.textContent = current.question;
+
+    card.appendChild(meta);
+    card.appendChild(qText);
+
+    if (current.answer) {
+      const ans = document.createElement("div");
+      ans.className = "qa-answer";
+      ans.textContent = current.answer;
+      if (!revisionQuestionRevealed) ans.classList.add("hidden");
+      card.appendChild(ans);
+    }
+
+    revisionSessionEl.appendChild(card);
+  }
 }
 
 // ---------- PWA service worker ----------

@@ -117,7 +117,7 @@ body {
 /* Content should feel like content: flatter surfaces with a clean edge */
 .bubble,
 .qa-card,
-.difficult-item {
+.revision-item {
   background: var(--content-bg);
   border: 1px solid var(--content-edge);
   border-radius: var(--radius-card);
