@@ -360,4 +360,3 @@ body.light .progress-bar {
   border-radius: 999px;
   background: linear-gradient(90deg, var(--progress-start), var(--progress-end));
 }
-
