@@ -1,5 +1,5 @@
 // Bump the version to force PWAs to update on phones.
-const CACHE_NAME = "microlearn-bio-v45";
+const CACHE_NAME = "microlearn-bio-v46";
 
 const ASSETS = [
   "./",
@@ -10,7 +10,7 @@ const ASSETS = [
   "./modes.css",
   "./components.css",
   "./script.js",
-  "./manifest.json"
+  "./manifest.webmanifest"
 ];
 
 self.addEventListener("install", (event) => {
