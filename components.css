@@ -354,12 +354,18 @@
   gap: 12px;
   color: var(--muted);
   font-size: 13px;
+  padding-right: 28px;
 }
 
 .remove-btn {
-  width: 44px;
-  height: 44px;
-  border-radius: 18px;
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  font-size: 16px;
+  opacity: 0.6;
 }
 
 .revision-header {
@@ -411,6 +417,7 @@
   flex-direction: column;
   gap: 10px;
   flex: 1;
+  position: relative;
 }
 
 .revision-checkbox-wrap {
@@ -465,6 +472,8 @@
 .revision-session-header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  width: 100%;
 }
 
 .revision-session-actions {
