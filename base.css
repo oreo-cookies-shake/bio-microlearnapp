@@ -30,6 +30,16 @@ body {
 }
 
 .hidden { display: none !important; }
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
 
 /* =====================
    2) App layout
@@ -70,7 +80,7 @@ body {
 
 /* Home screen header: keep it minimal (just the theme toggle) */
 .app-header.header--home {
-  justify-content: flex-end;
+  justify-content: space-between;
 }
 .app-header.header--home .header-title {
   display: none;

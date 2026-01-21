@@ -16,6 +16,12 @@
   <div class="app">
     <header class="app-header">
       <button class="icon-button back-button hidden" id="backButton" aria-label="Back">←</button>
+      <button class="icon-button hidden" id="settingsButton" aria-label="Open settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="3.5"></circle>
+          <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.05.05a2 2 0 1 1-2.83 2.83l-.05-.05a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.54V21a2 2 0 1 1-4 0v-.08a1.7 1.7 0 0 0-1-1.54 1.7 1.7 0 0 0-1.87.34l-.05.05a2 2 0 1 1-2.83-2.83l.05-.05a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.54-1H3a2 2 0 1 1 0-4h.08a1.7 1.7 0 0 0 1.54-1 1.7 1.7 0 0 0-.34-1.87l-.05-.05a2 2 0 1 1 2.83-2.83l.05.05a1.7 1.7 0 0 0 1.87.34h0A1.7 1.7 0 0 0 9 3.08V3a2 2 0 1 1 4 0v.08a1.7 1.7 0 0 0 1 1.54h0a1.7 1.7 0 0 0 1.87-.34l.05-.05a2 2 0 1 1 2.83 2.83l-.05.05a1.7 1.7 0 0 0-.34 1.87v0A1.7 1.7 0 0 0 20.92 11H21a2 2 0 1 1 0 4h-.08a1.7 1.7 0 0 0-1.54 1z"></path>
+        </svg>
+      </button>
       <div class="header-title">
         <span id="headerSubtitle" class="header-subtitle"></span>
         <h1 id="headerTitle" class="header-main"></h1>
@@ -156,6 +162,46 @@
       <div class="modal__actions">
         <button id="revisionSwitchCancel" class="btn btn--ghost">Cancel</button>
         <button id="revisionSwitchConfirm" class="btn">End &amp; Switch</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="settingsModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+    <div class="modal__card modal__card--settings">
+      <div class="modal__header">
+        <div id="settingsTitle" class="modal__title">Settings</div>
+        <button id="settingsClose" class="icon-button icon-button--flat icon-button--small" aria-label="Close settings">×</button>
+      </div>
+      <div class="settings-section">
+        <div class="settings-section-title">Progress</div>
+        <div class="settings-actions">
+          <button class="btn btn--warning" type="button" data-reset="points">Reset Points progress</button>
+          <button class="btn btn--warning" type="button" data-reset="questions">Reset Questions progress</button>
+          <button class="btn btn--warning" type="button" data-reset="all">Reset ALL progress</button>
+        </div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-section-title">Backup</div>
+        <div class="settings-actions">
+          <button id="exportBackup" class="btn" type="button">Export backup</button>
+          <button id="importBackup" class="btn btn--ghost" type="button">Import backup</button>
+          <input id="importFile" class="visually-hidden" type="file" accept="application/json" />
+        </div>
+        <p class="settings-help">Backups only include Microlearn Bio data stored on this device.</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="confirmDialog" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+    <div class="modal__card">
+      <div class="modal__header">
+        <div id="confirmTitle" class="modal__title">Confirm</div>
+        <button id="confirmClose" class="icon-button icon-button--flat icon-button--small" aria-label="Close dialog">×</button>
+      </div>
+      <div id="confirmMessage" class="modal__text">This will permanently clear your local progress on this device.</div>
+      <div class="modal__actions">
+        <button id="confirmCancel" class="btn btn--ghost">Cancel</button>
+        <button id="confirmConfirm" class="btn btn--warning">Reset</button>
       </div>
     </div>
   </div>

@@ -57,6 +57,16 @@
   box-shadow: none;
 }
 
+.btn--warning {
+  border-color: rgba(226, 160, 117, 0.55);
+  background: rgba(226, 160, 117, 0.12);
+  color: var(--text);
+}
+
+.btn--warning:active {
+  box-shadow: var(--shadow-press), var(--highlight-line);
+}
+
 /* Segmented controls */
 .segmented {
   display: inline-flex;
@@ -179,6 +189,11 @@
   height: 34px;
   border-radius: 12px;
   font-size: 14px;
+}
+
+.icon-button svg {
+  width: 20px;
+  height: 20px;
 }
 
 /* =====================
@@ -516,16 +531,57 @@
   gap: 16px;
 }
 
+.modal__card--settings {
+  width: min(520px, 100%);
+}
+
+.modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
 .modal__title {
   font-size: 15px;
   font-weight: 650;
   color: var(--text);
 }
 
+.modal__text {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
 .modal__actions {
   display: flex;
   gap: 10px;
   justify-content: flex-end;
+}
+
+.settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.settings-section-title {
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--muted);
+  letter-spacing: 0.01em;
+}
+
+.settings-actions {
+  display: grid;
+  gap: 10px;
+}
+
+.settings-help {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
 }
 
 /* =====================

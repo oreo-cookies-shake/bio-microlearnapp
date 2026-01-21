@@ -45,26 +45,32 @@ const DATA = {
 // ---------- State & persistence ----------
 
 const STORAGE_KEY = "microlearn-bio-state-v1";
+const STORAGE_PREFIX = "microlearnBio:";
 
-let appState = {
+const createDefaultState = () => ({
   theme: "dark",
   currentLevelId: null, // "as" | "a2"
   currentChapterId: null,
   currentMode: "story", // "story" | "questions" | "revision"
   currentRevisionSubMode: "story",
   chapters: {} // per-chapter progress
-};
+});
+
+let appState = createDefaultState();
 
 function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      appState = { ...appState, ...parsed };
+      appState = { ...createDefaultState(), ...parsed };
+    } else {
+      appState = createDefaultState();
     }
     migrateState();
   } catch (e) {
     console.warn("Could not load state", e);
+    appState = createDefaultState();
   }
 }
 
@@ -102,6 +108,77 @@ function saveState() {
   } catch (e) {
     console.warn("Could not save state", e);
   }
+}
+
+function isAppStorageKey(key) {
+  return key === STORAGE_KEY || key.startsWith(STORAGE_PREFIX);
+}
+
+function getAllAppKeys() {
+  const keys = new Set();
+  for (let i = 0; i < localStorage.length; i += 1) {
+    const key = localStorage.key(i);
+    if (key && isAppStorageKey(key)) {
+      keys.add(key);
+    }
+  }
+  return Array.from(keys);
+}
+
+function resetPointsProgress() {
+  Object.values(appState.chapters).forEach((chState) => {
+    chState.storyIndex = 0;
+    chState.revisionStoryIds = [];
+  });
+}
+
+function resetQuestionsProgress() {
+  Object.values(appState.chapters).forEach((chState) => {
+    chState.questionIndex = 0;
+    chState.revisionQuestionIds = [];
+  });
+}
+
+function resetAllProgress() {
+  resetPointsProgress();
+  resetQuestionsProgress();
+}
+
+function exportBackup() {
+  const keys = getAllAppKeys();
+  const data = {};
+  keys.forEach((key) => {
+    const value = localStorage.getItem(key);
+    if (value !== null) {
+      data[key] = value;
+    }
+  });
+  return {
+    version: 1,
+    createdAt: new Date().toISOString(),
+    data
+  };
+}
+
+function importBackup(payload) {
+  const data = payload && typeof payload === "object" ? payload.data : null;
+  if (!data || typeof data !== "object") {
+    return { ok: false, error: "invalid-format" };
+  }
+
+  const entries = Object.entries(data).filter(
+    ([key, value]) => isAppStorageKey(key) && typeof value === "string"
+  );
+
+  if (entries.length === 0) {
+    return { ok: false, error: "no-entries" };
+  }
+
+  getAllAppKeys().forEach((key) => localStorage.removeItem(key));
+  entries.forEach(([key, value]) => {
+    localStorage.setItem(key, value);
+  });
+  return { ok: true };
 }
 
 function getChapter(levelId, chapterId) {
@@ -173,6 +250,18 @@ const revisionConfigCancelBtn = qs("#revisionConfigCancel");
 const themeToggleBtn = qs("#themeToggle");
 const appHeaderEl = document.querySelector(".app-header");
 const toastEl = qs("#toast");
+const settingsButton = qs("#settingsButton");
+const settingsModal = qs("#settingsModal");
+const settingsCloseBtn = qs("#settingsClose");
+const exportBackupBtn = qs("#exportBackup");
+const importBackupBtn = qs("#importBackup");
+const importFileInput = qs("#importFile");
+const confirmDialog = qs("#confirmDialog");
+const confirmCloseBtn = qs("#confirmClose");
+const confirmCancelBtn = qs("#confirmCancel");
+const confirmConfirmBtn = qs("#confirmConfirm");
+const confirmMessageEl = qs("#confirmMessage");
+const confirmTitleEl = qs("#confirmTitle");
 
 // Floating actions (Story + Questions)
 const actionDock = qs("#actionDock");
@@ -240,6 +329,190 @@ function showToast(message) {
   }, 1600);
 }
 
+// ---------- Settings + Backup ----------
+
+let confirmAction = null;
+
+function openModal(modal) {
+  modal.classList.remove("hidden");
+}
+
+function closeModal(modal) {
+  modal.classList.add("hidden");
+}
+
+function openConfirmDialog({ title, message, confirmLabel, onConfirm }) {
+  confirmTitleEl.textContent = title;
+  confirmMessageEl.textContent = message;
+  confirmConfirmBtn.textContent = confirmLabel;
+  confirmAction = onConfirm;
+  openModal(confirmDialog);
+}
+
+function closeConfirmDialog() {
+  confirmAction = null;
+  closeModal(confirmDialog);
+}
+
+function resetTransientUiState() {
+  resetRevisionSession();
+  isRevisionConfigOpen = false;
+  revisionSelectMode = false;
+  revisionSelectedIds.clear();
+  questionRevealed = false;
+  currentAnswerEl = null;
+}
+
+function refreshUiAfterStateChange() {
+  resetTransientUiState();
+  applyTheme();
+
+  if (!screenChapter.classList.contains("hidden")) {
+    if (appState.currentLevelId && appState.currentChapterId) {
+      showScreen("chapter");
+      renderCurrentMode();
+      return;
+    }
+  }
+
+  if (!screenChapters.classList.contains("hidden")) {
+    if (appState.currentLevelId) {
+      showScreen("chapters");
+      renderChapters();
+      return;
+    }
+  }
+
+  showScreen("levels");
+}
+
+settingsButton.addEventListener("click", () => {
+  openModal(settingsModal);
+});
+
+settingsCloseBtn.addEventListener("click", () => {
+  closeModal(settingsModal);
+});
+
+settingsModal.addEventListener("click", (e) => {
+  if (e.target === settingsModal) {
+    closeModal(settingsModal);
+  }
+});
+
+confirmCloseBtn.addEventListener("click", () => {
+  closeConfirmDialog();
+});
+
+confirmCancelBtn.addEventListener("click", () => {
+  closeConfirmDialog();
+});
+
+confirmDialog.addEventListener("click", (e) => {
+  if (e.target === confirmDialog) {
+    closeConfirmDialog();
+  }
+});
+
+confirmConfirmBtn.addEventListener("click", () => {
+  if (confirmAction) {
+    confirmAction();
+  }
+  closeConfirmDialog();
+});
+
+qsa("[data-reset]").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const kind = btn.dataset.reset;
+    openConfirmDialog({
+      title: "Reset progress?",
+      message: "This will permanently clear your local progress on this device.",
+      confirmLabel: "Reset",
+      onConfirm: () => {
+        if (kind === "points") {
+          resetPointsProgress();
+        } else if (kind === "questions") {
+          resetQuestionsProgress();
+        } else {
+          resetAllProgress();
+        }
+        saveState();
+        refreshUiAfterStateChange();
+        showToast("Progress reset");
+      }
+    });
+  });
+});
+
+exportBackupBtn.addEventListener("click", () => {
+  const payload = exportBackup();
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {
+    type: "application/json"
+  });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "microlearn-bio-backup.json";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+  showToast("Backup exported");
+});
+
+importBackupBtn.addEventListener("click", () => {
+  importFileInput.click();
+});
+
+importFileInput.addEventListener("change", async () => {
+  const file = importFileInput.files && importFileInput.files[0];
+  importFileInput.value = "";
+  if (!file) return;
+
+  let payload = null;
+  try {
+    const text = await file.text();
+    payload = JSON.parse(text);
+  } catch (e) {
+    showToast("That backup file isn’t valid.");
+    return;
+  }
+
+  if (!payload || typeof payload !== "object" || !payload.data) {
+    showToast("That backup file isn’t valid.");
+    return;
+  }
+
+  openConfirmDialog({
+    title: "Restore backup?",
+    message: "This will replace your current local progress with the backup.",
+    confirmLabel: "Restore",
+    onConfirm: () => {
+      const result = importBackup(payload);
+      if (!result.ok) {
+        showToast("Backup could not be restored.");
+        return;
+      }
+      loadState();
+      refreshUiAfterStateChange();
+      showToast("Backup restored");
+    }
+  });
+});
+
+document.addEventListener("keydown", (e) => {
+  if (e.key !== "Escape") return;
+
+  if (!confirmDialog.classList.contains("hidden")) {
+    closeConfirmDialog();
+    return;
+  }
+
+  if (!settingsModal.classList.contains("hidden")) {
+    closeModal(settingsModal);
+  }
+});
+
 // ---------- Theme ----------
 
 function applyTheme() {
@@ -273,6 +546,7 @@ function showScreen(name) {
   if (name === "levels") {
     screenLevels.classList.remove("hidden");
     backButton.classList.add("hidden");
+    settingsButton.classList.remove("hidden");
     headerSubtitleEl.textContent = "";
     headerTitleEl.textContent = "";
     appHeaderEl.classList.add("header--home");
@@ -280,12 +554,14 @@ function showScreen(name) {
     screenChapters.classList.remove("hidden");
     appHeaderEl.classList.add("header--list");
     backButton.classList.remove("hidden");
+    settingsButton.classList.add("hidden");
     headerTitleEl.textContent = DATA[appState.currentLevelId].label;
     headerSubtitleEl.textContent = "Choose a chapter";
   } else if (name === "chapter") {
     screenChapter.classList.remove("hidden");
     appHeaderEl.classList.add("header--chapter");
     backButton.classList.remove("hidden");
+    settingsButton.classList.add("hidden");
     const chapter = getChapter(appState.currentLevelId, appState.currentChapterId);
     headerTitleEl.textContent = chapter.title;
     headerSubtitleEl.textContent = DATA[appState.currentLevelId].label;
