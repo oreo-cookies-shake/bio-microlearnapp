@@ -47,7 +47,7 @@
       <!-- Screen 3: Chapter modes (Story / Questions / Revision) -->
       <section id="screenChapter" class="screen hidden">
         <div class="tabs" id="modeTabs">
-          <button class="tab active" data-mode="story">Story</button>
+          <button class="tab active" data-mode="story">Points</button>
           <button class="tab" data-mode="questions">Questions</button>
           <button class="tab" data-mode="revision">Revision</button>
         </div>
@@ -73,7 +73,7 @@
         <div id="revisionMode" class="mode-panel hidden">
           <div class="revision-header">
             <div class="segmented" role="tablist" aria-label="Revision type">
-              <button class="segmented__btn" data-revision-submode="story" aria-pressed="true">Story</button>
+              <button class="segmented__btn" data-revision-submode="story" aria-pressed="true">Points</button>
               <button class="segmented__btn" data-revision-submode="questions" aria-pressed="false">Questions</button>
             </div>
           </div>
@@ -91,7 +91,17 @@
             </div>
             <ul id="revisionList" class="revision-list"></ul>
             <div class="revision-actions">
-              <button id="revisionStartBtn" class="btn" disabled>Start revision</button>
+              <div id="revisionSelectionBar" class="revision-selection hidden">
+                <span id="revisionSelectedCount" class="revision-selection-count">0 selected</span>
+                <div class="revision-selection-actions">
+                  <button id="revisionSelectAll" class="btn btn--ghost btn--small" type="button">Select all</button>
+                  <button id="revisionClearSelection" class="btn btn--ghost btn--small" type="button">Clear</button>
+                </div>
+              </div>
+              <div class="revision-action-buttons">
+                <button id="revisionSelectToggle" class="btn btn--ghost" type="button">Select</button>
+                <button id="revisionStartBtn" class="btn" disabled>Start revision</button>
+              </div>
             </div>
           </div>
 

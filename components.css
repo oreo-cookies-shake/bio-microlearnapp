@@ -37,6 +37,17 @@
   box-shadow: none;
 }
 
+.btn--small {
+  min-height: 32px;
+  padding: 6px 12px;
+  font-size: 12px;
+  box-shadow: none;
+}
+
+.btn--small:active {
+  box-shadow: none;
+}
+
 /* Segmented controls */
 .segmented {
   display: inline-flex;
@@ -152,6 +163,13 @@
 .icon-button:focus-visible {
   outline: 2px solid rgba(143, 181, 166, 0.50);
   outline-offset: 3px;
+}
+
+.icon-button--small {
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  font-size: 14px;
 }
 
 /* =====================
@@ -353,7 +371,58 @@
 .revision-actions {
   padding-top: 12px;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.revision-action-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.revision-selection {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.revision-selection-actions {
+  display: inline-flex;
+  gap: 8px;
+}
+
+.revision-selection-count {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.revision-item--selectable {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.revision-item-content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+
+.revision-checkbox-wrap {
+  display: inline-flex;
+  align-items: flex-start;
+  padding-top: 4px;
+}
+
+.revision-checkbox {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
 }
 
 .revision-config {
@@ -391,6 +460,11 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
+}
+
+.revision-session-header {
+  display: flex;
+  align-items: center;
 }
 
 .revision-session-actions {
