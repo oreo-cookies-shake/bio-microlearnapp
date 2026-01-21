@@ -161,6 +161,11 @@ const revisionHubEl = qs("#revisionHub");
 const revisionConfigEl = qs("#revisionConfig");
 const revisionSessionEl = qs("#revisionSession");
 const revisionStartBtn = qs("#revisionStartBtn");
+const revisionSelectToggleBtn = qs("#revisionSelectToggle");
+const revisionSelectionBarEl = qs("#revisionSelectionBar");
+const revisionSelectedCountEl = qs("#revisionSelectedCount");
+const revisionSelectAllBtn = qs("#revisionSelectAll");
+const revisionClearSelectionBtn = qs("#revisionClearSelection");
 const revisionCountOptionsEl = qs("#revisionCountOptions");
 const revisionOrderOptionsEl = qs("#revisionOrderOptions");
 const revisionConfigStartBtn = qs("#revisionConfigStart");
@@ -188,11 +193,13 @@ let currentAnswerEl = null;
 let isRevisionSessionActive = false;
 let revisionSessionQueue = [];
 let revisionSessionIndex = 0;
-let revisionQuestionRevealed = false;
 let revisionConfigOpen = false;
 let revisionSelectedCount = null;
 let revisionOrder = "in-order";
 let pendingRevisionSubMode = null;
+let revisionSelectMode = false;
+let revisionSelectedIds = new Set();
+let revisionQuestionRevealedById = {};
 
 const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -333,7 +340,7 @@ function renderChapters() {
         <div class="progress-circle">${badge}</div>
       </div>
       <div class="chapter-meta">
-        ${isSoon ? "<span>Coming soon</span>" : `<span>${totalStory} story points</span><span>${totalQ} questions</span>`}
+        ${isSoon ? "<span>Coming soon</span>" : `<span>${totalStory} points</span><span>${totalQ} questions</span>`}
       </div>
     `;
 
@@ -381,6 +388,8 @@ function setActiveMode(mode) {
   if (mode !== "revision") {
     resetRevisionSession();
     revisionConfigOpen = false;
+    revisionSelectMode = false;
+    revisionSelectedIds.clear();
   }
 
   renderCurrentMode();
@@ -406,6 +415,8 @@ qsa("[data-revision-submode]").forEach((btn) => {
 
     appState.currentRevisionSubMode = btn.dataset.revisionSubmode;
     revisionConfigOpen = false;
+    revisionSelectMode = false;
+    revisionSelectedIds.clear();
     saveState();
     renderCurrentMode();
   });
@@ -413,7 +424,44 @@ qsa("[data-revision-submode]").forEach((btn) => {
 
 revisionStartBtn.addEventListener("click", () => {
   if (revisionStartBtn.disabled) return;
+  const chapter = getChapter(appState.currentLevelId, appState.currentChapterId);
+  if (!chapter) return;
+  const chState = ensureChapterState(chapter.id);
+
+  if (revisionSelectMode) {
+    if (revisionSelectedIds.size === 0) {
+      showToast("Select at least 1 item");
+      return;
+    }
+    startRevisionSession(chapter, chState, Array.from(revisionSelectedIds));
+    return;
+  }
+
   revisionConfigOpen = true;
+  renderCurrentMode();
+});
+
+revisionSelectToggleBtn.addEventListener("click", () => {
+  revisionSelectMode = !revisionSelectMode;
+  if (!revisionSelectMode) {
+    revisionSelectedIds.clear();
+  } else {
+    revisionConfigOpen = false;
+  }
+  renderCurrentMode();
+});
+
+revisionSelectAllBtn.addEventListener("click", () => {
+  const chapter = getChapter(appState.currentLevelId, appState.currentChapterId);
+  if (!chapter) return;
+  const chState = ensureChapterState(chapter.id);
+  const deck = getRevisionDeck(chapter, chState, appState.currentRevisionSubMode);
+  revisionSelectedIds = new Set(deck.map((item) => item.id));
+  renderCurrentMode();
+});
+
+revisionClearSelectionBtn.addEventListener("click", () => {
+  revisionSelectedIds.clear();
   renderCurrentMode();
 });
 
@@ -535,9 +583,11 @@ function syncActionDock(chapter, chState) {
       setLeftButton({ label: "Exit", shape: "circle" });
       setRightButton({ label: "OK", shape: "circle", disabled: false });
     } else {
+      const current = getCurrentRevisionItem();
+      const isRevealed = isRevisionQuestionRevealed(current);
       setLeftButton({ label: "Exit", shape: "pill" });
       setRightButton({
-        label: revisionQuestionRevealed ? "Next" : "Reveal",
+        label: isRevealed ? "Next" : "Reveal",
         shape: "pill",
         disabled: false
       });
@@ -658,7 +708,7 @@ function advanceStory(chapter, chState) {
     saveState();
     renderCurrentMode();
   } else {
-    showToast("End of story");
+    showToast("End of points");
   }
 }
 
@@ -807,7 +857,7 @@ function resetRevisionSession() {
   isRevisionSessionActive = false;
   revisionSessionQueue = [];
   revisionSessionIndex = 0;
-  revisionQuestionRevealed = false;
+  revisionQuestionRevealedById = {};
 }
 
 function getRevisionDeck(chapter, chState, subMode) {
@@ -818,7 +868,8 @@ function getRevisionDeck(chapter, chState, subMode) {
       .filter(Boolean)
       .map((q) => ({
         id: q.id,
-        type: "Question",
+        kind: "questions",
+        label: "Question",
         question: q.question,
         answer: q.answer
       }));
@@ -830,9 +881,20 @@ function getRevisionDeck(chapter, chState, subMode) {
     .filter(Boolean)
     .map((p) => ({
       id: p.id,
-      type: "Story",
+      kind: "story",
+      label: "Point",
       text: p.text
     }));
+}
+
+function getCurrentRevisionItem() {
+  if (!isRevisionSessionActive) return null;
+  return revisionSessionQueue[revisionSessionIndex] || null;
+}
+
+function isRevisionQuestionRevealed(item) {
+  if (!item) return false;
+  return Boolean(revisionQuestionRevealedById[item.id]);
 }
 
 function setRevisionProgress(count) {
@@ -843,6 +905,19 @@ function setRevisionProgress(count) {
   }
 
   updateProgress(count, count);
+}
+
+function updateRevisionSelectionUI(deckSize) {
+  if (!revisionSelectMode) {
+    revisionSelectedCountEl.textContent = "0 selected";
+    revisionSelectAllBtn.disabled = true;
+    revisionClearSelectionBtn.disabled = true;
+    return;
+  }
+  const selectedCount = revisionSelectedIds.size;
+  revisionSelectedCountEl.textContent = `${selectedCount} selected`;
+  revisionSelectAllBtn.disabled = deckSize === 0 || selectedCount === deckSize;
+  revisionClearSelectionBtn.disabled = selectedCount === 0;
 }
 
 function renderRevisionMode(chapter, chState) {
@@ -876,6 +951,13 @@ function renderRevisionMode(chapter, chState) {
   revisionHubEl.classList.remove("hidden");
   if (deck.length === 0) {
     revisionConfigOpen = false;
+    revisionSelectMode = false;
+    revisionSelectedIds.clear();
+  }
+  const deckIdSet = new Set(deck.map((item) => item.id));
+  revisionSelectedIds = new Set([...revisionSelectedIds].filter((id) => deckIdSet.has(id)));
+  if (revisionSelectMode) {
+    revisionConfigOpen = false;
   }
   revisionConfigEl.classList.toggle("hidden", !revisionConfigOpen);
 
@@ -883,6 +965,10 @@ function renderRevisionMode(chapter, chState) {
 
   revisionListEl.innerHTML = "";
   revisionStartBtn.disabled = deck.length === 0;
+  revisionStartBtn.textContent = revisionSelectMode ? "Start selected" : "Start revision";
+  revisionSelectionBarEl.classList.toggle("hidden", !revisionSelectMode);
+  revisionSelectToggleBtn.textContent = revisionSelectMode ? "Done" : "Select";
+  revisionSelectToggleBtn.disabled = deck.length === 0;
 
   if (deck.length === 0) {
     revisionEmptyEl.classList.remove("hidden");
@@ -893,28 +979,54 @@ function renderRevisionMode(chapter, chState) {
   deck.forEach((item) => {
     const li = document.createElement("li");
     li.className = "revision-item";
-    li.innerHTML = `
+    if (revisionSelectMode) {
+      li.classList.add("revision-item--selectable");
+      const checkboxWrap = document.createElement("label");
+      checkboxWrap.className = "revision-checkbox-wrap";
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.className = "revision-checkbox";
+      checkbox.checked = revisionSelectedIds.has(item.id);
+      checkbox.addEventListener("change", () => {
+        if (checkbox.checked) {
+          revisionSelectedIds.add(item.id);
+        } else {
+          revisionSelectedIds.delete(item.id);
+        }
+        updateRevisionSelectionUI(deck.length);
+      });
+      checkboxWrap.appendChild(checkbox);
+      li.appendChild(checkboxWrap);
+    }
+
+    const content = document.createElement("div");
+    content.className = "revision-item-content";
+    content.innerHTML = `
       <div class="revision-meta">
-        <span class="revision-tag">${item.type}</span>
+        <span class="revision-tag">${item.label}</span>
         <button class="icon-button icon-button--flat remove-btn" aria-label="Remove">×</button>
       </div>
-      <div class="revision-text revision-text--clamp">${item.type === "Story" ? item.text : item.question}</div>
+      <div class="revision-text revision-text--clamp">${item.kind === "story" ? item.text : item.question}</div>
     `;
+    li.appendChild(content);
 
     const removeBtn = li.querySelector(".remove-btn");
     removeBtn.addEventListener("click", (e) => {
       e.stopPropagation();
-      if (item.type === "Story") {
+      if (item.kind === "story") {
         chState.revisionStoryIds = chState.revisionStoryIds.filter((x) => x !== item.id);
       } else {
         chState.revisionQuestionIds = chState.revisionQuestionIds.filter((x) => x !== item.id);
       }
+      revisionSelectedIds.delete(item.id);
       saveState();
       renderRevisionMode(chapter, chState);
     });
 
     revisionListEl.appendChild(li);
   });
+
+  updateRevisionSelectionUI(deck.length);
 
   if (revisionConfigOpen) {
     renderRevisionConfig(deck.length);
@@ -964,26 +1076,36 @@ function shuffleArray(items) {
   return items;
 }
 
-function startRevisionSession(chapter, chState) {
+function startRevisionSession(chapter, chState, selectedIds = null) {
   const subMode = appState.currentRevisionSubMode || "story";
   const deck = getRevisionDeck(chapter, chState, subMode);
   if (deck.length === 0) return;
 
   let queue = deck.slice();
-  if (revisionOrder === "random") {
-    queue = shuffleArray(queue);
+  if (Array.isArray(selectedIds) && selectedIds.length > 0) {
+    const selectedSet = new Set(selectedIds);
+    queue = deck.filter((item) => selectedSet.has(item.id));
+  } else {
+    if (revisionOrder === "random") {
+      queue = shuffleArray(queue);
+    }
+
+    let count = revisionSelectedCount === "all" ? queue.length : Number(revisionSelectedCount);
+    if (!count || Number.isNaN(count)) {
+      count = Math.min(queue.length, 5);
+    }
+
+    queue = queue.slice(0, count);
   }
 
-  let count = revisionSelectedCount === "all" ? queue.length : Number(revisionSelectedCount);
-  if (!count || Number.isNaN(count)) {
-    count = Math.min(queue.length, 5);
-  }
-
-  revisionSessionQueue = queue.slice(0, count);
+  if (queue.length === 0) return;
+  revisionSessionQueue = queue;
   revisionSessionIndex = 0;
-  revisionQuestionRevealed = false;
+  revisionQuestionRevealedById = {};
   isRevisionSessionActive = true;
   revisionConfigOpen = false;
+  revisionSelectMode = false;
+  revisionSelectedIds.clear();
   renderCurrentMode();
 }
 
@@ -993,15 +1115,22 @@ function handleRevisionPrimary() {
   if (revisionSessionIndex >= total) return;
 
   if (appState.currentRevisionSubMode === "questions") {
-    if (!revisionQuestionRevealed) {
-      revisionQuestionRevealed = true;
+    const current = getCurrentRevisionItem();
+    if (current && !isRevisionQuestionRevealed(current)) {
+      revisionQuestionRevealedById[current.id] = true;
       renderCurrentMode();
       return;
     }
   }
 
   revisionSessionIndex += 1;
-  revisionQuestionRevealed = false;
+  renderCurrentMode();
+}
+
+function handleRevisionPrev() {
+  if (!isRevisionSessionActive) return;
+  if (revisionSessionIndex <= 0) return;
+  revisionSessionIndex -= 1;
   renderCurrentMode();
 }
 
@@ -1045,6 +1174,18 @@ function renderRevisionSession() {
     renderRevisionSession();
     return;
   }
+
+  const header = document.createElement("div");
+  header.className = "revision-session-header";
+  const prevBtn = document.createElement("button");
+  prevBtn.className = "icon-button icon-button--flat icon-button--small";
+  prevBtn.textContent = "←";
+  prevBtn.setAttribute("aria-label", "Prev");
+  prevBtn.disabled = revisionSessionIndex === 0;
+  prevBtn.addEventListener("click", handleRevisionPrev);
+  header.appendChild(prevBtn);
+  revisionSessionEl.appendChild(header);
+
   if (appState.currentRevisionSubMode === "story") {
     const bubble = document.createElement("div");
     bubble.className = "bubble bubble--left";
@@ -1069,7 +1210,7 @@ function renderRevisionSession() {
       const ans = document.createElement("div");
       ans.className = "qa-answer";
       ans.textContent = current.answer;
-      if (!revisionQuestionRevealed) ans.classList.add("hidden");
+      if (!isRevisionQuestionRevealed(current)) ans.classList.add("hidden");
       card.appendChild(ans);
     }
 
