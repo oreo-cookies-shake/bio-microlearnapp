@@ -38,6 +38,11 @@
   margin: 0;
 }
 
+.revision-point--focused {
+  border-color: rgba(143, 181, 166, 0.5);
+  box-shadow: var(--shadow-card), var(--highlight-line);
+}
+
 /* Subtle iMessage-style bubble: no triangle tail (cleaner) */
 .bubble--left::before,
 .bubble--left::after {
