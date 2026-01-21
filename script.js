@@ -161,7 +161,6 @@ const revisionHubEl = qs("#revisionHub");
 const revisionConfigEl = qs("#revisionConfig");
 const revisionSessionEl = qs("#revisionSession");
 const revisionStartBtn = qs("#revisionStartBtn");
-const revisionSelectToggleBtn = qs("#revisionSelectToggle");
 const revisionSelectionBarEl = qs("#revisionSelectionBar");
 const revisionSelectedCountEl = qs("#revisionSelectedCount");
 const revisionSelectAllBtn = qs("#revisionSelectAll");
@@ -194,12 +193,14 @@ let isRevisionSessionActive = false;
 let revisionSessionQueue = [];
 let revisionSessionIndex = 0;
 let revisionConfigOpen = false;
-let revisionSelectedCount = null;
+let revisionCountChoice = null;
+let revisionLastStandardCount = "all";
 let revisionOrder = "in-order";
 let pendingRevisionSubMode = null;
 let revisionSelectMode = false;
 let revisionSelectedIds = new Set();
 let revisionQuestionRevealedById = {};
+let revisionSessionMaxIndex = 0;
 
 const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -390,6 +391,7 @@ function setActiveMode(mode) {
     revisionConfigOpen = false;
     revisionSelectMode = false;
     revisionSelectedIds.clear();
+    revisionCountChoice = revisionLastStandardCount;
   }
 
   renderCurrentMode();
@@ -417,6 +419,7 @@ qsa("[data-revision-submode]").forEach((btn) => {
     revisionConfigOpen = false;
     revisionSelectMode = false;
     revisionSelectedIds.clear();
+    revisionCountChoice = revisionLastStandardCount;
     saveState();
     renderCurrentMode();
   });
@@ -424,30 +427,7 @@ qsa("[data-revision-submode]").forEach((btn) => {
 
 revisionStartBtn.addEventListener("click", () => {
   if (revisionStartBtn.disabled) return;
-  const chapter = getChapter(appState.currentLevelId, appState.currentChapterId);
-  if (!chapter) return;
-  const chState = ensureChapterState(chapter.id);
-
-  if (revisionSelectMode) {
-    if (revisionSelectedIds.size === 0) {
-      showToast("Select at least 1 item");
-      return;
-    }
-    startRevisionSession(chapter, chState, Array.from(revisionSelectedIds));
-    return;
-  }
-
   revisionConfigOpen = true;
-  renderCurrentMode();
-});
-
-revisionSelectToggleBtn.addEventListener("click", () => {
-  revisionSelectMode = !revisionSelectMode;
-  if (!revisionSelectMode) {
-    revisionSelectedIds.clear();
-  } else {
-    revisionConfigOpen = false;
-  }
   renderCurrentMode();
 });
 
@@ -466,6 +446,11 @@ revisionClearSelectionBtn.addEventListener("click", () => {
 });
 
 revisionConfigCancelBtn.addEventListener("click", () => {
+  if (revisionSelectMode) {
+    revisionSelectedIds.clear();
+    revisionSelectMode = false;
+    revisionCountChoice = revisionLastStandardCount;
+  }
   revisionConfigOpen = false;
   renderCurrentMode();
 });
@@ -474,13 +459,30 @@ revisionConfigStartBtn.addEventListener("click", () => {
   const chapter = getChapter(appState.currentLevelId, appState.currentChapterId);
   if (!chapter) return;
   const chState = ensureChapterState(chapter.id);
-  startRevisionSession(chapter, chState);
+  if (revisionSelectMode && revisionSelectedIds.size === 0) {
+    showToast("Select at least 1 item");
+    return;
+  }
+  startRevisionSession(
+    chapter,
+    chState,
+    revisionSelectMode ? Array.from(revisionSelectedIds) : null
+  );
 });
 
 revisionCountOptionsEl.addEventListener("click", (e) => {
   const btn = e.target.closest(".pill");
   if (!btn || btn.disabled) return;
-  revisionSelectedCount = btn.dataset.count;
+  const countChoice = btn.dataset.count;
+  if (countChoice === "select") {
+    revisionSelectMode = true;
+    revisionCountChoice = "select";
+  } else {
+    revisionSelectMode = false;
+    revisionSelectedIds.clear();
+    revisionCountChoice = countChoice;
+    revisionLastStandardCount = countChoice;
+  }
   renderCurrentMode();
 });
 
@@ -585,11 +587,13 @@ function syncActionDock(chapter, chState) {
     } else {
       const current = getCurrentRevisionItem();
       const isRevealed = isRevisionQuestionRevealed(current);
+      const isAtNewest = revisionSessionIndex >= revisionSessionMaxIndex;
+      const disableNext = isRevealed && !isAtNewest;
       setLeftButton({ label: "Exit", shape: "pill" });
       setRightButton({
         label: isRevealed ? "Next" : "Reveal",
         shape: "pill",
-        disabled: false
+        disabled: disableNext
       });
     }
     return;
@@ -858,6 +862,7 @@ function resetRevisionSession() {
   revisionSessionQueue = [];
   revisionSessionIndex = 0;
   revisionQuestionRevealedById = {};
+  revisionSessionMaxIndex = 0;
 }
 
 function getRevisionDeck(chapter, chState, subMode) {
@@ -912,12 +917,14 @@ function updateRevisionSelectionUI(deckSize) {
     revisionSelectedCountEl.textContent = "0 selected";
     revisionSelectAllBtn.disabled = true;
     revisionClearSelectionBtn.disabled = true;
+    revisionConfigStartBtn.disabled = deckSize === 0;
     return;
   }
   const selectedCount = revisionSelectedIds.size;
   revisionSelectedCountEl.textContent = `${selectedCount} selected`;
   revisionSelectAllBtn.disabled = deckSize === 0 || selectedCount === deckSize;
   revisionClearSelectionBtn.disabled = selectedCount === 0;
+  revisionConfigStartBtn.disabled = deckSize === 0 || selectedCount === 0;
 }
 
 function renderRevisionMode(chapter, chState) {
@@ -956,19 +963,14 @@ function renderRevisionMode(chapter, chState) {
   }
   const deckIdSet = new Set(deck.map((item) => item.id));
   revisionSelectedIds = new Set([...revisionSelectedIds].filter((id) => deckIdSet.has(id)));
-  if (revisionSelectMode) {
-    revisionConfigOpen = false;
-  }
   revisionConfigEl.classList.toggle("hidden", !revisionConfigOpen);
 
   setRevisionProgress(deck.length);
 
   revisionListEl.innerHTML = "";
   revisionStartBtn.disabled = deck.length === 0;
-  revisionStartBtn.textContent = revisionSelectMode ? "Start selected" : "Start revision";
+  revisionStartBtn.textContent = "Start revision";
   revisionSelectionBarEl.classList.toggle("hidden", !revisionSelectMode);
-  revisionSelectToggleBtn.textContent = revisionSelectMode ? "Done" : "Select";
-  revisionSelectToggleBtn.disabled = deck.length === 0;
 
   if (deck.length === 0) {
     revisionEmptyEl.classList.remove("hidden");
@@ -1042,23 +1044,30 @@ function renderRevisionConfig(deckSize) {
 
   countButtons.forEach((btn) => {
     const countValue = btn.dataset.count;
-    if (countValue === "all") {
+    if (countValue === "select") {
       btn.disabled = deckSize === 0;
-      if (deckSize > 0) availableCounts.push("all");
-    } else {
-      const num = Number(countValue);
-      const isAvailable = num <= deckSize;
-      btn.disabled = !isAvailable;
-      if (isAvailable) availableCounts.push(countValue);
+      if (deckSize > 0) availableCounts.push("select");
+      return;
     }
+
+    if (countValue === "all") {
+      btn.disabled = deckSize === 0 || revisionSelectMode;
+      if (deckSize > 0) availableCounts.push("all");
+      return;
+    }
+
+    const num = Number(countValue);
+    const isAvailable = num <= deckSize;
+    btn.disabled = !isAvailable || revisionSelectMode;
+    if (isAvailable) availableCounts.push(countValue);
   });
 
-  if (!availableCounts.includes(revisionSelectedCount)) {
-    revisionSelectedCount = availableCounts[0] || "all";
+  if (!availableCounts.includes(revisionCountChoice)) {
+    revisionCountChoice = availableCounts[0] || "all";
   }
 
   countButtons.forEach((btn) => {
-    btn.classList.toggle("is-selected", btn.dataset.count === revisionSelectedCount);
+    btn.classList.toggle("is-selected", btn.dataset.count === revisionCountChoice);
   });
 
   const orderButtons = Array.from(revisionOrderOptionsEl.querySelectorAll(".segmented__btn"));
@@ -1066,6 +1075,10 @@ function renderRevisionConfig(deckSize) {
     const isActive = btn.dataset.order === revisionOrder;
     btn.setAttribute("aria-pressed", isActive ? "true" : "false");
   });
+
+  if (!revisionSelectMode) {
+    revisionConfigStartBtn.disabled = deckSize === 0;
+  }
 }
 
 function shuffleArray(items) {
@@ -1082,15 +1095,19 @@ function startRevisionSession(chapter, chState, selectedIds = null) {
   if (deck.length === 0) return;
 
   let queue = deck.slice();
-  if (Array.isArray(selectedIds) && selectedIds.length > 0) {
+  if (Array.isArray(selectedIds)) {
+    if (selectedIds.length === 0) return;
     const selectedSet = new Set(selectedIds);
     queue = deck.filter((item) => selectedSet.has(item.id));
+    if (revisionOrder === "random") {
+      queue = shuffleArray(queue);
+    }
   } else {
     if (revisionOrder === "random") {
       queue = shuffleArray(queue);
     }
 
-    let count = revisionSelectedCount === "all" ? queue.length : Number(revisionSelectedCount);
+    let count = revisionCountChoice === "all" ? queue.length : Number(revisionCountChoice);
     if (!count || Number.isNaN(count)) {
       count = Math.min(queue.length, 5);
     }
@@ -1101,11 +1118,13 @@ function startRevisionSession(chapter, chState, selectedIds = null) {
   if (queue.length === 0) return;
   revisionSessionQueue = queue;
   revisionSessionIndex = 0;
+  revisionSessionMaxIndex = 0;
   revisionQuestionRevealedById = {};
   isRevisionSessionActive = true;
   revisionConfigOpen = false;
   revisionSelectMode = false;
   revisionSelectedIds.clear();
+  revisionCountChoice = revisionLastStandardCount;
   renderCurrentMode();
 }
 
@@ -1121,9 +1140,13 @@ function handleRevisionPrimary() {
       renderCurrentMode();
       return;
     }
+    if (revisionSessionIndex < revisionSessionMaxIndex) {
+      return;
+    }
   }
 
   revisionSessionIndex += 1;
+  revisionSessionMaxIndex = Math.max(revisionSessionMaxIndex, revisionSessionIndex);
   renderCurrentMode();
 }
 
@@ -1131,6 +1154,14 @@ function handleRevisionPrev() {
   if (!isRevisionSessionActive) return;
   if (revisionSessionIndex <= 0) return;
   revisionSessionIndex -= 1;
+  renderCurrentMode();
+}
+
+function handleRevisionForward() {
+  if (!isRevisionSessionActive) return;
+  if (appState.currentRevisionSubMode !== "questions") return;
+  if (revisionSessionIndex >= revisionSessionMaxIndex) return;
+  revisionSessionIndex += 1;
   renderCurrentMode();
 }
 
@@ -1180,10 +1211,20 @@ function renderRevisionSession() {
   const prevBtn = document.createElement("button");
   prevBtn.className = "icon-button icon-button--flat icon-button--small";
   prevBtn.textContent = "←";
-  prevBtn.setAttribute("aria-label", "Prev");
+  prevBtn.setAttribute("aria-label", "Back");
   prevBtn.disabled = revisionSessionIndex === 0;
   prevBtn.addEventListener("click", handleRevisionPrev);
   header.appendChild(prevBtn);
+
+  if (appState.currentRevisionSubMode === "questions") {
+    const nextBtn = document.createElement("button");
+    nextBtn.className = "icon-button icon-button--flat icon-button--small";
+    nextBtn.textContent = "→";
+    nextBtn.setAttribute("aria-label", "Forward");
+    nextBtn.disabled = revisionSessionIndex >= revisionSessionMaxIndex;
+    nextBtn.addEventListener("click", handleRevisionForward);
+    header.appendChild(nextBtn);
+  }
   revisionSessionEl.appendChild(header);
 
   if (appState.currentRevisionSubMode === "story") {
