@@ -46,6 +46,7 @@ const DATA = {
 
 const STORAGE_KEY = "microlearn-bio-state-v1";
 const STORAGE_PREFIX = "microlearnBio:";
+const LAST_SESSION_KEY = "lastSession";
 
 const createDefaultState = () => ({
   theme: "dark",
@@ -128,8 +129,38 @@ function saveState() {
   }
 }
 
+function loadLastSession() {
+  try {
+    const raw = localStorage.getItem(LAST_SESSION_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) {
+    console.warn("Could not load last session", e);
+    return null;
+  }
+}
+
+function saveLastSession(session) {
+  try {
+    if (!session) {
+      localStorage.removeItem(LAST_SESSION_KEY);
+      return;
+    }
+    localStorage.setItem(LAST_SESSION_KEY, JSON.stringify(session));
+  } catch (e) {
+    console.warn("Could not save last session", e);
+  }
+}
+
+function clearLastSession() {
+  try {
+    localStorage.removeItem(LAST_SESSION_KEY);
+  } catch (e) {
+    console.warn("Could not clear last session", e);
+  }
+}
+
 function isAppStorageKey(key) {
-  return key === STORAGE_KEY || key.startsWith(STORAGE_PREFIX);
+  return key === STORAGE_KEY || key === LAST_SESSION_KEY || key.startsWith(STORAGE_PREFIX);
 }
 
 function getAllAppKeys() {
@@ -307,6 +338,133 @@ function getResumeMode(progress, chState) {
   return null;
 }
 
+function getModeLabel(mode, revisionSubMode = "story") {
+  if (mode === "questions") return "Questions";
+  if (mode === "revision") {
+    return revisionSubMode === "questions" ? "Revision · Questions" : "Revision · Points";
+  }
+  return "Points";
+}
+
+function buildLastSessionPayload(chapter, chState) {
+  if (!chapter || !chState) return null;
+  const baseSession = {
+    levelId: appState.currentLevelId,
+    chapterId: chapter.id,
+    mode: appState.currentMode,
+    storyIndex: chState.storyIndex || 0,
+    questionIndex: chState.questionIndex || 0,
+    revisionSubMode: appState.currentRevisionSubMode || "story",
+    updatedAt: Date.now()
+  };
+
+  if (appState.currentMode !== "revision" || !isRevisionSessionActive) {
+    return { ...baseSession, revisionSession: null };
+  }
+
+  const queueIds = revisionSessionQueue.map((item) => item.id);
+  return {
+    ...baseSession,
+    revisionSession: {
+      queueIds,
+      sessionIndex: revisionSessionIndex,
+      sessionMaxIndex: revisionSessionMaxIndex,
+      pointIndex: revisionPointIndex,
+      pointMaxIndex: revisionPointMaxIndex,
+      revealedById: revisionQuestionRevealedById
+    }
+  };
+}
+
+function syncLastSession(chapter, chState) {
+  if (!chapter || !chState) return;
+  if (!appState.currentLevelId || !appState.currentChapterId) return;
+  if (!["story", "questions", "revision"].includes(appState.currentMode)) return;
+  const payload = buildLastSessionPayload(chapter, chState);
+  saveLastSession(payload);
+}
+
+function isValidSession(session) {
+  if (!session || !session.levelId || !session.chapterId || !session.mode) return false;
+  const level = DATA[session.levelId];
+  if (!level) return false;
+  const chapter = level.chapters.find((c) => c.id === session.chapterId);
+  if (!chapter || isChapterComingSoon(chapter)) return false;
+  return true;
+}
+
+function renderResumeCard() {
+  if (!resumeCardEl || !resumeSubtitleEl) return;
+  const session = loadLastSession();
+  if (!isValidSession(session)) {
+    resumeCardEl.classList.add("hidden");
+    return;
+  }
+  const level = DATA[session.levelId];
+  const chapter = level.chapters.find((c) => c.id === session.chapterId);
+  resumeSubtitleEl.textContent = `${level.label} · ${chapter.title} · ${getModeLabel(
+    session.mode,
+    session.revisionSubMode
+  )}`;
+  resumeCardEl.classList.remove("hidden");
+}
+
+function restoreRevisionSession(chapter, chState, session) {
+  if (!session?.revisionSession || appState.currentMode !== "revision") {
+    resetRevisionSession();
+    return;
+  }
+  isRevisionConfigOpen = false;
+  revisionSelectMode = false;
+  revisionSelectedIds.clear();
+  const queueIds = session.revisionSession.queueIds || [];
+  const deck = getRevisionDeck(chapter, chState, appState.currentRevisionSubMode || "story");
+  const deckMap = new Map(deck.map((item) => [item.id, item]));
+  const queue = queueIds.map((id) => deckMap.get(id)).filter(Boolean);
+  if (queue.length === 0) {
+    resetRevisionSession();
+    return;
+  }
+
+  revisionSessionQueue = queue;
+  revisionSessionIndex = Math.min(session.revisionSession.sessionIndex || 0, queue.length);
+  revisionSessionMaxIndex = Math.min(session.revisionSession.sessionMaxIndex || 0, queue.length);
+  revisionPointIndex = Math.min(session.revisionSession.pointIndex || 0, queue.length);
+  revisionPointMaxIndex = Math.min(session.revisionSession.pointMaxIndex || 0, queue.length);
+  revisionQuestionRevealedById = session.revisionSession.revealedById || {};
+  isRevisionSessionActive = true;
+}
+
+function applyResumeSession(session) {
+  if (!isValidSession(session)) return;
+  appState.currentLevelId = session.levelId;
+  appState.currentChapterId = session.chapterId;
+  appState.currentMode = session.mode || "story";
+  appState.currentRevisionSubMode = session.revisionSubMode || "story";
+
+  const chapter = getChapter(session.levelId, session.chapterId);
+  const chState = ensureChapterState(session.chapterId);
+  const totalStory = chapter.storyPoints.length;
+  const totalQuestions = chapter.questions.length;
+  if (typeof session.storyIndex === "number") {
+    chState.storyIndex = Math.max(0, Math.min(session.storyIndex, totalStory));
+  }
+  if (typeof session.questionIndex === "number") {
+    chState.questionIndex = Math.max(0, Math.min(session.questionIndex, totalQuestions));
+  }
+
+  if (appState.currentMode === "revision") {
+    restoreRevisionSession(chapter, chState, session);
+  } else {
+    resetRevisionSession();
+  }
+
+  saveState();
+  showScreen("chapter");
+  setActiveMode(appState.currentMode);
+  requestAnimationFrame(scrollToLatestContent);
+}
+
 // ---------- DOM helpers ----------
 
 const qs = (sel) => document.querySelector(sel);
@@ -350,6 +508,9 @@ const revisionConfigCancelBtn = qs("#revisionConfigCancel");
 const themeToggleBtn = qs("#themeToggle");
 const appHeaderEl = document.querySelector(".app-header");
 const toastEl = qs("#toast");
+const updateToastEl = qs("#updateToast");
+const updateRefreshBtn = qs("#updateRefresh");
+const updateLaterBtn = qs("#updateLater");
 const settingsButton = qs("#settingsButton");
 const settingsModal = qs("#settingsModal");
 const settingsCloseBtn = qs("#settingsClose");
@@ -370,6 +531,10 @@ const confirmCancelBtn = qs("#confirmCancel");
 const confirmConfirmBtn = qs("#confirmConfirm");
 const confirmMessageEl = qs("#confirmMessage");
 const confirmTitleEl = qs("#confirmTitle");
+const resumeCardEl = qs("#resumeCard");
+const resumeSubtitleEl = qs("#resumeSubtitle");
+const resumeButtonEl = qs("#resumeButton");
+const clearResumeBtn = qs("#clearResume");
 
 // Floating actions (Story + Questions)
 const actionDock = qs("#actionDock");
@@ -436,6 +601,18 @@ function showToast(message) {
     toastEl.classList.add("hidden");
     toastTimeout = null;
   }, 2000);
+}
+
+function showUpdateToast() {
+  if (!updateToastEl) return;
+  updateToastEl.classList.remove("hidden");
+  updateToastEl.classList.add("toast--show");
+}
+
+function hideUpdateToast() {
+  if (!updateToastEl) return;
+  updateToastEl.classList.remove("toast--show");
+  updateToastEl.classList.add("hidden");
 }
 
 // ---------- Settings + Backup ----------
@@ -764,6 +941,37 @@ qsa("[data-reset]").forEach((btn) => {
   });
 });
 
+clearResumeBtn?.addEventListener("click", () => {
+  openConfirmDialog({
+    title: "Clear resume?",
+    message: "This will remove the saved resume location on this device.",
+    confirmLabel: "Clear",
+    onConfirm: () => {
+      clearLastSession();
+      renderResumeCard();
+      showToast("Resume cleared");
+    }
+  });
+});
+
+const handleResume = () => {
+  const session = loadLastSession();
+  if (!session) return;
+  applyResumeSession(session);
+};
+
+resumeCardEl?.addEventListener("click", handleResume);
+resumeCardEl?.addEventListener("keydown", (event) => {
+  if (event.key === "Enter" || event.key === " ") {
+    event.preventDefault();
+    handleResume();
+  }
+});
+resumeButtonEl?.addEventListener("click", (event) => {
+  event.stopPropagation();
+  handleResume();
+});
+
 exportBackupBtn.addEventListener("click", () => {
   const payload = exportBackup();
   const blob = new Blob([JSON.stringify(payload, null, 2)], {
@@ -870,6 +1078,7 @@ function showScreen(name) {
     headerSubtitleEl.textContent = "";
     headerTitleEl.textContent = "";
     appHeaderEl.classList.add("header--home");
+    renderResumeCard();
   } else if (name === "chapters") {
     screenChapters.classList.remove("hidden");
     appHeaderEl.classList.add("header--list");
@@ -1157,6 +1366,7 @@ function renderCurrentMode() {
   }
 
   syncActionDock(chapter, chState);
+  syncLastSession(chapter, chState);
 }
 
 function updateProgress(current, total) {
@@ -2062,9 +2272,49 @@ function renderRevisionSession() {
 // ---------- PWA service worker ----------
 
 if ("serviceWorker" in navigator) {
+  let swRegistration = null;
+  let refreshPending = false;
+
+  const sendSkipWaiting = () => {
+    if (!swRegistration?.waiting) return;
+    swRegistration.waiting.postMessage({ type: "SKIP_WAITING" });
+  };
+
+  updateRefreshBtn?.addEventListener("click", () => {
+    refreshPending = true;
+    sendSkipWaiting();
+  });
+
+  updateLaterBtn?.addEventListener("click", () => {
+    hideUpdateToast();
+  });
+
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (refreshPending) {
+      window.location.reload();
+    }
+  });
+
   window.addEventListener("load", () => {
     navigator.serviceWorker
       .register("/sw.js")
+      .then((registration) => {
+        swRegistration = registration;
+
+        if (registration.waiting) {
+          showUpdateToast();
+        }
+
+        registration.addEventListener("updatefound", () => {
+          const newWorker = registration.installing;
+          if (!newWorker) return;
+          newWorker.addEventListener("statechange", () => {
+            if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+              showUpdateToast();
+            }
+          });
+        });
+      })
       .catch((err) => console.warn("SW registration failed", err));
   });
 }

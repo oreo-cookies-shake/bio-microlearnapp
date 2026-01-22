@@ -36,6 +36,13 @@
     <main class="app-main">
       <!-- Screen 1: Level selection (AS / A2) -->
       <section id="screenLevels" class="screen active">
+        <div id="resumeCard" class="card resume-card hidden" role="button" tabindex="0" aria-label="Resume last session">
+          <div class="resume-card__text">
+            <div class="resume-card__title">Resume</div>
+            <div id="resumeSubtitle" class="resume-card__subtitle"></div>
+          </div>
+          <button id="resumeButton" class="btn btn--small" type="button">Continue</button>
+        </div>
         <div class="hero">
           <h2>Microlearning for A-Level Biology</h2>
           <p>Tiny lessons. Fast recall.</p>
@@ -198,6 +205,7 @@
           <button class="btn btn--warning" type="button" data-reset="points">Reset Points progress</button>
           <button class="btn btn--warning" type="button" data-reset="questions">Reset Questions progress</button>
           <button class="btn btn--warning" type="button" data-reset="all">Reset ALL progress</button>
+          <button id="clearResume" class="btn btn--ghost" type="button">Clear resume</button>
         </div>
       </div>
       <div class="settings-section">
@@ -249,6 +257,13 @@
   </div>
 
   <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+  <div id="updateToast" class="toast toast--action hidden" role="status" aria-live="polite">
+    <span>Update available</span>
+    <div class="toast__actions">
+      <button id="updateRefresh" class="btn btn--small" type="button">Refresh</button>
+      <button id="updateLater" class="btn btn--ghost btn--small" type="button">Later</button>
+    </div>
+  </div>
 
   <script src="script.js" defer></script>
 </body>
