@@ -107,3 +107,24 @@
 .end-card-actions .btn {
   width: 100%;
 }
+
+.end-card--celebrate {
+  animation: end-card-pop 420ms ease;
+}
+
+@keyframes end-card-pop {
+  from {
+    opacity: 0.7;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .end-card--celebrate {
+    animation: none;
+  }
+}
