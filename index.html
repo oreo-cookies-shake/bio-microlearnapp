@@ -175,14 +175,20 @@
       <div class="settings-section">
         <div class="settings-section-title">Progress</div>
         <div class="settings-scope">
-          <label class="settings-field" for="settingsLevelSelect">
+          <div class="settings-field">
             <span class="settings-field-label">Level</span>
-            <select id="settingsLevelSelect" class="settings-select"></select>
-          </label>
-          <label class="settings-field" for="settingsChapterSelect">
+            <button id="settingsLevelPicker" class="settings-picker" type="button" aria-haspopup="dialog" aria-controls="levelSheet">
+              <span id="settingsLevelValue" class="settings-picker__value"></span>
+              <span class="settings-picker__icon" aria-hidden="true">⌄</span>
+            </button>
+          </div>
+          <div class="settings-field">
             <span class="settings-field-label">Chapter</span>
-            <select id="settingsChapterSelect" class="settings-select"></select>
-          </label>
+            <button id="settingsChapterPicker" class="settings-picker" type="button" aria-haspopup="dialog" aria-controls="chapterSheet">
+              <span id="settingsChapterValue" class="settings-picker__value"></span>
+              <span class="settings-picker__icon" aria-hidden="true">⌄</span>
+            </button>
+          </div>
         </div>
         <div class="settings-actions">
           <button class="btn btn--warning" type="button" data-reset="points">Reset Points progress</button>
@@ -199,6 +205,28 @@
         </div>
         <p class="settings-help">Backups only include Microlearn Bio data stored on this device.</p>
       </div>
+    </div>
+  </div>
+
+  <div id="levelSheet" class="bottom-sheet hidden" role="dialog" aria-modal="true" aria-labelledby="levelSheetTitle">
+    <div class="bottom-sheet__backdrop" data-sheet-close></div>
+    <div class="bottom-sheet__panel">
+      <div class="bottom-sheet__header">
+        <div id="levelSheetTitle" class="bottom-sheet__title">Choose level</div>
+        <button class="icon-button icon-button--flat icon-button--small" type="button" data-sheet-close aria-label="Close level picker">×</button>
+      </div>
+      <div id="levelSheetOptions" class="bottom-sheet__list"></div>
+    </div>
+  </div>
+
+  <div id="chapterSheet" class="bottom-sheet hidden" role="dialog" aria-modal="true" aria-labelledby="chapterSheetTitle">
+    <div class="bottom-sheet__backdrop" data-sheet-close></div>
+    <div class="bottom-sheet__panel">
+      <div class="bottom-sheet__header">
+        <div id="chapterSheetTitle" class="bottom-sheet__title">Choose chapter</div>
+        <button class="icon-button icon-button--flat icon-button--small" type="button" data-sheet-close aria-label="Close chapter picker">×</button>
+      </div>
+      <div id="chapterSheetOptions" class="bottom-sheet__list"></div>
     </div>
   </div>
 
