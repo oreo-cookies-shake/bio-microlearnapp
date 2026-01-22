@@ -383,6 +383,7 @@ function scrollToLatestContent() {
 // ---------- Toast ----------
 
 let toastTimeout = null;
+const endOfSetCelebrations = new Set();
 
 function showToast(message) {
   toastEl.textContent = message;
@@ -394,7 +395,7 @@ function showToast(message) {
     toastEl.classList.remove("toast--show");
     toastEl.classList.add("hidden");
     toastTimeout = null;
-  }, 1600);
+  }, 2000);
 }
 
 // ---------- Settings + Backup ----------
@@ -415,6 +416,7 @@ function openConfirmDialog({ title, message, confirmLabel, onConfirm }) {
   confirmConfirmBtn.textContent = confirmLabel;
   confirmAction = onConfirm;
   openModal(confirmDialog);
+  confirmCancelBtn?.focus();
 }
 
 function closeConfirmDialog() {
@@ -716,7 +718,7 @@ qsa("[data-reset]").forEach((btn) => {
         }
         saveState();
         refreshUiAfterStateChange();
-        showToast("Progress reset");
+        showToast("Progress reset ✅");
       }
     });
   });
@@ -735,7 +737,7 @@ exportBackupBtn.addEventListener("click", () => {
   link.click();
   link.remove();
   URL.revokeObjectURL(url);
-  showToast("Backup exported");
+  showToast("Backup exported ✅");
 });
 
 importBackupBtn.addEventListener("click", () => {
@@ -752,12 +754,12 @@ importFileInput.addEventListener("change", async () => {
     const text = await file.text();
     payload = JSON.parse(text);
   } catch (e) {
-    showToast("That backup file isn’t valid.");
+    showToast("Backup import failed.");
     return;
   }
 
   if (!payload || typeof payload !== "object" || !payload.data) {
-    showToast("That backup file isn’t valid.");
+    showToast("Backup import failed.");
     return;
   }
 
@@ -768,12 +770,12 @@ importFileInput.addEventListener("change", async () => {
     onConfirm: () => {
       const result = importBackup(payload);
       if (!result.ok) {
-        showToast("Backup could not be restored.");
+        showToast("Backup import failed.");
         return;
       }
       loadState();
       refreshUiAfterStateChange();
-      showToast("Backup restored");
+      showToast("Backup imported ✅");
     }
   });
 });
@@ -1393,6 +1395,14 @@ function renderQuestionMode(chapter, chState) {
 function createEndOfSetCard({ levelId, chapterId, mode }) {
   const card = document.createElement("div");
   card.className = "qa-card end-card";
+  const celebrateKey = `${levelId}:${chapterId}:${mode}`;
+  if (!endOfSetCelebrations.has(celebrateKey)) {
+    endOfSetCelebrations.add(celebrateKey);
+    card.classList.add("end-card--celebrate");
+    if (!prefersReducedMotion && navigator?.vibrate) {
+      navigator.vibrate(10);
+    }
+  }
 
   const meta = document.createElement("div");
   meta.className = "qa-meta";
@@ -1408,6 +1418,16 @@ function createEndOfSetCard({ levelId, chapterId, mode }) {
   const nextChapter = getNextChapter(levelId, chapterId);
   const actions = document.createElement("div");
   actions.className = "end-card-actions";
+
+  const revisionBtn = document.createElement("button");
+  revisionBtn.className = "btn btn--ghost btn--small";
+  revisionBtn.type = "button";
+  revisionBtn.textContent = "Start revision";
+  revisionBtn.addEventListener("click", () => {
+    appState.currentRevisionSubMode = mode === "questions" ? "questions" : "story";
+    setActiveMode("revision");
+    saveState();
+  });
 
   if (nextChapter) {
     const nextBtn = document.createElement("button");
@@ -1432,12 +1452,17 @@ function createEndOfSetCard({ levelId, chapterId, mode }) {
     });
 
     actions.appendChild(nextBtn);
+    actions.appendChild(revisionBtn);
     actions.appendChild(backBtn);
   } else {
     const note = document.createElement("div");
     note.className = "end-card-note";
     note.textContent = "You’ve finished this level 🎉";
     card.appendChild(note);
+
+    revisionBtn.classList.remove("btn--small");
+    revisionBtn.classList.add("btn--ghost");
+    actions.appendChild(revisionBtn);
 
     const backBtn = document.createElement("button");
     backBtn.className = "btn";
