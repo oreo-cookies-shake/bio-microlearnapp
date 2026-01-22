@@ -53,7 +53,9 @@ const createDefaultState = () => ({
   currentChapterId: null,
   currentMode: "story", // "story" | "questions" | "revision"
   currentRevisionSubMode: "story",
-  chapters: {} // per-chapter progress
+  chapters: {}, // per-chapter progress
+  settingsScopeLevelId: null,
+  settingsScopeChapterId: "all"
 });
 
 let appState = createDefaultState();
@@ -80,6 +82,22 @@ function migrateState() {
   }
   if (appState.currentMode === "difficult") {
     appState.currentMode = "revision";
+  }
+
+  if (!DATA[appState.settingsScopeLevelId]) {
+    appState.settingsScopeLevelId = DATA[appState.currentLevelId]
+      ? appState.currentLevelId
+      : "as";
+  }
+  if (!appState.settingsScopeChapterId) {
+    appState.settingsScopeChapterId = "all";
+  }
+  if (appState.settingsScopeChapterId !== "all") {
+    const level = DATA[appState.settingsScopeLevelId];
+    const hasChapter = level?.chapters?.some((chapter) => chapter.id === appState.settingsScopeChapterId);
+    if (!hasChapter) {
+      appState.settingsScopeChapterId = "all";
+    }
   }
 
   if (!appState.chapters) {
@@ -126,22 +144,41 @@ function getAllAppKeys() {
 }
 
 function resetPointsProgress() {
-  Object.values(appState.chapters).forEach((chState) => {
-    chState.storyIndex = 0;
-    chState.revisionStoryIds = [];
-  });
+  const chapterIds = Object.keys(appState.chapters);
+  resetPointsProgressFor(chapterIds);
 }
 
 function resetQuestionsProgress() {
-  Object.values(appState.chapters).forEach((chState) => {
-    chState.questionIndex = 0;
-    chState.revisionQuestionIds = [];
-  });
+  const chapterIds = Object.keys(appState.chapters);
+  resetQuestionsProgressFor(chapterIds);
 }
 
 function resetAllProgress() {
   resetPointsProgress();
   resetQuestionsProgress();
+}
+
+function resetPointsProgressFor(chapterIds) {
+  chapterIds.forEach((chapterId) => {
+    const chState = appState.chapters[chapterId];
+    if (!chState) return;
+    chState.storyIndex = 0;
+    chState.revisionStoryIds = [];
+  });
+}
+
+function resetQuestionsProgressFor(chapterIds) {
+  chapterIds.forEach((chapterId) => {
+    const chState = appState.chapters[chapterId];
+    if (!chState) return;
+    chState.questionIndex = 0;
+    chState.revisionQuestionIds = [];
+  });
+}
+
+function resetAllProgressFor(chapterIds) {
+  resetPointsProgressFor(chapterIds);
+  resetQuestionsProgressFor(chapterIds);
 }
 
 function exportBackup() {
@@ -253,6 +290,8 @@ const toastEl = qs("#toast");
 const settingsButton = qs("#settingsButton");
 const settingsModal = qs("#settingsModal");
 const settingsCloseBtn = qs("#settingsClose");
+const settingsLevelSelect = qs("#settingsLevelSelect");
+const settingsChapterSelect = qs("#settingsChapterSelect");
 const exportBackupBtn = qs("#exportBackup");
 const importBackupBtn = qs("#importBackup");
 const importFileInput = qs("#importFile");
@@ -386,7 +425,107 @@ function refreshUiAfterStateChange() {
   showScreen("levels");
 }
 
+function getSettingsResetScope() {
+  const levelId = DATA[appState.settingsScopeLevelId]
+    ? appState.settingsScopeLevelId
+    : DATA[appState.currentLevelId]
+      ? appState.currentLevelId
+      : "as";
+  const chapterId = appState.settingsScopeChapterId || "all";
+  return { levelId, chapterId };
+}
+
+function getChapterIdsForScope(scope) {
+  const level = DATA[scope.levelId];
+  if (!level) return [];
+  if (scope.chapterId === "all") {
+    return level.chapters.map((chapter) => chapter.id);
+  }
+  return level.chapters.some((chapter) => chapter.id === scope.chapterId)
+    ? [scope.chapterId]
+    : level.chapters.map((chapter) => chapter.id);
+}
+
+function getSettingsScopeLabel(scope) {
+  const level = DATA[scope.levelId];
+  const levelLabel = level?.label || "Selected level";
+  if (scope.chapterId === "all") {
+    return `${levelLabel} — All chapters`;
+  }
+  const chapterLabel = level?.chapters?.find((chapter) => chapter.id === scope.chapterId)?.title
+    || "Selected chapter";
+  return `${levelLabel} — ${chapterLabel}`;
+}
+
+function buildSettingsLevelOptions() {
+  settingsLevelSelect.innerHTML = "";
+  Object.values(DATA).forEach((level) => {
+    const option = document.createElement("option");
+    option.value = level.id;
+    option.textContent = level.label;
+    settingsLevelSelect.appendChild(option);
+  });
+}
+
+function buildSettingsChapterOptions(levelId) {
+  settingsChapterSelect.innerHTML = "";
+  const allOption = document.createElement("option");
+  allOption.value = "all";
+  allOption.textContent = "All chapters";
+  settingsChapterSelect.appendChild(allOption);
+
+  const level = DATA[levelId];
+  if (!level) return;
+  level.chapters.forEach((chapter) => {
+    const option = document.createElement("option");
+    option.value = chapter.id;
+    option.textContent = chapter.title;
+    settingsChapterSelect.appendChild(option);
+  });
+}
+
+function syncSettingsScopeControls() {
+  if (!DATA[appState.settingsScopeLevelId]) {
+    appState.settingsScopeLevelId = DATA[appState.currentLevelId]
+      ? appState.currentLevelId
+      : "as";
+  }
+  if (!appState.settingsScopeChapterId) {
+    appState.settingsScopeChapterId = "all";
+  }
+
+  buildSettingsLevelOptions();
+  settingsLevelSelect.value = appState.settingsScopeLevelId;
+  buildSettingsChapterOptions(appState.settingsScopeLevelId);
+
+  const hasChapter = settingsChapterSelect.querySelector(
+    `option[value="${appState.settingsScopeChapterId}"]`
+  );
+  settingsChapterSelect.value = hasChapter ? appState.settingsScopeChapterId : "all";
+  appState.settingsScopeChapterId = settingsChapterSelect.value;
+  saveState();
+}
+
+function initSettingsScopeControls() {
+  if (!settingsLevelSelect || !settingsChapterSelect) return;
+  syncSettingsScopeControls();
+
+  settingsLevelSelect.addEventListener("change", () => {
+    appState.settingsScopeLevelId = settingsLevelSelect.value;
+    buildSettingsChapterOptions(appState.settingsScopeLevelId);
+    settingsChapterSelect.value = "all";
+    appState.settingsScopeChapterId = settingsChapterSelect.value;
+    saveState();
+  });
+
+  settingsChapterSelect.addEventListener("change", () => {
+    appState.settingsScopeChapterId = settingsChapterSelect.value;
+    saveState();
+  });
+}
+
 settingsButton.addEventListener("click", () => {
+  syncSettingsScopeControls();
   openModal(settingsModal);
 });
 
@@ -424,17 +563,27 @@ confirmConfirmBtn.addEventListener("click", () => {
 qsa("[data-reset]").forEach((btn) => {
   btn.addEventListener("click", () => {
     const kind = btn.dataset.reset;
+    const scope = getSettingsResetScope();
+    const chapterIds = getChapterIdsForScope(scope);
+    const scopeLabel = getSettingsScopeLabel(scope);
+    const actionLabel = kind === "points"
+      ? "Points"
+      : kind === "questions"
+        ? "Questions"
+        : "ALL";
+    const title = `Reset ${actionLabel} progress?`;
+    const message = `Reset ${actionLabel} progress for ${scopeLabel}?`;
     openConfirmDialog({
-      title: "Reset progress?",
-      message: "This will permanently clear your local progress on this device.",
+      title,
+      message,
       confirmLabel: "Reset",
       onConfirm: () => {
         if (kind === "points") {
-          resetPointsProgress();
+          resetPointsProgressFor(chapterIds);
         } else if (kind === "questions") {
-          resetQuestionsProgress();
+          resetQuestionsProgressFor(chapterIds);
         } else {
-          resetAllProgress();
+          resetAllProgressFor(chapterIds);
         }
         saveState();
         refreshUiAfterStateChange();
@@ -585,6 +734,10 @@ function initLevelButtons() {
     btn.addEventListener("click", () => {
       const levelId = btn.dataset.level;
       appState.currentLevelId = levelId;
+      if (!DATA[appState.settingsScopeLevelId]) {
+        appState.settingsScopeLevelId = levelId;
+        appState.settingsScopeChapterId = "all";
+      }
       saveState();
       renderChapters();
       showScreen("chapters");
@@ -1611,6 +1764,7 @@ if ("serviceWorker" in navigator) {
 function init() {
   loadState();
   applyTheme();
+  initSettingsScopeControls();
   initLevelButtons();
   showScreen("levels");
 }

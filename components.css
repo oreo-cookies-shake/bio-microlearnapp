@@ -196,6 +196,11 @@
   height: 20px;
 }
 
+.icon-button--gear svg {
+  width: 18px;
+  height: 18px;
+}
+
 /* =====================
    Floating action buttons (Story + Questions)
    ===================== */
@@ -511,7 +516,7 @@
 .modal {
   position: fixed;
   inset: 0;
-  background: rgba(9, 12, 18, 0.6);
+  background: rgba(9, 12, 18, 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -521,7 +526,7 @@
 
 .modal__card {
   width: min(420px, 100%);
-  background: var(--content-bg);
+  background: var(--surface);
   border: 1px solid var(--content-edge);
   border-radius: var(--radius-card);
   box-shadow: var(--shadow-card);
@@ -576,6 +581,43 @@
 .settings-actions {
   display: grid;
   gap: 10px;
+}
+
+.settings-scope {
+  display: grid;
+  gap: 12px;
+}
+
+.settings-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.settings-field-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.01em;
+}
+
+.settings-select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid var(--edge);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 14px;
+}
+
+.settings-select:focus {
+  outline: none;
+}
+
+.settings-select:focus-visible {
+  outline: 2px solid rgba(143, 181, 166, 0.45);
+  outline-offset: 2px;
 }
 
 .settings-help {

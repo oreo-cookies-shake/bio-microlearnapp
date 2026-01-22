@@ -16,7 +16,7 @@
   <div class="app">
     <header class="app-header">
       <button class="icon-button back-button hidden" id="backButton" aria-label="Back">←</button>
-      <button class="icon-button hidden" id="settingsButton" aria-label="Open settings">
+      <button class="icon-button icon-button--gear hidden" id="settingsButton" aria-label="Open settings">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <circle cx="12" cy="12" r="3.5"></circle>
           <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.05.05a2 2 0 1 1-2.83 2.83l-.05-.05a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.54V21a2 2 0 1 1-4 0v-.08a1.7 1.7 0 0 0-1-1.54 1.7 1.7 0 0 0-1.87.34l-.05.05a2 2 0 1 1-2.83-2.83l.05-.05a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.54-1H3a2 2 0 1 1 0-4h.08a1.7 1.7 0 0 0 1.54-1 1.7 1.7 0 0 0-.34-1.87l-.05-.05a2 2 0 1 1 2.83-2.83l.05.05a1.7 1.7 0 0 0 1.87.34h0A1.7 1.7 0 0 0 9 3.08V3a2 2 0 1 1 4 0v.08a1.7 1.7 0 0 0 1 1.54h0a1.7 1.7 0 0 0 1.87-.34l.05-.05a2 2 0 1 1 2.83 2.83l-.05.05a1.7 1.7 0 0 0-.34 1.87v0A1.7 1.7 0 0 0 20.92 11H21a2 2 0 1 1 0 4h-.08a1.7 1.7 0 0 0-1.54 1z"></path>
@@ -174,6 +174,16 @@
       </div>
       <div class="settings-section">
         <div class="settings-section-title">Progress</div>
+        <div class="settings-scope">
+          <label class="settings-field" for="settingsLevelSelect">
+            <span class="settings-field-label">Level</span>
+            <select id="settingsLevelSelect" class="settings-select"></select>
+          </label>
+          <label class="settings-field" for="settingsChapterSelect">
+            <span class="settings-field-label">Chapter</span>
+            <select id="settingsChapterSelect" class="settings-select"></select>
+          </label>
+        </div>
         <div class="settings-actions">
           <button class="btn btn--warning" type="button" data-reset="points">Reset Points progress</button>
           <button class="btn btn--warning" type="button" data-reset="questions">Reset Questions progress</button>
