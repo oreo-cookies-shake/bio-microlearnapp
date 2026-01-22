@@ -942,15 +942,16 @@ function renderChapters() {
         ${isSoon ? '<div class="progress-circle">Soon</div>' : ""}
       </div>
       <div class="chapter-meta">
-        ${isSoon ? "<span>Coming soon</span>" : `<span>${progress.totalStory} points</span><span>${progress.totalQ} questions</span>`}
+        ${isSoon ? "<span>Coming soon</span>" : `
+          <span class="chapter-meta-line">
+            <span class="chapter-meta-long">Points: ${progress.totalStory} (${progress.storyPct}%) • Questions: ${progress.totalQ} (${progress.questionPct}%)</span>
+            <span class="chapter-meta-short">${progress.totalStory} pts (${progress.storyPct}%) • ${progress.totalQ} qs (${progress.questionPct}%)</span>
+          </span>
+        `}
       </div>
-      ${isSoon ? "" : `
+      ${isSoon || !hasProgress ? "" : `
         <div class="card-chapter-footer">
-          <div class="chapter-progress-badges">
-            <span class="progress-badge">Points: ${progress.storyPct}%</span>
-            <span class="progress-badge">Questions: ${progress.questionPct}%</span>
-          </div>
-          ${hasProgress ? '<button class="btn btn--small chapter-resume-btn" type="button">Resume</button>' : ""}
+          <button class="btn btn--small chapter-resume-btn" type="button">Resume</button>
         </div>
       `}
     `;
