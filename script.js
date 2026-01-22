@@ -252,12 +252,16 @@ function ensureChapterState(chapterId) {
       storyIndex: 0, // how many story points have been shown
       questionIndex: 0, // current question index (0-based)
       revisionStoryIds: [],
-      revisionQuestionIds: []
+      revisionQuestionIds: [],
+      lastActiveMode: null,
+      lastActiveAt: null
     };
   }
   const chState = appState.chapters[chapterId];
   if (!Array.isArray(chState.revisionStoryIds)) chState.revisionStoryIds = [];
   if (!Array.isArray(chState.revisionQuestionIds)) chState.revisionQuestionIds = [];
+  if (!chState.lastActiveMode) chState.lastActiveMode = null;
+  if (!chState.lastActiveAt) chState.lastActiveAt = null;
   if (Array.isArray(chState.difficultStoryIds) && chState.revisionStoryIds.length === 0) {
     chState.revisionStoryIds = [...chState.difficultStoryIds];
   }
@@ -265,6 +269,42 @@ function ensureChapterState(chapterId) {
     chState.revisionQuestionIds = [...chState.difficultQuestionIds];
   }
   return chState;
+}
+
+function recordChapterActivity(chapterId, mode) {
+  if (!chapterId) return;
+  if (mode !== "story" && mode !== "questions") return;
+  const chState = ensureChapterState(chapterId);
+  chState.lastActiveMode = mode;
+  chState.lastActiveAt = Date.now();
+}
+
+function getChapterProgress(chapter, chState) {
+  const totalStory = chapter.storyPoints?.length || 0;
+  const totalQ = chapter.questions?.length || 0;
+  const storyDone = Math.min(chState.storyIndex || 0, totalStory);
+  const questionDone = Math.min(chState.questionIndex || 0, totalQ);
+  const storyPct = totalStory > 0 ? Math.round((storyDone / totalStory) * 100) : 0;
+  const questionPct = totalQ > 0 ? Math.round((questionDone / totalQ) * 100) : 0;
+  return {
+    totalStory,
+    totalQ,
+    storyDone,
+    questionDone,
+    storyPct,
+    questionPct
+  };
+}
+
+function getResumeMode(progress, chState) {
+  const hasStoryProgress = progress.storyDone > 0;
+  const hasQuestionProgress = progress.questionDone > 0;
+  if (hasStoryProgress && hasQuestionProgress) {
+    return chState.lastActiveMode || "story";
+  }
+  if (hasStoryProgress) return "story";
+  if (hasQuestionProgress) return "questions";
+  return null;
 }
 
 // ---------- DOM helpers ----------
@@ -882,45 +922,70 @@ function renderChapters() {
 
   level.chapters.forEach((chapter) => {
     const chState = ensureChapterState(chapter.id);
-    const totalStory = chapter.storyPoints?.length || 0;
-    const totalQ = chapter.questions?.length || 0;
-    const totalItems = totalStory + totalQ;
-
-    const shownStory = Math.min(chState.storyIndex, totalStory);
-    const doneItems = shownStory + chState.questionIndex;
-    const pct = totalItems > 0 ? Math.round((doneItems / totalItems) * 100) : 0;
+    const progress = getChapterProgress(chapter, chState);
+    const totalItems = progress.totalStory + progress.totalQ;
 
     const isSoon = totalItems === 0;
-    const badge = isSoon ? "Soon" : `${pct}%`;
+    const hasProgress = progress.storyDone > 0 || progress.questionDone > 0;
+    const resumeMode = hasProgress ? getResumeMode(progress, chState) : null;
 
-    const card = document.createElement("button");
+    const card = document.createElement("div");
     card.className = "card card-chapter";
     card.dataset.chapterId = chapter.id;
+    card.setAttribute("role", "button");
+    card.setAttribute("tabindex", "0");
+    card.setAttribute("aria-label", `${chapter.title} chapter`);
 
     card.innerHTML = `
       <div class="card-chapter-header">
         <div class="card-chapter-title">${chapter.title}</div>
-        <div class="progress-circle">${badge}</div>
+        ${isSoon ? '<div class="progress-circle">Soon</div>' : ""}
       </div>
       <div class="chapter-meta">
-        ${isSoon ? "<span>Coming soon</span>" : `<span>${totalStory} points</span><span>${totalQ} questions</span>`}
+        ${isSoon ? "<span>Coming soon</span>" : `<span>${progress.totalStory} points</span><span>${progress.totalQ} questions</span>`}
       </div>
+      ${isSoon ? "" : `
+        <div class="card-chapter-footer">
+          <div class="chapter-progress-badges">
+            <span class="progress-badge">Points: ${progress.storyPct}%</span>
+            <span class="progress-badge">Questions: ${progress.questionPct}%</span>
+          </div>
+          ${hasProgress ? '<button class="btn btn--small chapter-resume-btn" type="button">Resume</button>' : ""}
+        </div>
+      `}
     `;
 
-    card.addEventListener("click", () => {
+    const openChapter = (modeOverride = null) => {
       if (isSoon) {
         showToast("Coming soon");
         return;
       }
 
       appState.currentChapterId = chapter.id;
-      appState.currentMode = appState.currentMode || "story";
+      appState.currentMode = modeOverride || appState.currentMode || "story";
       saveState();
-      setActiveMode(appState.currentMode);
       showScreen("chapter");
-      renderCurrentMode();
+      setActiveMode(appState.currentMode);
       requestAnimationFrame(scrollToLatestContent);
+    };
+
+    card.addEventListener("click", () => {
+      openChapter();
     });
+    card.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        openChapter();
+      }
+    });
+
+    const resumeBtn = card.querySelector(".chapter-resume-btn");
+    if (resumeBtn && resumeMode) {
+      resumeBtn.addEventListener("click", (event) => {
+        event.stopPropagation();
+        openChapter(resumeMode);
+      });
+    }
 
     chaptersListEl.appendChild(card);
   });
@@ -942,6 +1007,11 @@ function setActiveMode(mode) {
   if (mode === "story") storyModePanel.classList.remove("hidden");
   if (mode === "questions") questionsModePanel.classList.remove("hidden");
   if (mode === "revision") revisionModePanel.classList.remove("hidden");
+
+  if (mode === "story" || mode === "questions") {
+    recordChapterActivity(appState.currentChapterId, mode);
+    saveState();
+  }
 
   // reset per-mode UI state
   if (mode !== "questions") {
@@ -1286,6 +1356,7 @@ function advanceStory(chapter, chState) {
 
   if (chState.storyIndex < total) {
     chState.storyIndex += 1;
+    recordChapterActivity(chapter.id, "story");
     saveState();
     renderCurrentMode();
   } else {
@@ -1500,6 +1571,7 @@ function advanceQuestion(chapter, chState) {
   if (chState.questionIndex < total) {
     chState.questionIndex += 1;
   }
+  recordChapterActivity(chapter.id, "questions");
   saveState();
   renderCurrentMode();
 }
