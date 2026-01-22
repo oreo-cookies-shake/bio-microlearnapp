@@ -924,6 +924,9 @@ function renderChapters() {
     const chState = ensureChapterState(chapter.id);
     const progress = getChapterProgress(chapter, chState);
     const totalItems = progress.totalStory + progress.totalQ;
+    const overallPct = totalItems > 0
+      ? Math.round(((progress.storyDone + progress.questionDone) / totalItems) * 100)
+      : 0;
 
     const isSoon = totalItems === 0;
     const hasProgress = progress.storyDone > 0 || progress.questionDone > 0;
@@ -939,13 +942,15 @@ function renderChapters() {
     card.innerHTML = `
       <div class="card-chapter-header">
         <div class="card-chapter-title">${chapter.title}</div>
-        ${isSoon ? '<div class="progress-circle">Soon</div>' : ""}
+        ${isSoon ? '<div class="progress-circle">Soon</div>' : `
+          <div class="card-chapter-progress">${overallPct}%</div>
+        `}
       </div>
       <div class="chapter-meta">
         ${isSoon ? "<span>Coming soon</span>" : `
           <span class="chapter-meta-line">
-            <span class="chapter-meta-long">Points: ${progress.totalStory} (${progress.storyPct}%) • Questions: ${progress.totalQ} (${progress.questionPct}%)</span>
-            <span class="chapter-meta-short">${progress.totalStory} pts (${progress.storyPct}%) • ${progress.totalQ} qs (${progress.questionPct}%)</span>
+            <span class="chapter-meta-long">${progress.totalStory} points (${progress.storyPct}%) · ${progress.totalQ} questions (${progress.questionPct}%)</span>
+            <span class="chapter-meta-short">${progress.totalStory} pts (${progress.storyPct}%) · ${progress.totalQ} qs (${progress.questionPct}%)</span>
           </span>
         `}
       </div>
