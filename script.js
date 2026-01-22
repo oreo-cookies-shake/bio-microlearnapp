@@ -313,8 +313,14 @@ const toastEl = qs("#toast");
 const settingsButton = qs("#settingsButton");
 const settingsModal = qs("#settingsModal");
 const settingsCloseBtn = qs("#settingsClose");
-const settingsLevelSelect = qs("#settingsLevelSelect");
-const settingsChapterSelect = qs("#settingsChapterSelect");
+const settingsLevelPicker = qs("#settingsLevelPicker");
+const settingsLevelValue = qs("#settingsLevelValue");
+const settingsChapterPicker = qs("#settingsChapterPicker");
+const settingsChapterValue = qs("#settingsChapterValue");
+const levelSheet = qs("#levelSheet");
+const chapterSheet = qs("#chapterSheet");
+const levelSheetOptions = qs("#levelSheetOptions");
+const chapterSheetOptions = qs("#chapterSheetOptions");
 const exportBackupBtn = qs("#exportBackup");
 const importBackupBtn = qs("#importBackup");
 const importFileInput = qs("#importFile");
@@ -480,34 +486,7 @@ function getSettingsScopeLabel(scope) {
   return `${levelLabel} — ${chapterLabel}`;
 }
 
-function buildSettingsLevelOptions() {
-  settingsLevelSelect.innerHTML = "";
-  Object.values(DATA).forEach((level) => {
-    const option = document.createElement("option");
-    option.value = level.id;
-    option.textContent = level.label;
-    settingsLevelSelect.appendChild(option);
-  });
-}
-
-function buildSettingsChapterOptions(levelId) {
-  settingsChapterSelect.innerHTML = "";
-  const allOption = document.createElement("option");
-  allOption.value = "all";
-  allOption.textContent = "All chapters";
-  settingsChapterSelect.appendChild(allOption);
-
-  const level = DATA[levelId];
-  if (!level) return;
-  level.chapters.forEach((chapter) => {
-    const option = document.createElement("option");
-    option.value = chapter.id;
-    option.textContent = chapter.title;
-    settingsChapterSelect.appendChild(option);
-  });
-}
-
-function syncSettingsScopeControls() {
+function ensureSettingsScope() {
   if (!DATA[appState.settingsScopeLevelId]) {
     appState.settingsScopeLevelId = DATA[appState.currentLevelId]
       ? appState.currentLevelId
@@ -517,33 +496,158 @@ function syncSettingsScopeControls() {
     appState.settingsScopeChapterId = "all";
   }
 
-  buildSettingsLevelOptions();
-  settingsLevelSelect.value = appState.settingsScopeLevelId;
-  buildSettingsChapterOptions(appState.settingsScopeLevelId);
+  const level = DATA[appState.settingsScopeLevelId];
+  if (
+    appState.settingsScopeChapterId !== "all"
+    && !level?.chapters?.some((chapter) => chapter.id === appState.settingsScopeChapterId)
+  ) {
+    appState.settingsScopeChapterId = "all";
+  }
+}
 
-  const hasChapter = settingsChapterSelect.querySelector(
-    `option[value="${appState.settingsScopeChapterId}"]`
-  );
-  settingsChapterSelect.value = hasChapter ? appState.settingsScopeChapterId : "all";
-  appState.settingsScopeChapterId = settingsChapterSelect.value;
+function buildLevelSheetOptions() {
+  if (!levelSheetOptions) return;
+  levelSheetOptions.innerHTML = "";
+  Object.values(DATA).forEach((level) => {
+    const option = document.createElement("button");
+    option.type = "button";
+    option.className = "bottom-sheet__option";
+    option.dataset.value = level.id;
+    if (level.id === appState.settingsScopeLevelId) {
+      option.classList.add("is-selected");
+    }
+    option.innerHTML = `
+      <span class="bottom-sheet__option-label">${level.label}</span>
+      <span class="bottom-sheet__check" aria-hidden="true"></span>
+    `;
+    levelSheetOptions.appendChild(option);
+  });
+}
+
+function buildChapterSheetOptions(levelId) {
+  if (!chapterSheetOptions) return;
+  chapterSheetOptions.innerHTML = "";
+  const allOption = document.createElement("button");
+  allOption.type = "button";
+  allOption.className = "bottom-sheet__option";
+  allOption.dataset.value = "all";
+  if (appState.settingsScopeChapterId === "all") {
+    allOption.classList.add("is-selected");
+  }
+  allOption.innerHTML = `
+    <span class="bottom-sheet__option-label">All chapters</span>
+    <span class="bottom-sheet__check" aria-hidden="true"></span>
+  `;
+  chapterSheetOptions.appendChild(allOption);
+
+  const level = DATA[levelId];
+  if (!level) return;
+  level.chapters.forEach((chapter) => {
+    const option = document.createElement("button");
+    option.type = "button";
+    option.className = "bottom-sheet__option";
+    option.dataset.value = chapter.id;
+    if (chapter.id === appState.settingsScopeChapterId) {
+      option.classList.add("is-selected");
+    }
+    option.innerHTML = `
+      <span class="bottom-sheet__option-label">${chapter.title}</span>
+      <span class="bottom-sheet__check" aria-hidden="true"></span>
+    `;
+    chapterSheetOptions.appendChild(option);
+  });
+}
+
+function renderSettingsScope() {
+  if (!settingsLevelValue || !settingsChapterValue) return;
+  const level = DATA[appState.settingsScopeLevelId];
+  settingsLevelValue.textContent = level?.label || "AS Level";
+  if (appState.settingsScopeChapterId === "all") {
+    settingsChapterValue.textContent = "All chapters";
+    return;
+  }
+  const chapterLabel = level?.chapters?.find(
+    (chapter) => chapter.id === appState.settingsScopeChapterId
+  )?.title;
+  settingsChapterValue.textContent = chapterLabel || "All chapters";
+}
+
+function syncSettingsScopeControls() {
+  ensureSettingsScope();
+  renderSettingsScope();
+  buildLevelSheetOptions();
+  buildChapterSheetOptions(appState.settingsScopeLevelId);
   saveState();
 }
 
+function openBottomSheet(sheetEl) {
+  if (!sheetEl || !sheetEl.classList.contains("hidden")) return;
+  sheetEl.classList.remove("hidden");
+  requestAnimationFrame(() => {
+    sheetEl.classList.add("is-open");
+  });
+  document.body.classList.add("no-scroll");
+}
+
+function closeBottomSheet(sheetEl) {
+  if (!sheetEl || sheetEl.classList.contains("hidden")) return;
+  sheetEl.classList.remove("is-open");
+  const cleanup = () => {
+    if (sheetEl.classList.contains("hidden")) return;
+    sheetEl.classList.add("hidden");
+    sheetEl.removeEventListener("transitionend", cleanup);
+    if (!document.querySelector(".bottom-sheet.is-open")) {
+      document.body.classList.remove("no-scroll");
+    }
+  };
+  sheetEl.addEventListener("transitionend", cleanup);
+  setTimeout(cleanup, 250);
+}
+
+function closeAllBottomSheets() {
+  closeBottomSheet(levelSheet);
+  closeBottomSheet(chapterSheet);
+}
+
 function initSettingsScopeControls() {
-  if (!settingsLevelSelect || !settingsChapterSelect) return;
+  if (!settingsLevelPicker || !settingsChapterPicker) return;
   syncSettingsScopeControls();
 
-  settingsLevelSelect.addEventListener("change", () => {
-    appState.settingsScopeLevelId = settingsLevelSelect.value;
-    buildSettingsChapterOptions(appState.settingsScopeLevelId);
-    settingsChapterSelect.value = "all";
-    appState.settingsScopeChapterId = settingsChapterSelect.value;
-    saveState();
+  settingsLevelPicker.addEventListener("click", () => {
+    syncSettingsScopeControls();
+    openBottomSheet(levelSheet);
   });
 
-  settingsChapterSelect.addEventListener("change", () => {
-    appState.settingsScopeChapterId = settingsChapterSelect.value;
-    saveState();
+  settingsChapterPicker.addEventListener("click", () => {
+    syncSettingsScopeControls();
+    openBottomSheet(chapterSheet);
+  });
+
+  levelSheetOptions?.addEventListener("click", (event) => {
+    const option = event.target.closest("[data-value]");
+    if (!option) return;
+    appState.settingsScopeLevelId = option.dataset.value;
+    ensureSettingsScope();
+    syncSettingsScopeControls();
+    closeBottomSheet(levelSheet);
+  });
+
+  chapterSheetOptions?.addEventListener("click", (event) => {
+    const option = event.target.closest("[data-value]");
+    if (!option) return;
+    appState.settingsScopeChapterId = option.dataset.value;
+    ensureSettingsScope();
+    syncSettingsScopeControls();
+    closeBottomSheet(chapterSheet);
+  });
+
+  [levelSheet, chapterSheet].forEach((sheet) => {
+    if (!sheet) return;
+    sheet.addEventListener("click", (event) => {
+      if (event.target.matches("[data-sheet-close]")) {
+        closeBottomSheet(sheet);
+      }
+    });
   });
 }
 
@@ -553,11 +657,13 @@ settingsButton.addEventListener("click", () => {
 });
 
 settingsCloseBtn.addEventListener("click", () => {
+  closeAllBottomSheets();
   closeModal(settingsModal);
 });
 
 settingsModal.addEventListener("click", (e) => {
   if (e.target === settingsModal) {
+    closeAllBottomSheets();
     closeModal(settingsModal);
   }
 });
