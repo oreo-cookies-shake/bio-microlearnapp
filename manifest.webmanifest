@@ -1,6 +1,6 @@
 {
   "name": "Microlearn Bio",
-  "short_name": "Microlearn Bio",
+  "short_name": "BioMicro",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",

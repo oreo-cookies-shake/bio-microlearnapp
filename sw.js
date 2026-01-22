@@ -2,20 +2,20 @@
 const CACHE_NAME = "microlearn-bio-v47";
 
 const ASSETS = [
-  "/",
-  "/index.html",
-  "/style.css",
-  "/theme.css",
-  "/base.css",
-  "/modes.css",
-  "/components.css",
-  "/script.js",
-  "/manifest.webmanifest",
-  "/icons/icon-192.png",
-  "/icons/icon-512.png",
-  "/icons/maskable-192.png",
-  "/icons/maskable-512.png",
-  "/icons/apple-touch-icon.png"
+  "./",
+  "./index.html",
+  "./style.css",
+  "./theme.css",
+  "./base.css",
+  "./modes.css",
+  "./components.css",
+  "./script.js",
+  "./manifest.webmanifest",
+  "./icons/icon-192.png",
+  "./icons/icon-512.png",
+  "./icons/maskable-192.png",
+  "./icons/maskable-512.png",
+  "./icons/apple-touch-icon.png"
 ];
 
 self.addEventListener("install", (event) => {
