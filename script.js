@@ -393,10 +393,20 @@ function isValidSession(session) {
   return true;
 }
 
+const RESUME_DISMISS_KEY = "microlearn.resumeDismissedOn";
+
+function getTodayStamp() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function isResumeDismissedToday() {
+  return localStorage.getItem(RESUME_DISMISS_KEY) === getTodayStamp();
+}
+
 function renderResumeCard() {
   if (!resumeCardEl || !resumeSubtitleEl) return;
   const session = loadLastSession();
-  if (!isValidSession(session)) {
+  if (!isValidSession(session) || isResumeDismissedToday()) {
     resumeCardEl.classList.add("hidden");
     return;
   }
@@ -534,6 +544,7 @@ const confirmTitleEl = qs("#confirmTitle");
 const resumeCardEl = qs("#resumeCard");
 const resumeSubtitleEl = qs("#resumeSubtitle");
 const resumeButtonEl = qs("#resumeButton");
+const resumeDismissBtn = qs("#resumeDismiss");
 const clearResumeBtn = qs("#clearResume");
 
 // Floating actions (Story + Questions)
@@ -971,6 +982,11 @@ resumeButtonEl?.addEventListener("click", (event) => {
   event.stopPropagation();
   handleResume();
 });
+resumeDismissBtn?.addEventListener("click", (event) => {
+  event.stopPropagation();
+  localStorage.setItem(RESUME_DISMISS_KEY, getTodayStamp());
+  renderResumeCard();
+});
 
 exportBackupBtn.addEventListener("click", () => {
   const payload = exportBackup();
@@ -1157,17 +1173,13 @@ function renderChapters() {
       </div>
       <div class="chapter-meta">
         ${isSoon ? "<span>Coming soon</span>" : `
-          <span class="chapter-meta-line">
-            <span class="chapter-meta-long">${progress.totalStory} points (${progress.storyPct}%) · ${progress.totalQ} questions (${progress.questionPct}%)</span>
-            <span class="chapter-meta-short">${progress.totalStory} pts (${progress.storyPct}%) · ${progress.totalQ} qs (${progress.questionPct}%)</span>
-          </span>
+          <div class="chapter-meta-chips">
+            <span class="chapter-chip">Points · ${progress.totalStory} · ${progress.storyPct}%</span>
+            <span class="chapter-chip">Questions · ${progress.totalQ} · ${progress.questionPct}%</span>
+            ${hasProgress ? '<span class="chapter-chip chapter-chip--muted">Continue</span>' : ""}
+          </div>
         `}
       </div>
-      ${isSoon || !hasProgress ? "" : `
-        <div class="card-chapter-footer">
-          <button class="btn btn--small chapter-resume-btn" type="button">Resume</button>
-        </div>
-      `}
     `;
 
     const openChapter = (modeOverride = null) => {
@@ -1177,7 +1189,7 @@ function renderChapters() {
       }
 
       appState.currentChapterId = chapter.id;
-      appState.currentMode = modeOverride || appState.currentMode || "story";
+      appState.currentMode = modeOverride || resumeMode || appState.currentMode || "story";
       saveState();
       showScreen("chapter");
       setActiveMode(appState.currentMode);
@@ -1193,14 +1205,6 @@ function renderChapters() {
         openChapter();
       }
     });
-
-    const resumeBtn = card.querySelector(".chapter-resume-btn");
-    if (resumeBtn && resumeMode) {
-      resumeBtn.addEventListener("click", (event) => {
-        event.stopPropagation();
-        openChapter(resumeMode);
-      });
-    }
 
     chaptersListEl.appendChild(card);
   });

@@ -36,16 +36,19 @@
     <main class="app-main">
       <!-- Screen 1: Level selection (AS / A2) -->
       <section id="screenLevels" class="screen active">
+        <div class="hero">
+          <h2>Microlearning for A-Level Biology</h2>
+          <p>Tiny lessons. Fast recall.</p>
+        </div>
         <div id="resumeCard" class="card resume-card hidden" role="button" tabindex="0" aria-label="Resume last session">
           <div class="resume-card__text">
             <div class="resume-card__title">Resume</div>
             <div id="resumeSubtitle" class="resume-card__subtitle"></div>
           </div>
-          <button id="resumeButton" class="btn btn--small" type="button">Continue</button>
-        </div>
-        <div class="hero">
-          <h2>Microlearning for A-Level Biology</h2>
-          <p>Tiny lessons. Fast recall.</p>
+          <div class="resume-card__actions">
+            <button id="resumeButton" class="btn btn--small" type="button">Continue</button>
+            <button id="resumeDismiss" class="icon-button resume-card__dismiss" type="button" aria-label="Dismiss resume">×</button>
+          </div>
         </div>
         <div class="card-grid">
           <button class="card card-select" data-level="as">

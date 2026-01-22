@@ -864,12 +864,12 @@ body.light .toast {
 .card-grid {
   display: grid;
   gap: 16px;
-  margin-top: 14px;
+  margin-top: 8px;
 }
 
 .resume-card {
-  margin-bottom: 16px;
-  padding: 14px 16px;
+  margin: 8px 0 18px;
+  padding: 12px 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -892,6 +892,29 @@ body.light .toast {
   color: var(--muted);
 }
 
+.resume-card__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.resume-card__dismiss {
+  width: 28px;
+  height: 28px;
+  font-size: 18px;
+  border-radius: 999px;
+  border: 1px solid var(--edge);
+  color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.resume-card__dismiss:hover {
+  color: var(--text);
+}
+
 .chapter-meta {
   margin-top: 10px;
   color: var(--muted);
@@ -899,23 +922,28 @@ body.light .toast {
   line-height: 1.4;
 }
 
-.chapter-meta-line {
-  display: block;
-  white-space: normal;
+.chapter-meta-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
-.chapter-meta-short {
-  display: none;
+.chapter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--edge);
+  background: transparent;
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
 }
 
-@media (max-width: 520px) {
-  .chapter-meta-long {
-    display: none;
-  }
-
-  .chapter-meta-short {
-    display: inline;
-  }
+.chapter-chip--muted {
+  color: var(--text);
+  border-color: rgba(143, 181, 166, 0.35);
 }
 
 .progress-circle {
