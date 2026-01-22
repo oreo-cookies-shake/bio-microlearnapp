@@ -205,6 +205,11 @@
   height: var(--header-icon-size);
 }
 
+.icon-button--gear svg {
+  width: calc(var(--header-icon-size) - 2px);
+  height: calc(var(--header-icon-size) - 2px);
+}
+
 /* =====================
    Floating action buttons (Story + Questions)
    ===================== */
@@ -840,11 +845,51 @@ body.light .toast {
   transform: translateX(-50%) translateY(0);
 }
 
+.toast--action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 18px;
+}
+
+.toast--action .toast__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
 /* === Keep clickable cards airy (home + chapter list) === */
 .card-grid {
   display: grid;
   gap: 16px;
   margin-top: 14px;
+}
+
+.resume-card {
+  margin-bottom: 16px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.resume-card__text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.resume-card__title {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.resume-card__subtitle {
+  font-size: 12px;
+  color: var(--muted);
 }
 
 .chapter-meta {
