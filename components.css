@@ -848,11 +848,29 @@ body.light .toast {
 }
 
 .chapter-meta {
-  display: flex;
-  gap: 14px;
   margin-top: 10px;
   color: var(--muted);
   font-size: 13px;
+  line-height: 1.4;
+}
+
+.chapter-meta-line {
+  display: block;
+  white-space: normal;
+}
+
+.chapter-meta-short {
+  display: none;
+}
+
+@media (max-width: 520px) {
+  .chapter-meta-long {
+    display: none;
+  }
+
+  .chapter-meta-short {
+    display: inline;
+  }
 }
 
 .progress-circle {
