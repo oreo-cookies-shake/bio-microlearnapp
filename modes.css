@@ -66,6 +66,11 @@
   border-radius: 22px;
 }
 
+.end-card {
+  align-self: center;
+  width: min(620px, 100%);
+}
+
 .qa-meta {
   font-size: 12.5px;
   font-weight: 650;
@@ -84,4 +89,21 @@
   border-top: 1px solid var(--content-edge);
   background: transparent;
   border-radius: 0;
+}
+
+.end-card-note {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.end-card-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.end-card-actions .btn {
+  width: 100%;
 }

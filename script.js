@@ -223,6 +223,29 @@ function getChapter(levelId, chapterId) {
   return level.chapters.find((c) => c.id === chapterId);
 }
 
+function getNextChapter(levelId, chapterId) {
+  const level = DATA[levelId];
+  if (!level) return null;
+  const index = level.chapters.findIndex((chapter) => chapter.id === chapterId);
+  if (index === -1) return null;
+  return level.chapters[index + 1] || null;
+}
+
+function isChapterComingSoon(chapter) {
+  if (!chapter) return false;
+  const totalStory = chapter.storyPoints?.length || 0;
+  const totalQ = chapter.questions?.length || 0;
+  return totalStory + totalQ === 0;
+}
+
+function navigateToChapter(chapterId, mode) {
+  appState.currentChapterId = chapterId;
+  appState.currentMode = mode;
+  saveState();
+  showScreen("chapter");
+  setActiveMode(mode);
+}
+
 function ensureChapterState(chapterId) {
   if (!appState.chapters[chapterId]) {
     appState.chapters[chapterId] = {
@@ -1045,7 +1068,12 @@ function syncActionDock(chapter, chState) {
   if (mode === "story") {
     const total = chapter.storyPoints.length;
     const done = chState.storyIndex >= total;
-    setRightButton({ label: "OK", shape: "circle", disabled: total === 0 || done });
+    if (total === 0 || done) {
+      actionDock.classList.add("hidden");
+      return;
+    }
+
+    setRightButton({ label: "OK", shape: "circle", disabled: false });
   }
 
   if (mode === "questions") {
@@ -1130,6 +1158,14 @@ function renderStoryMode(chapter, chState) {
 
   storyFeedEl.innerHTML = "";
   storyFeedEl.appendChild(feed);
+
+  if (chState.storyIndex >= total) {
+    feed.appendChild(createEndOfSetCard({
+      levelId: appState.currentLevelId,
+      chapterId: chapter.id,
+      mode: "story"
+    }));
+  }
 
   // auto scroll to latest bubble
   requestAnimationFrame(scrollToLatestContent);
@@ -1235,16 +1271,81 @@ function renderQuestionMode(chapter, chState) {
     const q = chapter.questions[chState.questionIndex];
     wrapper.appendChild(makeQuestionCard(q, chState.questionIndex, false));
   } else {
-    const done = document.createElement("div");
-    done.className = "qa-card";
-    done.innerHTML = `<div class="qa-meta">Done</div><div class="qa-text">You’ve reached the end of this set.</div>`;
-    wrapper.appendChild(done);
+    wrapper.appendChild(createEndOfSetCard({
+      levelId: appState.currentLevelId,
+      chapterId: chapter.id,
+      mode: "questions"
+    }));
   }
 
   questionAreaEl.innerHTML = "";
   questionAreaEl.appendChild(wrapper);
 
   requestAnimationFrame(scrollToLatestContent);
+}
+
+function createEndOfSetCard({ levelId, chapterId, mode }) {
+  const card = document.createElement("div");
+  card.className = "qa-card end-card";
+
+  const meta = document.createElement("div");
+  meta.className = "qa-meta";
+  meta.textContent = "Done";
+
+  const text = document.createElement("div");
+  text.className = "qa-text";
+  text.textContent = "You’ve reached the end of this set.";
+
+  card.appendChild(meta);
+  card.appendChild(text);
+
+  const nextChapter = getNextChapter(levelId, chapterId);
+  const actions = document.createElement("div");
+  actions.className = "end-card-actions";
+
+  if (nextChapter) {
+    const nextBtn = document.createElement("button");
+    const nextIsSoon = isChapterComingSoon(nextChapter);
+    nextBtn.className = "btn";
+    nextBtn.type = "button";
+    nextBtn.textContent = nextIsSoon ? "Next chapter (coming soon)" : "Next chapter →";
+    nextBtn.disabled = nextIsSoon;
+
+    if (!nextIsSoon) {
+      nextBtn.addEventListener("click", () => {
+        navigateToChapter(nextChapter.id, mode);
+      });
+    }
+
+    const backBtn = document.createElement("button");
+    backBtn.className = "btn btn--ghost btn--small";
+    backBtn.type = "button";
+    backBtn.textContent = "Back to chapters";
+    backBtn.addEventListener("click", () => {
+      showScreen("chapters");
+    });
+
+    actions.appendChild(nextBtn);
+    actions.appendChild(backBtn);
+  } else {
+    const note = document.createElement("div");
+    note.className = "end-card-note";
+    note.textContent = "You’ve finished this level 🎉";
+    card.appendChild(note);
+
+    const backBtn = document.createElement("button");
+    backBtn.className = "btn";
+    backBtn.type = "button";
+    backBtn.textContent = "Back to chapters";
+    backBtn.addEventListener("click", () => {
+      showScreen("chapters");
+    });
+
+    actions.appendChild(backBtn);
+  }
+
+  card.appendChild(actions);
+  return card;
 }
 
 
