@@ -11,6 +11,8 @@
   --radius-card: 28px;
   --radius-pill: 999px;
 
+  --header-icon-size: 18px;
+
   /* Tiny highlight line to make surfaces feel "real" */
   --highlight-line: inset 0 1px 0 rgba(255,255,255,0.06);
 

@@ -160,6 +160,10 @@
   transition: transform 140ms ease, box-shadow 140ms ease;
 }
 
+.app-header .icon-button {
+  font-size: var(--header-icon-size);
+}
+
 .icon-button:active {
   transform: translateY(1px) scale(0.97);
   box-shadow: var(--shadow-press), var(--highlight-line);
@@ -196,9 +200,9 @@
   height: 20px;
 }
 
-.icon-button--gear svg {
-  width: 20px;
-  height: 20px;
+.app-header .icon-button svg {
+  width: var(--header-icon-size);
+  height: var(--header-icon-size);
 }
 
 /* =====================
