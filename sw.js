@@ -1,5 +1,5 @@
 // Bump the version to force PWAs to update on phones.
-const CACHE_NAME = "microlearn-bio-v47";
+const CACHE_NAME = "microlearn-v2024-05-30";
 
 const ASSETS = [
   "./",
@@ -24,14 +24,17 @@ self.addEventListener("install", (event) => {
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.map((k) => (k !== CACHE_NAME ? caches.delete(k) : undefined)))
-    )
+    Promise.all([
+      caches.keys().then((keys) =>
+        Promise.all(keys.map((k) => (k !== CACHE_NAME ? caches.delete(k) : undefined)))
+      ),
+      self.clients.claim()
+    ])
   );
-  self.clients.claim();
 });
 
 self.addEventListener("message", (event) => {
+  // Allow the page to trigger immediate activation of a waiting worker.
   if (event.data && event.data.type === "SKIP_WAITING") {
     self.skipWaiting();
   }
