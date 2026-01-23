@@ -1062,3 +1062,90 @@ body.light .toast {
 body.light .progress-circle {
   background: rgba(17, 24, 39, 0.03);
 }
+
+/* =====================
+   Objectives screen
+   ===================== */
+.objectives-intro {
+  display: grid;
+  gap: 4px;
+  margin: 4px 4px 14px;
+}
+
+.objectives-intro__title {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.objectives-intro__subtitle {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.objectives-list {
+  display: grid;
+  gap: 12px;
+}
+
+.objective-section {
+  padding: 0;
+  overflow: hidden;
+}
+
+.objective-section__toggle {
+  width: 100%;
+  border: none;
+  background: transparent;
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.objective-section__chevron {
+  font-size: 16px;
+  color: var(--muted);
+  transition: transform 160ms ease;
+}
+
+.objective-section.is-open .objective-section__chevron {
+  transform: rotate(90deg);
+}
+
+.objective-items {
+  display: grid;
+  gap: 8px;
+  padding: 0 18px 16px;
+}
+
+.objective-items.hidden {
+  display: none;
+}
+
+.objective-item {
+  border: 1px solid var(--content-edge);
+  background: var(--content-bg);
+  border-radius: 14px;
+  padding: 12px 14px;
+  text-align: left;
+  font-size: 14px;
+  color: var(--text);
+  cursor: pointer;
+  box-shadow: var(--shadow-soft);
+  transition: transform 140ms ease, box-shadow 140ms ease;
+}
+
+.objective-item:active {
+  transform: translateY(1px) scale(0.99);
+  box-shadow: var(--shadow-press);
+}
+
+.objectives-footer {
+  margin-top: 16px;
+  display: grid;
+}
