@@ -1508,10 +1508,8 @@ function showScreen(name) {
       if (objectiveId) {
         const objectiveTitle = getObjectiveTitle(chapter.id, objectiveId);
         headerSubtitleEl.textContent = [objectiveId, objectiveTitle].filter(Boolean).join(" ");
-      } else if (getObjectivesForChapter(chapter.id)) {
-        headerSubtitleEl.textContent = "Full chapter";
       } else {
-        headerSubtitleEl.textContent = DATA[appState.currentLevelId].label;
+        headerSubtitleEl.textContent = "";
       }
     }
   }
