@@ -47,6 +47,7 @@ const DATA = {
 const STORAGE_KEY = "microlearn-bio-state-v1";
 const STORAGE_PREFIX = "microlearnBio:";
 const LAST_SESSION_KEY = "lastSession";
+const STREAK_KEY = "microlearn_streak_v1";
 
 const createDefaultState = () => ({
   theme: "dark",
@@ -60,6 +61,129 @@ const createDefaultState = () => ({
 });
 
 let appState = createDefaultState();
+let streakState = null;
+
+// ---------- Streak helpers ----------
+function getLocalYYYYMMDD(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function createDefaultStreak() {
+  return {
+    current: 0,
+    longest: 0,
+    lastActiveDate: getLocalYYYYMMDD(),
+    todayCounted: false
+  };
+}
+
+function isValidDateString(value) {
+  return typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value);
+}
+
+function parseLocalDate(value) {
+  if (!isValidDateString(value)) return null;
+  const [year, month, day] = value.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
+function getDayDiff(fromDate, toDate) {
+  const from = parseLocalDate(fromDate);
+  const to = parseLocalDate(toDate);
+  if (!from || !to) return null;
+  const msPerDay = 24 * 60 * 60 * 1000;
+  return Math.floor((to - from) / msPerDay);
+}
+
+function loadStreak() {
+  try {
+    const raw = localStorage.getItem(STREAK_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      streakState = {
+        ...createDefaultStreak(),
+        ...parsed
+      };
+    } else {
+      streakState = createDefaultStreak();
+    }
+  } catch (e) {
+    console.warn("Could not load streak", e);
+    streakState = createDefaultStreak();
+  }
+
+  if (!isValidDateString(streakState.lastActiveDate)) {
+    streakState.lastActiveDate = getLocalYYYYMMDD();
+  }
+
+  if (streakState.lastActiveDate !== getLocalYYYYMMDD()) {
+    streakState.todayCounted = false;
+  }
+
+  if (typeof streakState.current !== "number" || streakState.current < 0) {
+    streakState.current = 0;
+  }
+  if (typeof streakState.longest !== "number" || streakState.longest < 0) {
+    streakState.longest = 0;
+  }
+
+  saveStreak();
+  return streakState;
+}
+
+function saveStreak() {
+  try {
+    localStorage.setItem(STREAK_KEY, JSON.stringify(streakState));
+  } catch (e) {
+    console.warn("Could not save streak", e);
+  }
+}
+
+// Testing checklist:
+// - New install: streak shows 🔥0
+// - Do one activity: becomes 🔥1
+// - Do more actions same day: stays 🔥1
+// - Next day activity: becomes 🔥2
+// - Skip a day then activity: resets to 🔥1
+// - Longest updates correctly
+// - Works offline
+function recordDailyActivity(reason) {
+  const streak = streakState || loadStreak();
+  const today = getLocalYYYYMMDD();
+
+  if (streak.lastActiveDate !== today) {
+    streak.todayCounted = false;
+  }
+
+  if (streak.lastActiveDate === today && streak.todayCounted) {
+    return;
+  }
+
+  if (streak.lastActiveDate === today) {
+    streak.current = Math.max(1, streak.current || 0);
+  } else {
+    const diff = getDayDiff(streak.lastActiveDate, today);
+    if (diff === 1) {
+      streak.current = (streak.current || 0) + 1;
+    } else {
+      streak.current = 1;
+    }
+  }
+
+  streak.longest = Math.max(streak.longest || 0, streak.current);
+  streak.lastActiveDate = today;
+  streak.todayCounted = true;
+
+  streakState = streak;
+  saveStreak();
+  updateStreakUI();
+  if (reason) {
+    // Reserved for analytics/debugging if needed later.
+  }
+}
 
 function loadState() {
   try {
@@ -160,7 +284,10 @@ function clearLastSession() {
 }
 
 function isAppStorageKey(key) {
-  return key === STORAGE_KEY || key === LAST_SESSION_KEY || key.startsWith(STORAGE_PREFIX);
+  return key === STORAGE_KEY
+    || key === LAST_SESSION_KEY
+    || key === STREAK_KEY
+    || key.startsWith(STORAGE_PREFIX);
 }
 
 function getAllAppKeys() {
@@ -488,6 +615,13 @@ const chaptersListEl = qs("#chaptersList");
 const headerTitleEl = qs("#headerTitle");
 const headerSubtitleEl = qs("#headerSubtitle");
 const backButton = qs("#backButton");
+const streakChipBtn = qs("#streakChip");
+const streakChipCountEl = qs("#streakChipCount");
+const streakSheet = qs("#streakSheet");
+const streakCurrentValueEl = qs("#streakCurrentValue");
+const streakLongestValueEl = qs("#streakLongestValue");
+const streakLastValueEl = qs("#streakLastValue");
+const streakDotsEl = qs("#streakDots");
 
 const modeTabs = qs("#modeTabs");
 const progressLabel = qs("#progressLabel");
@@ -612,6 +746,52 @@ function showToast(message) {
     toastEl.classList.add("hidden");
     toastTimeout = null;
   }, 2000);
+}
+
+function getLastStudiedLabel(streak) {
+  const today = getLocalYYYYMMDD();
+  const yesterday = getLocalYYYYMMDD(new Date(Date.now() - 24 * 60 * 60 * 1000));
+  if (streak.lastActiveDate === today) return "Today";
+  if (streak.lastActiveDate === yesterday) return "Yesterday";
+  return streak.lastActiveDate;
+}
+
+function updateStreakDots(streak) {
+  if (!streakDotsEl) return;
+  const dots = Array.from(streakDotsEl.querySelectorAll(".streak-dot"));
+  const today = getLocalYYYYMMDD();
+  const yesterday = getLocalYYYYMMDD(new Date(Date.now() - 24 * 60 * 60 * 1000));
+  let activeCount = 0;
+  if (streak.lastActiveDate === today || streak.lastActiveDate === yesterday) {
+    activeCount = Math.min(7, streak.current || 0);
+  }
+
+  dots.forEach((dot, index) => {
+    const shouldActivate = activeCount > 0 && index >= dots.length - activeCount;
+    dot.classList.toggle("is-active", shouldActivate);
+  });
+}
+
+function updateStreakUI() {
+  const streak = streakState || loadStreak();
+  if (!streak) return;
+
+  if (streakChipCountEl) {
+    streakChipCountEl.textContent = String(streak.current || 0);
+  }
+  if (streakCurrentValueEl) {
+    const currentLabel = streak.current === 1 ? "day" : "days";
+    streakCurrentValueEl.textContent = `${streak.current} ${currentLabel}`;
+  }
+  if (streakLongestValueEl) {
+    const longestLabel = streak.longest === 1 ? "day" : "days";
+    streakLongestValueEl.textContent = `${streak.longest} ${longestLabel}`;
+  }
+  if (streakLastValueEl) {
+    streakLastValueEl.textContent = getLastStudiedLabel(streak);
+  }
+
+  updateStreakDots(streak);
 }
 
 function showUpdateToast() {
@@ -837,6 +1017,7 @@ function closeBottomSheet(sheetEl) {
 function closeAllBottomSheets() {
   closeBottomSheet(levelSheet);
   closeBottomSheet(chapterSheet);
+  closeBottomSheet(streakSheet);
 }
 
 function initSettingsScopeControls() {
@@ -871,7 +1052,7 @@ function initSettingsScopeControls() {
     closeBottomSheet(chapterSheet);
   });
 
-  [levelSheet, chapterSheet].forEach((sheet) => {
+  [levelSheet, chapterSheet, streakSheet].forEach((sheet) => {
     if (!sheet) return;
     sheet.addEventListener("click", (event) => {
       if (event.target.matches("[data-sheet-close]")) {
@@ -880,6 +1061,11 @@ function initSettingsScopeControls() {
     });
   });
 }
+
+streakChipBtn?.addEventListener("click", () => {
+  updateStreakUI();
+  openBottomSheet(streakSheet);
+});
 
 settingsButton.addEventListener("click", () => {
   syncSettingsScopeControls();
@@ -1094,12 +1280,14 @@ function showScreen(name) {
     headerSubtitleEl.textContent = "";
     headerTitleEl.textContent = "";
     appHeaderEl.classList.add("header--home");
+    streakChipBtn?.classList.remove("hidden");
     renderResumeCard();
   } else if (name === "chapters") {
     screenChapters.classList.remove("hidden");
     appHeaderEl.classList.add("header--list");
     backButton.classList.remove("hidden");
     settingsButton.classList.add("hidden");
+    streakChipBtn?.classList.add("hidden");
     headerTitleEl.textContent = DATA[appState.currentLevelId].label;
     headerSubtitleEl.textContent = "Choose a chapter";
   } else if (name === "chapter") {
@@ -1107,10 +1295,13 @@ function showScreen(name) {
     appHeaderEl.classList.add("header--chapter");
     backButton.classList.remove("hidden");
     settingsButton.classList.add("hidden");
+    streakChipBtn?.classList.add("hidden");
     const chapter = getChapter(appState.currentLevelId, appState.currentChapterId);
     headerTitleEl.textContent = chapter.title;
     headerSubtitleEl.textContent = DATA[appState.currentLevelId].label;
   }
+
+  updateStreakUI();
 }
 
 backButton.addEventListener("click", () => {
@@ -1577,6 +1768,7 @@ function advanceStory(chapter, chState) {
   if (chState.storyIndex < total) {
     chState.storyIndex += 1;
     recordChapterActivity(chapter.id, "story");
+    recordDailyActivity("story-ok");
     saveState();
     renderCurrentMode();
   } else {
@@ -1778,6 +1970,7 @@ function handleQuestionPrimary(chapter, chState) {
   if (!questionRevealed) {
     questionRevealed = true;
     if (currentAnswerEl) currentAnswerEl.classList.remove("hidden");
+    recordDailyActivity("question-reveal");
     syncActionDock(chapter, chState);
     return;
   }
@@ -1792,6 +1985,7 @@ function advanceQuestion(chapter, chState) {
     chState.questionIndex += 1;
   }
   recordChapterActivity(chapter.id, "questions");
+  recordDailyActivity("question-next");
   saveState();
   renderCurrentMode();
 }
@@ -2089,6 +2283,7 @@ function startRevisionSession(chapter, chState, selectedIds = null) {
   revisionCountChoice = revisionLastStandardCount;
   revisionPointIndex = 0;
   revisionPointMaxIndex = 0;
+  recordDailyActivity("revision-start");
   renderCurrentMode();
 }
 
@@ -2100,10 +2295,12 @@ function handleRevisionPrimary() {
     if (revisionPointMaxIndex < total - 1) {
       revisionPointMaxIndex += 1;
       revisionPointIndex = revisionPointMaxIndex;
+      recordDailyActivity("revision-step");
       renderCurrentMode();
       return;
     }
     revisionPointIndex = total;
+    recordDailyActivity("revision-complete");
     renderCurrentMode();
     return;
   }
@@ -2113,6 +2310,7 @@ function handleRevisionPrimary() {
     const current = getCurrentRevisionItem();
     if (current && !isRevisionQuestionRevealed(current)) {
       revisionQuestionRevealedById[current.id] = true;
+      recordDailyActivity("revision-reveal");
       renderCurrentMode();
       return;
     }
@@ -2123,6 +2321,7 @@ function handleRevisionPrimary() {
 
   revisionSessionIndex += 1;
   revisionSessionMaxIndex = Math.max(revisionSessionMaxIndex, revisionSessionIndex);
+  recordDailyActivity("revision-next");
   renderCurrentMode();
 }
 
@@ -2329,10 +2528,12 @@ if ("serviceWorker" in navigator) {
 
 function init() {
   loadState();
+  loadStreak();
   applyTheme();
   initSettingsScopeControls();
   initLevelButtons();
   showScreen("levels");
+  updateStreakUI();
 }
 
 // ---------- Revision mode switch dialog ----------
