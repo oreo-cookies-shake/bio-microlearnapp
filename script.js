@@ -1465,6 +1465,7 @@ function showScreen(name) {
   appHeaderEl.classList.remove("header--chapter");
   appHeaderEl.classList.remove("header--list");
   appHeaderEl.classList.remove("header--objectives");
+  themeToggleBtn.classList.remove("hidden");
 
   if (name === "levels") {
     screenLevels.classList.remove("hidden");
@@ -1487,7 +1488,8 @@ function showScreen(name) {
     screenObjectives.classList.remove("hidden");
     appHeaderEl.classList.add("header--objectives");
     backButton.classList.remove("hidden");
-    settingsButton.classList.remove("hidden");
+    settingsButton.classList.add("hidden");
+    themeToggleBtn.classList.add("hidden");
     streakChipBtn?.classList.add("hidden");
     const chapter = getChapter(appState.currentLevelId, appState.currentChapterId);
     headerTitleEl.textContent = "Objectives";
