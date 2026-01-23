@@ -806,12 +806,12 @@ body.light .bottom-sheet__option.is-selected .bottom-sheet__check::after {
 .streak-chip {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   padding: 6px 10px;
   border-radius: 999px;
   border: 1px solid var(--edge);
   background: var(--surface);
-  color: var(--text);
+  color: var(--muted);
   font-size: 13px;
   font-weight: 600;
   box-shadow: var(--shadow-soft);
@@ -819,16 +819,42 @@ body.light .bottom-sheet__option.is-selected .bottom-sheet__check::after {
   white-space: nowrap;
 }
 
+.streak-chip.is-active {
+  color: var(--accent);
+}
+
 .streak-chip:active {
   transform: scale(0.98);
 }
 
 .streak-chip__icon {
-  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.streak-chip__icon svg {
+  width: 18px;
+  height: 18px;
 }
 
 .streak-chip__count {
   letter-spacing: 0.01em;
+}
+
+.streak-chip--header {
+  padding: 4px 8px;
+  font-size: 12px;
+  box-shadow: none;
+}
+
+.streak-sheet__header {
+  align-items: center;
+}
+
+.streak-sheet__title-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .streak-sheet__body {

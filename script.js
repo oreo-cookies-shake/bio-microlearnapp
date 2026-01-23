@@ -143,11 +143,11 @@ function saveStreak() {
 }
 
 // Testing checklist:
-// - New install: streak shows 🔥0
-// - Do one activity: becomes 🔥1
-// - Do more actions same day: stays 🔥1
-// - Next day activity: becomes 🔥2
-// - Skip a day then activity: resets to 🔥1
+// - New install: streak shows 0
+// - Do one activity: becomes 1
+// - Do more actions same day: stays 1
+// - Next day activity: becomes 2
+// - Skip a day then activity: resets to 1
 // - Longest updates correctly
 // - Works offline
 function recordDailyActivity(reason) {
@@ -617,6 +617,8 @@ const headerSubtitleEl = qs("#headerSubtitle");
 const backButton = qs("#backButton");
 const streakChipBtn = qs("#streakChip");
 const streakChipCountEl = qs("#streakChipCount");
+const streakSheetChipEl = qs("#streakSheetChip");
+const streakSheetCountEl = qs("#streakSheetCount");
 const streakSheet = qs("#streakSheet");
 const streakCurrentValueEl = qs("#streakCurrentValue");
 const streakLongestValueEl = qs("#streakLongestValue");
@@ -690,6 +692,27 @@ const revisionSwitchCancelBtn = qs("#revisionSwitchCancel");
 const revisionSwitchConfirmBtn = qs("#revisionSwitchConfirm");
 
 const actionLeftDefaultHtml = actionLeftBtn.innerHTML;
+
+function getFlameIconSVG() {
+  return `
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M12.1 2.8c1.8 2.7 2.1 4.8 1.6 6.8-.4 1.5-1.3 2.7-2.4 3.7-1.2 1.1-2 2.4-2 4.2 0 2.7 2.1 4.9 4.7 4.9s4.7-2.2 4.7-4.9c0-3.3-2.2-5.3-4.1-7.4-1.1-1.3-1.9-2.6-2.5-4.3z"></path>
+      <path d="M9.4 12.7c-1.3 1.2-2.1 2.6-2.1 4.6 0 2.3 1.7 4.3 3.9 4.7"></path>
+    </svg>
+  `;
+}
+
+function applyStreakIcons() {
+  const iconMarkup = getFlameIconSVG();
+  [streakChipBtn, streakSheetChipEl].forEach((chip) => {
+    const iconEl = chip?.querySelector(".streak-chip__icon");
+    if (iconEl) {
+      iconEl.innerHTML = iconMarkup;
+    }
+  });
+}
+
+applyStreakIcons();
 
 // Question mode UI state (not persisted)
 let questionRevealed = false;
@@ -775,9 +798,16 @@ function updateStreakDots(streak) {
 function updateStreakUI() {
   const streak = streakState || loadStreak();
   if (!streak) return;
+  const isActive = (streak.current || 0) > 0;
+
+  streakChipBtn?.classList.toggle("is-active", isActive);
+  streakSheetChipEl?.classList.toggle("is-active", isActive);
 
   if (streakChipCountEl) {
     streakChipCountEl.textContent = String(streak.current || 0);
+  }
+  if (streakSheetCountEl) {
+    streakSheetCountEl.textContent = String(streak.current || 0);
   }
   if (streakCurrentValueEl) {
     const currentLabel = streak.current === 1 ? "day" : "days";
