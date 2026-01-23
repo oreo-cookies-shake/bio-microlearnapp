@@ -1464,6 +1464,7 @@ function showScreen(name) {
   appHeaderEl.classList.remove("header--home");
   appHeaderEl.classList.remove("header--chapter");
   appHeaderEl.classList.remove("header--list");
+  appHeaderEl.classList.remove("header--objectives");
 
   if (name === "levels") {
     screenLevels.classList.remove("hidden");
@@ -1484,9 +1485,9 @@ function showScreen(name) {
     headerSubtitleEl.textContent = "Choose a chapter";
   } else if (name === "objectives") {
     screenObjectives.classList.remove("hidden");
-    appHeaderEl.classList.add("header--list");
+    appHeaderEl.classList.add("header--objectives");
     backButton.classList.remove("hidden");
-    settingsButton.classList.add("hidden");
+    settingsButton.classList.remove("hidden");
     streakChipBtn?.classList.add("hidden");
     const chapter = getChapter(appState.currentLevelId, appState.currentChapterId);
     headerTitleEl.textContent = "Objectives";

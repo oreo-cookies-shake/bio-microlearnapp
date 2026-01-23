@@ -78,6 +78,19 @@ body {
   gap: 12px;
 }
 
+/* Objectives screen: add breathing room and safe-area padding */
+.app-header.header--objectives {
+  padding: calc(16px + env(safe-area-inset-top)) 16px 12px;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.app-header.header--objectives .header-subtitle {
+  margin-bottom: 8px;
+  opacity: 0.7;
+  max-width: 280px;
+}
+
 /* Home screen header: keep it minimal (just the theme toggle) */
 .app-header.header--home {
   justify-content: space-between;
