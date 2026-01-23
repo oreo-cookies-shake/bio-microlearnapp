@@ -2278,6 +2278,7 @@ function renderRevisionSession() {
 if ("serviceWorker" in navigator) {
   let swRegistration = null;
   let refreshPending = false;
+  let hasRefreshed = false;
 
   const sendSkipWaiting = () => {
     if (!swRegistration?.waiting) return;
@@ -2293,10 +2294,11 @@ if ("serviceWorker" in navigator) {
     hideUpdateToast();
   });
 
+  // Update flow: prompt on waiting SW, request skipWaiting, then reload once on controllerchange.
   navigator.serviceWorker.addEventListener("controllerchange", () => {
-    if (refreshPending) {
-      window.location.reload();
-    }
+    if (!refreshPending || hasRefreshed) return;
+    hasRefreshed = true;
+    window.location.reload();
   });
 
   window.addEventListener("load", () => {
