@@ -30,6 +30,10 @@
         <span id="headerSubtitle" class="header-subtitle"></span>
         <h1 id="headerTitle" class="header-main"></h1>
       </div>
+      <button id="streakChip" class="streak-chip hidden" type="button" aria-label="View streak" aria-haspopup="dialog" aria-controls="streakSheet">
+        <span class="streak-chip__icon" aria-hidden="true">🔥</span>
+        <span id="streakChipCount" class="streak-chip__count">0</span>
+      </button>
       <button class="icon-button" id="themeToggle" aria-label="Toggle theme">☾</button>
     </header>
 
@@ -242,6 +246,39 @@
         <button class="icon-button icon-button--flat icon-button--small" type="button" data-sheet-close aria-label="Close chapter picker">×</button>
       </div>
       <div id="chapterSheetOptions" class="bottom-sheet__list"></div>
+    </div>
+  </div>
+
+  <div id="streakSheet" class="bottom-sheet hidden streak-sheet" role="dialog" aria-modal="true" aria-labelledby="streakSheetTitle">
+    <div class="bottom-sheet__backdrop" data-sheet-close></div>
+    <div class="bottom-sheet__panel">
+      <div class="bottom-sheet__header">
+        <div id="streakSheetTitle" class="bottom-sheet__title">Streak</div>
+        <button class="icon-button icon-button--flat icon-button--small" type="button" data-sheet-close aria-label="Close streak details">×</button>
+      </div>
+      <div class="streak-sheet__body">
+        <div class="streak-row">
+          <span class="streak-row__label">Current</span>
+          <span id="streakCurrentValue" class="streak-row__value">0 days</span>
+        </div>
+        <div class="streak-row">
+          <span class="streak-row__label">Longest</span>
+          <span id="streakLongestValue" class="streak-row__value">0 days</span>
+        </div>
+        <div class="streak-row">
+          <span class="streak-row__label">Last studied</span>
+          <span id="streakLastValue" class="streak-row__value">Today</span>
+        </div>
+        <div id="streakDots" class="streak-dots" aria-label="7-day streak indicator" role="img">
+          <span class="streak-dot"></span>
+          <span class="streak-dot"></span>
+          <span class="streak-dot"></span>
+          <span class="streak-dot"></span>
+          <span class="streak-dot"></span>
+          <span class="streak-dot"></span>
+          <span class="streak-dot"></span>
+        </div>
+      </div>
     </div>
   </div>
 
