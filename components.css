@@ -1069,7 +1069,7 @@ body.light .progress-circle {
 .objectives-intro {
   display: grid;
   gap: 4px;
-  margin: 4px 4px 14px;
+  margin: 0 4px 12px;
 }
 
 .objectives-intro__title {
@@ -1078,7 +1078,7 @@ body.light .progress-circle {
 }
 
 .objectives-intro__subtitle {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--muted);
 }
 
@@ -1105,6 +1105,37 @@ body.light .progress-circle {
   font-weight: 600;
   color: var(--text);
   cursor: pointer;
+}
+
+.objective-section__title {
+  text-align: left;
+}
+
+.objective-section__meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.objective-section__progress {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--edge);
+  background: rgba(255, 255, 255, 0.03);
+  letter-spacing: 0.01em;
+}
+
+.objective-section__progress.is-complete {
+  color: var(--accent);
+  border-color: rgba(143, 181, 166, 0.6);
+  background: rgba(143, 181, 166, 0.14);
+}
+
+body.light .objective-section__progress {
+  background: rgba(17, 24, 39, 0.04);
 }
 
 .objective-section__chevron {
@@ -1137,15 +1168,45 @@ body.light .progress-circle {
   color: var(--text);
   cursor: pointer;
   box-shadow: var(--shadow-soft);
-  transition: transform 140ms ease, box-shadow 140ms ease;
+  transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.objective-item__label {
+  flex: 1;
+}
+
+.objective-item__chevron {
+  font-size: 16px;
+  color: var(--muted);
 }
 
 .objective-item:active {
   transform: translateY(1px) scale(0.99);
-  box-shadow: var(--shadow-press);
+  box-shadow: var(--shadow-press), inset 0 1px 2px rgba(0, 0, 0, 0.2);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+body.light .objective-item:active {
+  background: rgba(17, 24, 39, 0.04);
 }
 
 .objectives-footer {
   margin-top: 16px;
   display: grid;
+  gap: 6px;
+}
+
+.objectives-footer__button {
+  border-color: rgba(143, 181, 166, 0.55);
+  box-shadow: var(--shadow-card), 0 0 0 1px rgba(143, 181, 166, 0.12);
+}
+
+.objectives-footer__subtitle {
+  font-size: 11px;
+  color: var(--muted);
+  text-align: center;
 }

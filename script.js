@@ -92,6 +92,15 @@ function getObjectiveSectionId(chapterId, objectiveId) {
   return section?.id || null;
 }
 
+function getObjectiveTitle(chapterId, objectiveId) {
+  if (!objectiveId) return "";
+  const config = getObjectivesForChapter(chapterId);
+  if (!config) return "";
+  const objective = config.sections.flatMap((section) => section.objectives)
+    .find((entry) => entry.id === objectiveId);
+  return objective?.title || "";
+}
+
 function getNextObjectiveId(chapterId, objectiveId) {
   const order = getObjectiveOrder(chapterId);
   const index = order.indexOf(objectiveId);
@@ -1683,13 +1692,23 @@ function renderObjectives() {
     const sectionEl = document.createElement("div");
     sectionEl.className = "card objective-section";
 
+    const totalObjectives = section.objectives.length;
+    const completedObjectives = section.objectives.filter((objective) =>
+      getObjectiveProgress(chapter, chState, objective.id).isComplete
+    ).length;
+    const sectionDone = totalObjectives > 0 && completedObjectives === totalObjectives;
+    const sectionProgressLabel = sectionDone ? "Done" : `${completedObjectives}/${totalObjectives}`;
+
     const toggle = document.createElement("button");
     toggle.type = "button";
     toggle.className = "objective-section__toggle";
     toggle.setAttribute("aria-expanded", section.id === autoOpenSectionId ? "true" : "false");
     toggle.innerHTML = `
-      <span>${section.title}</span>
-      <span class="objective-section__chevron" aria-hidden="true">›</span>
+      <span class="objective-section__title">${section.title}</span>
+      <span class="objective-section__meta">
+        <span class="objective-section__progress${sectionDone ? " is-complete" : ""}">${sectionProgressLabel}</span>
+        <span class="objective-section__chevron" aria-hidden="true">›</span>
+      </span>
     `;
 
     const list = document.createElement("div");
@@ -1710,7 +1729,10 @@ function renderObjectives() {
       const item = document.createElement("button");
       item.type = "button";
       item.className = "objective-item";
-      item.textContent = `${objective.id} ${objective.title}`;
+      item.innerHTML = `
+        <span class="objective-item__label">${objective.id} ${objective.title}</span>
+        <span class="objective-item__chevron" aria-hidden="true">›</span>
+      `;
       item.addEventListener("click", () => {
         openObjective(chapter, objective.id);
       });
@@ -2254,7 +2276,10 @@ function createEndOfSetCard({ levelId, chapterId, mode, objectiveId }) {
     const nextObjectiveBtn = document.createElement("button");
     nextObjectiveBtn.className = "btn";
     nextObjectiveBtn.type = "button";
-    nextObjectiveBtn.textContent = `Go to ${nextObjectiveId} →`;
+    const nextObjectiveTitle = getObjectiveTitle(chapterId, nextObjectiveId);
+    nextObjectiveBtn.textContent = nextObjectiveTitle
+      ? `Next: ${nextObjectiveId} ${nextObjectiveTitle} →`
+      : `Next: ${nextObjectiveId} →`;
     nextObjectiveBtn.addEventListener("click", () => {
       appState.currentObjectiveId = nextObjectiveId;
       appState.currentMode = mode;
