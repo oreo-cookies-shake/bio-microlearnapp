@@ -1200,13 +1200,24 @@ body.light .objective-item:active {
   gap: 6px;
 }
 
+.objectives-footer__continue {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  margin-bottom: 16px;
+}
+
 .objectives-footer__button {
   border-color: rgba(143, 181, 166, 0.55);
   box-shadow: var(--shadow-card), 0 0 0 1px rgba(143, 181, 166, 0.12);
 }
 
 .objectives-footer__subtitle {
-  font-size: 11px;
+  width: 100%;
+  font-size: 0.85rem;
   color: var(--muted);
+  opacity: 0.65;
   text-align: center;
 }
