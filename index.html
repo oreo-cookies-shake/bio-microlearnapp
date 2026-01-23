@@ -31,7 +31,7 @@
         <h1 id="headerTitle" class="header-main"></h1>
       </div>
       <button id="streakChip" class="streak-chip hidden" type="button" aria-label="View streak" aria-haspopup="dialog" aria-controls="streakSheet">
-        <span class="streak-chip__icon" aria-hidden="true">🔥</span>
+        <span class="streak-chip__icon" aria-hidden="true"></span>
         <span id="streakChipCount" class="streak-chip__count">0</span>
       </button>
       <button class="icon-button" id="themeToggle" aria-label="Toggle theme">☾</button>
@@ -252,8 +252,14 @@
   <div id="streakSheet" class="bottom-sheet hidden streak-sheet" role="dialog" aria-modal="true" aria-labelledby="streakSheetTitle">
     <div class="bottom-sheet__backdrop" data-sheet-close></div>
     <div class="bottom-sheet__panel">
-      <div class="bottom-sheet__header">
-        <div id="streakSheetTitle" class="bottom-sheet__title">Streak</div>
+      <div class="bottom-sheet__header streak-sheet__header">
+        <div class="streak-sheet__title-group">
+          <div id="streakSheetTitle" class="bottom-sheet__title">Streak</div>
+          <div id="streakSheetChip" class="streak-chip streak-chip--header" aria-label="Current streak">
+            <span class="streak-chip__icon" aria-hidden="true"></span>
+            <span id="streakSheetCount" class="streak-chip__count">0</span>
+          </div>
+        </div>
         <button class="icon-button icon-button--flat icon-button--small" type="button" data-sheet-close aria-label="Close streak details">×</button>
       </div>
       <div class="streak-sheet__body">
