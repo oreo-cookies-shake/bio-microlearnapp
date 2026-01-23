@@ -23,13 +23,13 @@ const DATA = {
     label: "A2 Level",
     chapters: [
       { id: "a2-12", title: "12 Energy and respiration", storyPoints: [
-    { id: "a2-12-s1", text: "ATP is the immediate energy source for cell processes." },
-    { id: "a2-12-s2", text: "ATP releases small, manageable amounts of energy when hydrolysed." },
-    { id: "a2-12-s3", text: "ATP is not used for long-term energy storage in cells." }
+    { id: "a2-12-s1", text: "ATP is the immediate energy source for cell processes.", objective: "12.1.2" },
+    { id: "a2-12-s2", text: "ATP releases small, manageable amounts of energy when hydrolysed.", objective: "12.1.2" },
+    { id: "a2-12-s3", text: "ATP is not used for long-term energy storage in cells.", objective: "12.1.2" }
   ], questions: [
-    { id: "a2-12-q1", question: "Name the immediate energy source in cells.", answer: "ATP." },
-    { id: "a2-12-q2", question: "Where in the cell does glycolysis occur?", answer: "In the cytoplasm." },
-    { id: "a2-12-q3", question: "What happens to ATP when it releases energy?", answer: "It is hydrolysed to ADP and inorganic phosphate (Pi)." }
+    { id: "a2-12-q1", question: "Name the immediate energy source in cells.", answer: "ATP.", objective: "12.1.2" },
+    { id: "a2-12-q2", question: "Where in the cell does glycolysis occur?", answer: "In the cytoplasm.", objective: "12.2.1" },
+    { id: "a2-12-q3", question: "What happens to ATP when it releases energy?", answer: "It is hydrolysed to ADP and inorganic phosphate (Pi).", objective: "12.1.2" }
   ] },
       { id: "a2-13", title: "13 Photosynthesis", storyPoints: [], questions: [] },
       { id: "a2-14", title: "14 Homeostasis", storyPoints: [], questions: [] },
@@ -41,6 +41,76 @@ const DATA = {
     ]
   }
 };
+
+const CHAPTER_OBJECTIVES = {
+  "a2-12": {
+    sections: [
+      {
+        id: "12.1",
+        title: "12.1 Energy",
+        objectives: [
+          { id: "12.1.1", title: "Why organisms need energy" },
+          { id: "12.1.2", title: "ATP role" }
+        ]
+      },
+      {
+        id: "12.2",
+        title: "12.2 Respiration",
+        objectives: [
+          { id: "12.2.1", title: "Glycolysis" },
+          { id: "12.2.2", title: "Link reaction + Krebs" },
+          { id: "12.2.3", title: "Oxidative phosphorylation" },
+          { id: "12.2.4", title: "Anaerobic respiration (yeast/mammals)" },
+          { id: "12.2.5", title: "Respiratory quotient (RQ)" }
+        ]
+      }
+    ]
+  }
+};
+
+function getObjectivesForChapter(chapterId) {
+  return CHAPTER_OBJECTIVES[chapterId] || null;
+}
+
+function getObjectiveOrder(chapterId) {
+  const config = getObjectivesForChapter(chapterId);
+  if (!config) return [];
+  return config.sections.flatMap((section) => section.objectives.map((obj) => obj.id));
+}
+
+function isObjectiveIdValid(chapterId, objectiveId) {
+  if (!objectiveId) return false;
+  return getObjectiveOrder(chapterId).includes(objectiveId);
+}
+
+function getObjectiveSectionId(chapterId, objectiveId) {
+  const config = getObjectivesForChapter(chapterId);
+  if (!config) return null;
+  const section = config.sections.find((entry) =>
+    entry.objectives.some((objective) => objective.id === objectiveId)
+  );
+  return section?.id || null;
+}
+
+function getNextObjectiveId(chapterId, objectiveId) {
+  const order = getObjectiveOrder(chapterId);
+  const index = order.indexOf(objectiveId);
+  if (index === -1) return null;
+  return order[index + 1] || null;
+}
+
+function getChapterItemsForObjective(chapter, objectiveId) {
+  if (!objectiveId) {
+    return {
+      storyPoints: chapter.storyPoints,
+      questions: chapter.questions
+    };
+  }
+  return {
+    storyPoints: chapter.storyPoints.filter((point) => point.objective === objectiveId),
+    questions: chapter.questions.filter((question) => question.objective === objectiveId)
+  };
+}
 
 // ---------- State & persistence ----------
 
@@ -54,6 +124,7 @@ const createDefaultState = () => ({
   currentLevelId: null, // "as" | "a2"
   currentChapterId: null,
   currentMode: "story", // "story" | "questions" | "revision"
+  currentObjectiveId: null,
   currentRevisionSubMode: "story",
   chapters: {}, // per-chapter progress
   settingsScopeLevelId: null,
@@ -207,6 +278,9 @@ function migrateState() {
   }
   if (appState.currentMode === "difficult") {
     appState.currentMode = "revision";
+  }
+  if (appState.currentObjectiveId && !isObjectiveIdValid(appState.currentChapterId, appState.currentObjectiveId)) {
+    appState.currentObjectiveId = null;
   }
 
   if (!DATA[appState.settingsScopeLevelId]) {
@@ -398,6 +472,7 @@ function isChapterComingSoon(chapter) {
 
 function navigateToChapter(chapterId, mode) {
   appState.currentChapterId = chapterId;
+  appState.currentObjectiveId = null;
   appState.currentMode = mode;
   saveState();
   showScreen("chapter");
@@ -412,12 +487,14 @@ function ensureChapterState(chapterId) {
       revisionStoryIds: [],
       revisionQuestionIds: [],
       lastActiveMode: null,
-      lastActiveAt: null
+      lastActiveAt: null,
+      objectives: {}
     };
   }
   const chState = appState.chapters[chapterId];
   if (!Array.isArray(chState.revisionStoryIds)) chState.revisionStoryIds = [];
   if (!Array.isArray(chState.revisionQuestionIds)) chState.revisionQuestionIds = [];
+  if (!chState.objectives) chState.objectives = {};
   if (!chState.lastActiveMode) chState.lastActiveMode = null;
   if (!chState.lastActiveAt) chState.lastActiveAt = null;
   if (Array.isArray(chState.difficultStoryIds) && chState.revisionStoryIds.length === 0) {
@@ -429,10 +506,59 @@ function ensureChapterState(chapterId) {
   return chState;
 }
 
-function recordChapterActivity(chapterId, mode) {
+function ensureObjectiveState(chState, objectiveId) {
+  if (!chState.objectives) chState.objectives = {};
+  if (!chState.objectives[objectiveId]) {
+    chState.objectives[objectiveId] = {
+      storyIndex: 0,
+      questionIndex: 0,
+      revisionStoryIds: [],
+      revisionQuestionIds: [],
+      lastActiveMode: null,
+      lastActiveAt: null
+    };
+  }
+  const objState = chState.objectives[objectiveId];
+  if (!Array.isArray(objState.revisionStoryIds)) objState.revisionStoryIds = [];
+  if (!Array.isArray(objState.revisionQuestionIds)) objState.revisionQuestionIds = [];
+  if (!objState.lastActiveMode) objState.lastActiveMode = null;
+  if (!objState.lastActiveAt) objState.lastActiveAt = null;
+  return objState;
+}
+
+function getActiveObjectiveId(chapterId) {
+  const candidate = appState.currentObjectiveId;
+  if (!candidate) return null;
+  if (!isObjectiveIdValid(chapterId, candidate)) {
+    appState.currentObjectiveId = null;
+    return null;
+  }
+  return candidate;
+}
+
+function getActiveChapterContext(chapter) {
+  const chState = ensureChapterState(chapter.id);
+  const objectiveId = getActiveObjectiveId(chapter.id);
+  const viewState = objectiveId ? ensureObjectiveState(chState, objectiveId) : chState;
+  const items = getChapterItemsForObjective(chapter, objectiveId);
+  return {
+    chState,
+    objectiveId,
+    viewState,
+    items
+  };
+}
+
+function recordChapterActivity(chapterId, mode, objectiveId = null) {
   if (!chapterId) return;
   if (mode !== "story" && mode !== "questions") return;
   const chState = ensureChapterState(chapterId);
+  if (objectiveId) {
+    const objState = ensureObjectiveState(chState, objectiveId);
+    objState.lastActiveMode = mode;
+    objState.lastActiveAt = Date.now();
+    return;
+  }
   chState.lastActiveMode = mode;
   chState.lastActiveAt = Date.now();
 }
@@ -473,14 +599,15 @@ function getModeLabel(mode, revisionSubMode = "story") {
   return "Points";
 }
 
-function buildLastSessionPayload(chapter, chState) {
-  if (!chapter || !chState) return null;
+function buildLastSessionPayload(chapter, viewState, objectiveId) {
+  if (!chapter || !viewState) return null;
   const baseSession = {
     levelId: appState.currentLevelId,
     chapterId: chapter.id,
     mode: appState.currentMode,
-    storyIndex: chState.storyIndex || 0,
-    questionIndex: chState.questionIndex || 0,
+    objectiveId: objectiveId || null,
+    storyIndex: viewState.storyIndex || 0,
+    questionIndex: viewState.questionIndex || 0,
     revisionSubMode: appState.currentRevisionSubMode || "story",
     updatedAt: Date.now()
   };
@@ -503,11 +630,11 @@ function buildLastSessionPayload(chapter, chState) {
   };
 }
 
-function syncLastSession(chapter, chState) {
-  if (!chapter || !chState) return;
+function syncLastSession(chapter, viewState, objectiveId) {
+  if (!chapter || !viewState) return;
   if (!appState.currentLevelId || !appState.currentChapterId) return;
   if (!["story", "questions", "revision"].includes(appState.currentMode)) return;
-  const payload = buildLastSessionPayload(chapter, chState);
+  const payload = buildLastSessionPayload(chapter, viewState, objectiveId);
   saveLastSession(payload);
 }
 
@@ -539,14 +666,17 @@ function renderResumeCard() {
   }
   const level = DATA[session.levelId];
   const chapter = level.chapters.find((c) => c.id === session.chapterId);
+  const objectiveSuffix = isObjectiveIdValid(session.chapterId, session.objectiveId)
+    ? ` · ${session.objectiveId}`
+    : "";
   resumeSubtitleEl.textContent = `${level.label} · ${chapter.title} · ${getModeLabel(
     session.mode,
     session.revisionSubMode
-  )}`;
+  )}${objectiveSuffix}`;
   resumeCardEl.classList.remove("hidden");
 }
 
-function restoreRevisionSession(chapter, chState, session) {
+function restoreRevisionSession(chapter, chState, session, objectiveId) {
   if (!session?.revisionSession || appState.currentMode !== "revision") {
     resetRevisionSession();
     return;
@@ -555,7 +685,12 @@ function restoreRevisionSession(chapter, chState, session) {
   revisionSelectMode = false;
   revisionSelectedIds.clear();
   const queueIds = session.revisionSession.queueIds || [];
-  const deck = getRevisionDeck(chapter, chState, appState.currentRevisionSubMode || "story");
+  const deck = getRevisionDeck(
+    chapter,
+    chState,
+    appState.currentRevisionSubMode || "story",
+    objectiveId
+  );
   const deckMap = new Map(deck.map((item) => [item.id, item]));
   const queue = queueIds.map((id) => deckMap.get(id)).filter(Boolean);
   if (queue.length === 0) {
@@ -578,20 +713,26 @@ function applyResumeSession(session) {
   appState.currentChapterId = session.chapterId;
   appState.currentMode = session.mode || "story";
   appState.currentRevisionSubMode = session.revisionSubMode || "story";
+  appState.currentObjectiveId = isObjectiveIdValid(session.chapterId, session.objectiveId)
+    ? session.objectiveId
+    : null;
 
   const chapter = getChapter(session.levelId, session.chapterId);
   const chState = ensureChapterState(session.chapterId);
-  const totalStory = chapter.storyPoints.length;
-  const totalQuestions = chapter.questions.length;
+  const objectiveId = getActiveObjectiveId(session.chapterId);
+  const items = getChapterItemsForObjective(chapter, objectiveId);
+  const totalStory = items.storyPoints.length;
+  const totalQuestions = items.questions.length;
+  const viewState = objectiveId ? ensureObjectiveState(chState, objectiveId) : chState;
   if (typeof session.storyIndex === "number") {
-    chState.storyIndex = Math.max(0, Math.min(session.storyIndex, totalStory));
+    viewState.storyIndex = Math.max(0, Math.min(session.storyIndex, totalStory));
   }
   if (typeof session.questionIndex === "number") {
-    chState.questionIndex = Math.max(0, Math.min(session.questionIndex, totalQuestions));
+    viewState.questionIndex = Math.max(0, Math.min(session.questionIndex, totalQuestions));
   }
 
   if (appState.currentMode === "revision") {
-    restoreRevisionSession(chapter, chState, session);
+    restoreRevisionSession(chapter, chState, session, objectiveId);
   } else {
     resetRevisionSession();
   }
@@ -609,8 +750,11 @@ const qsa = (sel) => Array.from(document.querySelectorAll(sel));
 
 const screenLevels = qs("#screenLevels");
 const screenChapters = qs("#screenChapters");
+const screenObjectives = qs("#screenObjectives");
 const screenChapter = qs("#screenChapter");
 const chaptersListEl = qs("#chaptersList");
+const objectivesListEl = qs("#objectivesList");
+const objectivesContinueBtn = qs("#objectivesContinue");
 
 const headerTitleEl = qs("#headerTitle");
 const headerSubtitleEl = qs("#headerSubtitle");
@@ -879,6 +1023,14 @@ function refreshUiAfterStateChange() {
     if (appState.currentLevelId && appState.currentChapterId) {
       showScreen("chapter");
       renderCurrentMode();
+      return;
+    }
+  }
+
+  if (!screenObjectives.classList.contains("hidden")) {
+    if (appState.currentLevelId && appState.currentChapterId) {
+      renderObjectives();
+      showScreen("objectives");
       return;
     }
   }
@@ -1296,6 +1448,7 @@ themeToggleBtn.addEventListener("click", () => {
 function showScreen(name) {
   screenLevels.classList.add("hidden");
   screenChapters.classList.add("hidden");
+  screenObjectives.classList.add("hidden");
   screenChapter.classList.add("hidden");
 
   // Header layout variant
@@ -1320,6 +1473,15 @@ function showScreen(name) {
     streakChipBtn?.classList.add("hidden");
     headerTitleEl.textContent = DATA[appState.currentLevelId].label;
     headerSubtitleEl.textContent = "Choose a chapter";
+  } else if (name === "objectives") {
+    screenObjectives.classList.remove("hidden");
+    appHeaderEl.classList.add("header--list");
+    backButton.classList.remove("hidden");
+    settingsButton.classList.add("hidden");
+    streakChipBtn?.classList.add("hidden");
+    const chapter = getChapter(appState.currentLevelId, appState.currentChapterId);
+    headerTitleEl.textContent = "Objectives";
+    headerSubtitleEl.textContent = chapter ? chapter.title : "";
   } else if (name === "chapter") {
     screenChapter.classList.remove("hidden");
     appHeaderEl.classList.add("header--chapter");
@@ -1335,12 +1497,23 @@ function showScreen(name) {
 }
 
 backButton.addEventListener("click", () => {
-  if (screenChapter.classList.contains("hidden")) {
-    // from chapters -> levels
-    showScreen("levels");
-  } else {
-    // from chapter -> chapters
+  if (!screenChapter.classList.contains("hidden")) {
+    if (getObjectivesForChapter(appState.currentChapterId)) {
+      renderObjectives();
+      showScreen("objectives");
+    } else {
+      showScreen("chapters");
+    }
+    return;
+  }
+
+  if (!screenObjectives.classList.contains("hidden")) {
     showScreen("chapters");
+    return;
+  }
+
+  if (!screenChapters.classList.contains("hidden")) {
+    showScreen("levels");
   }
 });
 
@@ -1410,8 +1583,16 @@ function renderChapters() {
       }
 
       appState.currentChapterId = chapter.id;
+      appState.currentObjectiveId = null;
       appState.currentMode = modeOverride || resumeMode || appState.currentMode || "story";
       saveState();
+
+      if (getObjectivesForChapter(chapter.id)) {
+        renderObjectives();
+        showScreen("objectives");
+        return;
+      }
+
       showScreen("chapter");
       setActiveMode(appState.currentMode);
       requestAnimationFrame(scrollToLatestContent);
@@ -1429,6 +1610,121 @@ function renderChapters() {
 
     chaptersListEl.appendChild(card);
   });
+}
+
+function getObjectiveProgress(chapter, chState, objectiveId) {
+  const items = getChapterItemsForObjective(chapter, objectiveId);
+  const totalStory = items.storyPoints.length;
+  const totalQ = items.questions.length;
+  const objState = ensureObjectiveState(chState, objectiveId);
+  const storyDone = Math.min(objState.storyIndex || 0, totalStory);
+  const questionDone = Math.min(objState.questionIndex || 0, totalQ);
+  const hasContent = totalStory + totalQ > 0;
+  return {
+    totalStory,
+    totalQ,
+    storyDone,
+    questionDone,
+    isComplete: hasContent && storyDone >= totalStory && questionDone >= totalQ
+  };
+}
+
+function getAutoOpenObjectiveSection(chapter, chState) {
+  const config = getObjectivesForChapter(chapter.id);
+  if (!config) return null;
+
+  const session = loadLastSession();
+  if (session?.chapterId === chapter.id && isObjectiveIdValid(chapter.id, session.objectiveId)) {
+    return getObjectiveSectionId(chapter.id, session.objectiveId);
+  }
+
+  const section = config.sections.find((entry) =>
+    entry.objectives.some((objective) => !getObjectiveProgress(chapter, chState, objective.id).isComplete)
+  );
+  return section?.id || config.sections[0]?.id || null;
+}
+
+function openObjective(chapter, objectiveId) {
+  appState.currentChapterId = chapter.id;
+  appState.currentObjectiveId = objectiveId;
+  const chState = ensureChapterState(chapter.id);
+  const progress = getObjectiveProgress(chapter, chState, objectiveId);
+  const resumeMode = getResumeMode(progress, ensureObjectiveState(chState, objectiveId)) || "story";
+  appState.currentMode = resumeMode;
+  saveState();
+  showScreen("chapter");
+  setActiveMode(appState.currentMode);
+  requestAnimationFrame(scrollToLatestContent);
+}
+
+function openFullChapter(chapter) {
+  appState.currentChapterId = chapter.id;
+  appState.currentObjectiveId = null;
+  const chState = ensureChapterState(chapter.id);
+  const progress = getChapterProgress(chapter, chState);
+  const resumeMode = getResumeMode(progress, chState) || "story";
+  appState.currentMode = resumeMode;
+  saveState();
+  showScreen("chapter");
+  setActiveMode(appState.currentMode);
+  requestAnimationFrame(scrollToLatestContent);
+}
+
+function renderObjectives() {
+  const chapter = getChapter(appState.currentLevelId, appState.currentChapterId);
+  const config = chapter ? getObjectivesForChapter(chapter.id) : null;
+  if (!objectivesListEl || !objectivesContinueBtn || !chapter || !config) return;
+
+  const chState = ensureChapterState(chapter.id);
+  const autoOpenSectionId = getAutoOpenObjectiveSection(chapter, chState);
+
+  objectivesListEl.innerHTML = "";
+  config.sections.forEach((section) => {
+    const sectionEl = document.createElement("div");
+    sectionEl.className = "card objective-section";
+
+    const toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.className = "objective-section__toggle";
+    toggle.setAttribute("aria-expanded", section.id === autoOpenSectionId ? "true" : "false");
+    toggle.innerHTML = `
+      <span>${section.title}</span>
+      <span class="objective-section__chevron" aria-hidden="true">›</span>
+    `;
+
+    const list = document.createElement("div");
+    list.className = "objective-items";
+    if (section.id !== autoOpenSectionId) {
+      list.classList.add("hidden");
+    } else {
+      sectionEl.classList.add("is-open");
+    }
+
+    toggle.addEventListener("click", () => {
+      const isOpen = sectionEl.classList.toggle("is-open");
+      list.classList.toggle("hidden", !isOpen);
+      toggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
+    });
+
+    section.objectives.forEach((objective) => {
+      const item = document.createElement("button");
+      item.type = "button";
+      item.className = "objective-item";
+      item.textContent = `${objective.id} ${objective.title}`;
+      item.addEventListener("click", () => {
+        openObjective(chapter, objective.id);
+      });
+      list.appendChild(item);
+    });
+
+    sectionEl.appendChild(toggle);
+    sectionEl.appendChild(list);
+    objectivesListEl.appendChild(sectionEl);
+  });
+
+  objectivesContinueBtn.onclick = () => {
+    openFullChapter(chapter);
+  };
 }
 
 // ---------- Mode switching ----------
@@ -1449,7 +1745,7 @@ function setActiveMode(mode) {
   if (mode === "revision") revisionModePanel.classList.remove("hidden");
 
   if (mode === "story" || mode === "questions") {
-    recordChapterActivity(appState.currentChapterId, mode);
+    recordChapterActivity(appState.currentChapterId, mode, getActiveObjectiveId(appState.currentChapterId));
     saveState();
   }
 
@@ -1507,7 +1803,8 @@ revisionSelectAllBtn.addEventListener("click", () => {
   const chapter = getChapter(appState.currentLevelId, appState.currentChapterId);
   if (!chapter) return;
   const chState = ensureChapterState(chapter.id);
-  const deck = getRevisionDeck(chapter, chState, appState.currentRevisionSubMode);
+  const objectiveId = getActiveObjectiveId(chapter.id);
+  const deck = getRevisionDeck(chapter, chState, appState.currentRevisionSubMode, objectiveId);
   revisionSelectedIds = new Set(deck.map((item) => item.id));
   renderCurrentMode();
 });
@@ -1531,6 +1828,7 @@ revisionConfigStartBtn.addEventListener("click", () => {
   const chapter = getChapter(appState.currentLevelId, appState.currentChapterId);
   if (!chapter) return;
   const chState = ensureChapterState(chapter.id);
+  const objectiveId = getActiveObjectiveId(chapter.id);
   if (revisionSelectMode && revisionSelectedIds.size === 0) {
     showToast("Select at least 1 item");
     return;
@@ -1538,7 +1836,8 @@ revisionConfigStartBtn.addEventListener("click", () => {
   startRevisionSession(
     chapter,
     chState,
-    revisionSelectMode ? Array.from(revisionSelectedIds) : null
+    revisionSelectMode ? Array.from(revisionSelectedIds) : null,
+    objectiveId
   );
 });
 
@@ -1567,31 +1866,36 @@ revisionOrderOptionsEl.addEventListener("click", (e) => {
 
 function renderCurrentMode() {
   const chapter = getChapter(appState.currentLevelId, appState.currentChapterId);
-  const chState = ensureChapterState(chapter.id);
+  const {
+    chState,
+    objectiveId,
+    viewState,
+    items
+  } = getActiveChapterContext(chapter);
 
   if (appState.currentMode === "story") {
-    const total = chapter.storyPoints.length;
+    const total = items.storyPoints.length;
 
     // Auto-show the first point so you land on 1/total
-    if (chState.storyIndex === 0 && total > 0) {
-      chState.storyIndex = 1;
+    if (viewState.storyIndex === 0 && total > 0) {
+      viewState.storyIndex = 1;
       saveState();
     }
 
-    const shown = Math.min(chState.storyIndex, total);
+    const shown = Math.min(viewState.storyIndex, total);
     updateProgress(shown, total);
-    renderStoryMode(chapter, chState);
+    renderStoryMode(chapter, viewState, objectiveId, items.storyPoints);
   } else if (appState.currentMode === "questions") {
-    const total = chapter.questions.length;
-    const current = total === 0 ? 0 : Math.min(chState.questionIndex + 1, total);
+    const total = items.questions.length;
+    const current = total === 0 ? 0 : Math.min(viewState.questionIndex + 1, total);
     updateProgress(current, total);
-    renderQuestionMode(chapter, chState);
+    renderQuestionMode(chapter, viewState, objectiveId, items.questions);
   } else if (appState.currentMode === "revision") {
-    renderRevisionMode(chapter, chState);
+    renderRevisionMode(chapter, chState, objectiveId);
   }
 
-  syncActionDock(chapter, chState);
-  syncLastSession(chapter, chState);
+  syncActionDock(chapter, chState, objectiveId, viewState, items);
+  syncLastSession(chapter, viewState, objectiveId);
 }
 
 function updateProgress(current, total) {
@@ -1634,7 +1938,7 @@ function setLeftButton({ label, shape = "circle", disabled = false, useIcon = fa
   actionLeftBtn.setAttribute("title", label);
 }
 
-function syncActionDock(chapter, chState) {
+function syncActionDock(chapter, chState, objectiveId, viewState, items) {
   const mode = appState.currentMode;
 
   // Show in Story + Questions + active Revision sessions only
@@ -1685,8 +1989,8 @@ function syncActionDock(chapter, chState) {
   setLeftButton({ label: "Add to Revision", shape: "circle", useIcon: true });
 
   if (mode === "story") {
-    const total = chapter.storyPoints.length;
-    const done = chState.storyIndex >= total;
+    const total = items.storyPoints.length;
+    const done = viewState.storyIndex >= total;
     if (total === 0 || done) {
       actionDock.classList.add("hidden");
       return;
@@ -1696,8 +2000,8 @@ function syncActionDock(chapter, chState) {
   }
 
   if (mode === "questions") {
-    const total = chapter.questions.length;
-    const finished = total === 0 || chState.questionIndex >= total;
+    const total = items.questions.length;
+    const finished = total === 0 || viewState.questionIndex >= total;
 
     if (finished) {
       actionDock.classList.add("hidden");
@@ -1715,12 +2019,12 @@ function syncActionDock(chapter, chState) {
 actionLeftBtn.addEventListener("click", () => {
   const chapter = getChapter(appState.currentLevelId, appState.currentChapterId);
   if (!chapter) return;
-  const chState = ensureChapterState(chapter.id);
+  const { chState, objectiveId, viewState, items } = getActiveChapterContext(chapter);
 
   if (appState.currentMode === "story") {
-    markCurrentStoryRevision(chapter, chState);
+    markCurrentStoryRevision(chapter, viewState, items.storyPoints);
   } else if (appState.currentMode === "questions") {
-    markCurrentQuestionRevision(chapter, chState);
+    markCurrentQuestionRevision(chapter, viewState, items.questions);
   } else if (appState.currentMode === "revision" && isRevisionSessionActive) {
     resetRevisionSession();
     renderCurrentMode();
@@ -1730,12 +2034,12 @@ actionLeftBtn.addEventListener("click", () => {
 actionRightBtn.addEventListener("click", () => {
   const chapter = getChapter(appState.currentLevelId, appState.currentChapterId);
   if (!chapter) return;
-  const chState = ensureChapterState(chapter.id);
+  const { objectiveId, viewState, items } = getActiveChapterContext(chapter);
 
   if (appState.currentMode === "story") {
-    advanceStory(chapter, chState);
+    advanceStory(chapter, viewState, objectiveId, items.storyPoints);
   } else if (appState.currentMode === "questions") {
-    handleQuestionPrimary(chapter, chState);
+    handleQuestionPrimary(chapter, viewState, objectiveId, items.questions);
   } else if (appState.currentMode === "revision") {
     handleRevisionPrimary();
   }
@@ -1743,8 +2047,8 @@ actionRightBtn.addEventListener("click", () => {
 
 // ---------- Story mode ----------
 
-function renderStoryMode(chapter, chState) {
-  const total = chapter.storyPoints.length;
+function renderStoryMode(chapter, viewState, objectiveId, storyPoints) {
+  const total = storyPoints.length;
 
   if (total === 0) {
     const feed = document.createElement("div");
@@ -1763,8 +2067,8 @@ function renderStoryMode(chapter, chState) {
   const feed = document.createElement("div");
   feed.className = "bubble-feed";
 
-  const countToShow = Math.min(chState.storyIndex, total);
-  const visible = chapter.storyPoints.slice(0, countToShow);
+  const countToShow = Math.min(viewState.storyIndex, total);
+  const visible = storyPoints.slice(0, countToShow);
 
   visible.forEach((p) => {
     const bubble = document.createElement("div");
@@ -1778,11 +2082,12 @@ function renderStoryMode(chapter, chState) {
   storyFeedEl.innerHTML = "";
   storyFeedEl.appendChild(feed);
 
-  if (chState.storyIndex >= total) {
+  if (viewState.storyIndex >= total) {
     feed.appendChild(createEndOfSetCard({
       levelId: appState.currentLevelId,
       chapterId: chapter.id,
-      mode: "story"
+      mode: "story",
+      objectiveId
     }));
   }
 
@@ -1791,13 +2096,13 @@ function renderStoryMode(chapter, chState) {
 }
 
 
-function advanceStory(chapter, chState) {
-  const total = chapter.storyPoints.length;
+function advanceStory(chapter, viewState, objectiveId, storyPoints) {
+  const total = storyPoints.length;
   if (total === 0) return;
 
-  if (chState.storyIndex < total) {
-    chState.storyIndex += 1;
-    recordChapterActivity(chapter.id, "story");
+  if (viewState.storyIndex < total) {
+    viewState.storyIndex += 1;
+    recordChapterActivity(chapter.id, "story", objectiveId);
     recordDailyActivity("story-ok");
     saveState();
     renderCurrentMode();
@@ -1806,11 +2111,12 @@ function advanceStory(chapter, chState) {
   }
 }
 
-function markCurrentStoryRevision(chapter, chState) {
-  const idx = Math.max(chState.storyIndex - 1, 0);
-  const point = chapter.storyPoints[idx];
+function markCurrentStoryRevision(chapter, viewState, storyPoints) {
+  const idx = Math.max(viewState.storyIndex - 1, 0);
+  const point = storyPoints[idx];
   if (!point) return;
 
+  const chState = ensureChapterState(chapter.id);
   if (!chState.revisionStoryIds.includes(point.id)) {
     chState.revisionStoryIds.push(point.id);
     saveState();
@@ -1858,11 +2164,11 @@ function makeQuestionCard(q, index, showAnswer) {
   return card;
 }
 
-function renderQuestionMode(chapter, chState) {
+function renderQuestionMode(chapter, viewState, objectiveId, questions) {
   const wrapper = document.createElement("div");
   wrapper.className = "qa-wrapper";
 
-  const total = chapter.questions.length;
+  const total = questions.length;
 
   if (total === 0) {
     const done = document.createElement("div");
@@ -1881,21 +2187,22 @@ function renderQuestionMode(chapter, chState) {
   questionRevealed = false;
   currentAnswerEl = null;
 
-  const completedCount = Math.min(chState.questionIndex, total);
+  const completedCount = Math.min(viewState.questionIndex, total);
 
   for (let i = 0; i < completedCount; i++) {
-    const q = chapter.questions[i];
+    const q = questions[i];
     wrapper.appendChild(makeQuestionCard(q, i, true));
   }
 
-  if (chState.questionIndex < total) {
-    const q = chapter.questions[chState.questionIndex];
-    wrapper.appendChild(makeQuestionCard(q, chState.questionIndex, false));
+  if (viewState.questionIndex < total) {
+    const q = questions[viewState.questionIndex];
+    wrapper.appendChild(makeQuestionCard(q, viewState.questionIndex, false));
   } else {
     wrapper.appendChild(createEndOfSetCard({
       levelId: appState.currentLevelId,
       chapterId: chapter.id,
-      mode: "questions"
+      mode: "questions",
+      objectiveId
     }));
   }
 
@@ -1905,7 +2212,7 @@ function renderQuestionMode(chapter, chState) {
   requestAnimationFrame(scrollToLatestContent);
 }
 
-function createEndOfSetCard({ levelId, chapterId, mode }) {
+function createEndOfSetCard({ levelId, chapterId, mode, objectiveId }) {
   const card = document.createElement("div");
   card.className = "qa-card end-card";
   const celebrateKey = `${levelId}:${chapterId}:${mode}`;
@@ -1929,6 +2236,7 @@ function createEndOfSetCard({ levelId, chapterId, mode }) {
   card.appendChild(text);
 
   const nextChapter = getNextChapter(levelId, chapterId);
+  const nextObjectiveId = objectiveId ? getNextObjectiveId(chapterId, objectiveId) : null;
   const actions = document.createElement("div");
   actions.className = "end-card-actions";
 
@@ -1942,7 +2250,31 @@ function createEndOfSetCard({ levelId, chapterId, mode }) {
     saveState();
   });
 
-  if (nextChapter) {
+  if (nextObjectiveId) {
+    const nextObjectiveBtn = document.createElement("button");
+    nextObjectiveBtn.className = "btn";
+    nextObjectiveBtn.type = "button";
+    nextObjectiveBtn.textContent = `Go to ${nextObjectiveId} →`;
+    nextObjectiveBtn.addEventListener("click", () => {
+      appState.currentObjectiveId = nextObjectiveId;
+      appState.currentMode = mode;
+      saveState();
+      showScreen("chapter");
+      setActiveMode(mode);
+    });
+
+    const backBtn = document.createElement("button");
+    backBtn.className = "btn btn--ghost btn--small";
+    backBtn.type = "button";
+    backBtn.textContent = "Back to chapters";
+    backBtn.addEventListener("click", () => {
+      showScreen("chapters");
+    });
+
+    actions.appendChild(nextObjectiveBtn);
+    actions.appendChild(revisionBtn);
+    actions.appendChild(backBtn);
+  } else if (nextChapter) {
     const nextBtn = document.createElement("button");
     const nextIsSoon = isChapterComingSoon(nextChapter);
     nextBtn.className = "btn";
@@ -1993,40 +2325,47 @@ function createEndOfSetCard({ levelId, chapterId, mode }) {
 }
 
 
-function handleQuestionPrimary(chapter, chState) {
-  const total = chapter.questions.length;
-  if (total === 0 || chState.questionIndex >= total) return;
+function handleQuestionPrimary(chapter, viewState, objectiveId, questions) {
+  const total = questions.length;
+  if (total === 0 || viewState.questionIndex >= total) return;
 
   if (!questionRevealed) {
     questionRevealed = true;
     if (currentAnswerEl) currentAnswerEl.classList.remove("hidden");
     recordDailyActivity("question-reveal");
-    syncActionDock(chapter, chState);
+    const {
+      chState,
+      objectiveId: activeObjectiveId,
+      viewState: activeViewState,
+      items
+    } = getActiveChapterContext(chapter);
+    syncActionDock(chapter, chState, activeObjectiveId, activeViewState, items);
     return;
   }
 
   // revealed -> Next
-  advanceQuestion(chapter, chState);
+  advanceQuestion(chapter, viewState, objectiveId, questions);
 }
 
-function advanceQuestion(chapter, chState) {
-  const total = chapter.questions.length;
-  if (chState.questionIndex < total) {
-    chState.questionIndex += 1;
+function advanceQuestion(chapter, viewState, objectiveId, questions) {
+  const total = questions.length;
+  if (viewState.questionIndex < total) {
+    viewState.questionIndex += 1;
   }
-  recordChapterActivity(chapter.id, "questions");
+  recordChapterActivity(chapter.id, "questions", objectiveId);
   recordDailyActivity("question-next");
   saveState();
   renderCurrentMode();
 }
 
-function markCurrentQuestionRevision(chapter, chState) {
-  const total = chapter.questions.length;
-  if (total === 0 || chState.questionIndex >= total) return;
+function markCurrentQuestionRevision(chapter, viewState, questions) {
+  const total = questions.length;
+  if (total === 0 || viewState.questionIndex >= total) return;
 
-  const idx = Math.min(chState.questionIndex, total - 1);
-  const q = chapter.questions[idx];
+  const idx = Math.min(viewState.questionIndex, total - 1);
+  const q = questions[idx];
 
+  const chState = ensureChapterState(chapter.id);
   if (!chState.revisionQuestionIds.includes(q.id)) {
     chState.revisionQuestionIds.push(q.id);
     saveState();
@@ -2048,12 +2387,12 @@ function resetRevisionSession() {
   revisionPointMaxIndex = 0;
 }
 
-function getRevisionDeck(chapter, chState, subMode) {
+function getRevisionDeck(chapter, chState, subMode, objectiveId = null) {
   if (subMode === "questions") {
     const qMap = new Map(chapter.questions.map((q) => [q.id, q]));
     return chState.revisionQuestionIds
       .map((id) => qMap.get(id))
-      .filter(Boolean)
+      .filter((q) => q && (!objectiveId || q.objective === objectiveId))
       .map((q) => ({
         id: q.id,
         kind: "questions",
@@ -2066,7 +2405,7 @@ function getRevisionDeck(chapter, chState, subMode) {
   const storyMap = new Map(chapter.storyPoints.map((p) => [p.id, p]));
   return chState.revisionStoryIds
     .map((id) => storyMap.get(id))
-    .filter(Boolean)
+    .filter((p) => p && (!objectiveId || p.objective === objectiveId))
     .map((p) => ({
       id: p.id,
       kind: "story",
@@ -2110,9 +2449,9 @@ function updateRevisionSelectionUI(deckSize) {
   revisionConfigStartBtn.disabled = deckSize === 0 || selectedCount === 0;
 }
 
-function renderRevisionMode(chapter, chState) {
-  const storyDeck = getRevisionDeck(chapter, chState, "story");
-  const questionDeck = getRevisionDeck(chapter, chState, "questions");
+function renderRevisionMode(chapter, chState, objectiveId) {
+  const storyDeck = getRevisionDeck(chapter, chState, "story", objectiveId);
+  const questionDeck = getRevisionDeck(chapter, chState, "questions", objectiveId);
 
   let subMode = appState.currentRevisionSubMode || "story";
   if (subMode === "questions" && questionDeck.length === 0 && storyDeck.length > 0) {
@@ -2133,7 +2472,12 @@ function renderRevisionMode(chapter, chState) {
     revisionHubEl.classList.add("hidden");
     revisionConfigEl.classList.add("hidden");
     renderRevisionSession();
-    syncActionDock(chapter, chState);
+    const {
+      objectiveId: activeObjectiveId,
+      viewState: activeViewState,
+      items
+    } = getActiveChapterContext(chapter);
+    syncActionDock(chapter, chState, activeObjectiveId, activeViewState, items);
     return;
   }
 
@@ -2208,7 +2552,7 @@ function renderRevisionMode(chapter, chState) {
       }
       revisionSelectedIds.delete(item.id);
       saveState();
-      renderRevisionMode(chapter, chState);
+      renderRevisionMode(chapter, chState, objectiveId);
     });
 
     revisionListEl.appendChild(li);
@@ -2275,9 +2619,9 @@ function shuffleArray(items) {
   return items;
 }
 
-function startRevisionSession(chapter, chState, selectedIds = null) {
+function startRevisionSession(chapter, chState, selectedIds = null, objectiveId = null) {
   const subMode = appState.currentRevisionSubMode || "story";
-  const deck = getRevisionDeck(chapter, chState, subMode);
+  const deck = getRevisionDeck(chapter, chState, subMode, objectiveId);
   if (deck.length === 0) return;
 
   let queue = deck.slice();
