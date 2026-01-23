@@ -1489,7 +1489,6 @@ function showScreen(name) {
     appHeaderEl.classList.add("header--objectives");
     backButton.classList.remove("hidden");
     settingsButton.classList.add("hidden");
-    themeToggleBtn.classList.add("hidden");
     streakChipBtn?.classList.add("hidden");
     const chapter = getChapter(appState.currentLevelId, appState.currentChapterId);
     headerTitleEl.textContent = "Objectives";
@@ -1502,7 +1501,19 @@ function showScreen(name) {
     streakChipBtn?.classList.add("hidden");
     const chapter = getChapter(appState.currentLevelId, appState.currentChapterId);
     headerTitleEl.textContent = chapter.title;
-    headerSubtitleEl.textContent = DATA[appState.currentLevelId].label;
+    if (!chapter) {
+      headerSubtitleEl.textContent = "";
+    } else {
+      const objectiveId = getActiveObjectiveId(chapter.id);
+      if (objectiveId) {
+        const objectiveTitle = getObjectiveTitle(chapter.id, objectiveId);
+        headerSubtitleEl.textContent = [objectiveId, objectiveTitle].filter(Boolean).join(" ");
+      } else if (getObjectivesForChapter(chapter.id)) {
+        headerSubtitleEl.textContent = "Full chapter";
+      } else {
+        headerSubtitleEl.textContent = DATA[appState.currentLevelId].label;
+      }
+    }
   }
 
   updateStreakUI();
