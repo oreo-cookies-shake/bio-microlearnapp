@@ -65,6 +65,70 @@ const CHAPTER_OBJECTIVES = {
         ]
       }
     ]
+  },
+  "a2-13": {
+    sections: [
+      {
+        id: "13.1",
+        title: "13.1 Photosynthesis process",
+        objectives: [
+          { id: "13.1.1", title: "Chloroplast structure" },
+          { id: "13.1.2", title: "Light-dependent stage" },
+          { id: "13.1.3", title: "Light-independent stage" }
+        ]
+      },
+      {
+        id: "13.2",
+        title: "13.2 Investigating environmental factors",
+        objectives: [
+          { id: "13.2.1", title: "Limiting factors" },
+          { id: "13.2.2", title: "Absorption and action spectra" }
+        ]
+      }
+    ]
+  },
+  "a2-14": {
+    sections: [
+      {
+        id: "14.1",
+        title: "14.1 Mammals",
+        objectives: [
+          { id: "14.1.1", title: "Negative feedback mechanisms" },
+          { id: "14.1.2", title: "Kidney + nephron structure" },
+          { id: "14.1.3", title: "Ultrafiltration + selective reabsorption" },
+          { id: "14.1.4", title: "Osmoregulation (ADH)" },
+          { id: "14.1.5", title: "Blood glucose control" }
+        ]
+      },
+      {
+        id: "14.2",
+        title: "14.2 Plants",
+        objectives: [
+          { id: "14.2.1", title: "Stomata control (ABA)" }
+        ]
+      }
+    ]
+  },
+  "a2-15": {
+    sections: [
+      {
+        id: "15.1",
+        title: "15.1 Mammals",
+        objectives: [
+          { id: "15.1.1", title: "Neurones + resting potential" },
+          { id: "15.1.2", title: "Action potentials + saltatory conduction" },
+          { id: "15.1.3", title: "Synapses (cholinergic)" },
+          { id: "15.1.4", title: "Muscle contraction" }
+        ]
+      },
+      {
+        id: "15.2",
+        title: "15.2 Plants",
+        objectives: [
+          { id: "15.2.1", title: "Auxin + gibberellin roles" }
+        ]
+      }
+    ]
   }
 };
 
