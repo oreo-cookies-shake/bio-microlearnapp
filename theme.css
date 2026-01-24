@@ -11,6 +11,7 @@
   --space-subtitle: 10px;
   --space-header-top: 20px;
   --space-header-bottom: 12px;
+  --space-header-x: 28px;
 
   --side-pad: var(--space-page-x);
   --bottom-pad: 112px; /* space for the floating buttons */
@@ -18,7 +19,9 @@
   --radius-card: 28px;
   --radius-pill: 999px;
 
-  --header-icon-size: 18px;
+  --header-icon-size: 16px;
+  --icon-button-size: 40px;
+  --icon-button-font-size: 18px;
 
   /* Tiny highlight line to make surfaces feel "real" */
   --highlight-line: inset 0 1px 0 rgba(255,255,255,0.06);
@@ -45,6 +48,8 @@
 
   /* Smaller, cleaner shadow for lightweight UI elements (back/theme buttons) */
   --shadow-ui: 0 6px 12px rgba(0,0,0,0.35);
+  --icon-shadow: none;
+  --icon-shadow-press: 0 4px 10px rgba(0,0,0,0.35);
 
   --shadow-press: inset 6px 6px 12px rgba(0,0,0,0.55),
                   inset -6px -6px 12px rgba(255,255,255,0.06);
@@ -61,7 +66,8 @@
 
   --nav-bg: rgba(21, 23, 26, 0.84);
   --icon-bg: rgba(255, 255, 255, 0.04);
-  --icon-border: rgba(255, 255, 255, 0.08);
+  --icon-bg-active: rgba(255, 255, 255, 0.08);
+  --icon-border: rgba(255, 255, 255, 0.10);
 }
 
 body.light {
@@ -88,6 +94,8 @@ body.light {
 
   /* Control buttons (back/theme/OK/book): smaller shadow so it doesn't overlap in the header */
   --shadow-ui: 0 6px 12px rgba(17, 24, 39, 0.10);
+  --icon-shadow: none;
+  --icon-shadow-press: 0 3px 8px rgba(17, 24, 39, 0.18);
 
   /* Press state for controls (subtle inset) */
   --shadow-press: inset 1px 1px 2px rgba(17, 24, 39, 0.12),
@@ -104,5 +112,6 @@ body.light {
 
   --nav-bg: rgba(231, 230, 226, 0.92);
   --icon-bg: rgba(17, 24, 39, 0.04);
-  --icon-border: rgba(17, 24, 39, 0.08);
+  --icon-bg-active: rgba(17, 24, 39, 0.08);
+  --icon-border: rgba(17, 24, 39, 0.10);
 }

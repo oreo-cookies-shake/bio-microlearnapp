@@ -140,24 +140,24 @@
 
 /* Icon buttons (back + theme toggle) */
 .icon-button {
-  width: 44px;
-  height: 44px;
-  border-radius: 20px;
+  width: var(--icon-button-size);
+  height: var(--icon-button-size);
+  border-radius: 999px;
   border: 1px solid var(--icon-border);
   -webkit-appearance: none;
   appearance: none;
   color: var(--text);
   background: var(--icon-bg);
-  box-shadow: var(--shadow-ui);
+  box-shadow: var(--icon-shadow);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
+  font-size: var(--icon-button-font-size);
   line-height: 1;
   cursor: pointer;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
-  transition: transform 140ms ease, box-shadow 140ms ease;
+  transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease;
 }
 
 .app-header .icon-button {
@@ -166,7 +166,8 @@
 
 .icon-button:active {
   transform: translateY(1px) scale(0.97);
-  box-shadow: var(--shadow-press);
+  box-shadow: var(--icon-shadow-press);
+  background: var(--icon-bg-active);
 }
 
 /* Flat icon button variant (used inside content lists to reduce visual noise) */
