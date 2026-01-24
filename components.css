@@ -143,12 +143,12 @@
   width: 44px;
   height: 44px;
   border-radius: 20px;
-  border: none;
+  border: 1px solid var(--icon-border);
   -webkit-appearance: none;
   appearance: none;
   color: var(--text);
-  background: var(--surface);
-  box-shadow: var(--shadow-ui), var(--highlight-line);
+  background: var(--icon-bg);
+  box-shadow: var(--shadow-ui);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -166,7 +166,7 @@
 
 .icon-button:active {
   transform: translateY(1px) scale(0.97);
-  box-shadow: var(--shadow-press), var(--highlight-line);
+  box-shadow: var(--shadow-press);
 }
 
 /* Flat icon button variant (used inside content lists to reduce visual noise) */
@@ -350,11 +350,11 @@
   padding: 12px 0 0;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-section);
 }
 
 .revision-item {
-  padding: 16px 16px;
+  padding: var(--space-card-pad);
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -409,7 +409,7 @@
 .revision-header {
   display: flex;
   justify-content: flex-start;
-  padding: 4px 0 8px;
+  padding: 6px 0 12px;
 }
 
 .revision-actions {
@@ -475,7 +475,7 @@
 }
 
 .revision-config-card {
-  padding: 18px;
+  padding: var(--space-card-pad);
   border: 1px solid var(--content-edge);
   border-radius: var(--radius-card);
   background: var(--content-bg);
@@ -504,7 +504,7 @@
   padding-top: 12px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: var(--space-section);
 }
 
 .revision-session-header {
@@ -1068,8 +1068,8 @@ body.light .progress-circle {
    ===================== */
 .objectives-intro {
   display: grid;
-  gap: 4px;
-  margin: 0 4px 12px;
+  gap: var(--space-subtitle);
+  margin: 0 0 var(--space-section);
 }
 
 .objectives-intro__title {
@@ -1084,7 +1084,7 @@ body.light .progress-circle {
 
 .objectives-list {
   display: grid;
-  gap: 12px;
+  gap: var(--space-section);
 }
 
 .objective-section {
@@ -1096,7 +1096,7 @@ body.light .progress-circle {
   width: 100%;
   border: none;
   background: transparent;
-  padding: 16px 18px;
+  padding: var(--space-card-pad);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1149,9 +1149,9 @@ body.light .objective-section__progress {
 }
 
 .objective-items {
-  display: grid;
-  gap: 8px;
-  padding: 0 18px 16px;
+  display: flex;
+  flex-direction: column;
+  padding: 0 0 var(--space-card-pad);
 }
 
 .objective-items.hidden {
@@ -1159,20 +1159,24 @@ body.light .objective-section__progress {
 }
 
 .objective-item {
-  border: 1px solid var(--content-edge);
-  background: var(--content-bg);
-  border-radius: 14px;
-  padding: 12px 14px;
+  border: none;
+  background: transparent;
+  border-radius: 0;
+  padding: 12px var(--space-card-pad);
   text-align: left;
   font-size: 14px;
   color: var(--text);
   cursor: pointer;
-  box-shadow: var(--shadow-soft);
-  transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease;
+  box-shadow: none;
+  transition: background 140ms ease;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+}
+
+.objective-item + .objective-item {
+  border-top: 1px solid var(--edge);
 }
 
 .objective-item__label {
@@ -1185,8 +1189,6 @@ body.light .objective-section__progress {
 }
 
 .objective-item:active {
-  transform: translateY(1px) scale(0.99);
-  box-shadow: var(--shadow-press), inset 0 1px 2px rgba(0, 0, 0, 0.2);
   background: rgba(255, 255, 255, 0.04);
 }
 
@@ -1195,7 +1197,7 @@ body.light .objective-item:active {
 }
 
 .objectives-footer {
-  margin-top: 16px;
+  margin-top: var(--space-section);
   display: grid;
   gap: 6px;
 }
@@ -1216,7 +1218,8 @@ body.light .objective-item:active {
 
 .objectives-footer__subtitle {
   width: 100%;
-  font-size: 0.85rem;
+  margin-top: 6px;
+  font-size: 12px;
   color: var(--muted);
   opacity: 0.65;
   text-align: center;

@@ -71,7 +71,7 @@ body {
   width: 100%;
   max-width: var(--maxw);
   margin: 0 auto;
-  padding: 10px var(--side-pad) 6px;
+  padding: calc(var(--space-header-top) + env(safe-area-inset-top)) var(--side-pad) var(--space-header-bottom);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -80,13 +80,12 @@ body {
 
 /* Objectives screen: add breathing room and safe-area padding */
 .app-header.header--objectives {
-  padding: calc(16px + env(safe-area-inset-top)) 16px 12px;
+  padding: calc(var(--space-header-top) + env(safe-area-inset-top)) var(--side-pad) var(--space-header-bottom);
   align-items: flex-start;
-  margin-bottom: 16px;
+  margin-bottom: var(--space-section);
 }
 
 .app-header.header--objectives .header-subtitle {
-  margin-top: 6px;
   opacity: 0.7;
   max-width: 280px;
 }
@@ -102,13 +101,16 @@ body {
 .header-title {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-subtitle);
 }
 
 .header-subtitle {
   display: block;
   font-size: 13px;
   color: var(--muted);
-  margin-top: 4px;
+  margin: 0;
 }
 
 .header-main {
@@ -132,7 +134,7 @@ body {
   background: var(--surface);
   border: 1px solid var(--edge);
   border-radius: var(--radius-card);
-  box-shadow: var(--shadow-card), var(--highlight-line);
+  box-shadow: var(--shadow-card);
   -webkit-tap-highlight-color: transparent;
   transform: translateZ(0);
 }
@@ -152,7 +154,7 @@ body {
 .card {
   width: 100%;
   text-align: left;
-  padding: 18px 18px;
+  padding: var(--space-card-pad);
   cursor: pointer;
   color: var(--text);
 }
@@ -169,7 +171,7 @@ button.card {
 
 
 .card h3 {
-  margin: 0 0 6px;
+  margin: 0 0 var(--space-subtitle);
   font-size: 15px;
 }
 
@@ -197,7 +199,7 @@ button.card {
 
   border: 1px solid var(--edge);
   border-radius: var(--radius-card);
-  box-shadow: var(--shadow-card), var(--highlight-line);
+  box-shadow: var(--shadow-card);
 
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
@@ -229,11 +231,11 @@ button.card:focus-visible {
 
 /* Homepage hero */
 .hero {
-  padding: 10px 4px 16px;
+  padding: 12px 0 18px;
 }
 
 .hero h2 {
-  margin: 0 0 6px;
+  margin: 0 0 var(--space-subtitle);
   font-size: 26px;
   letter-spacing: -0.02em;
 }
@@ -246,8 +248,8 @@ button.card:focus-visible {
 .card-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 14px;
-  padding: 10px 0 2px;
+  gap: var(--space-section);
+  padding: 12px 0 4px;
 }
 
 @media (min-width: 700px) {
@@ -255,15 +257,15 @@ button.card:focus-visible {
 }
 
 .card-select {
-  padding: 22px 20px;
+  padding: 20px;
 }
 
 /* Lists */
 .card-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 6px 0 2px;
+  gap: var(--space-section);
+  padding: 12px 0 4px;
 }
 
 .card-chapter-header {
@@ -308,7 +310,7 @@ button.card:focus-visible {
 }
 
 .card-chapter-sub {
-  margin-top: 8px;
+  margin-top: var(--space-subtitle);
   font-size: 12px;
   color: var(--muted);
 }
@@ -318,7 +320,7 @@ button.card:focus-visible {
   align-items: center;
   justify-content: flex-end;
   gap: 10px;
-  margin-top: 10px;
+  margin-top: var(--space-subtitle);
   flex-wrap: wrap;
 }
 
@@ -343,7 +345,7 @@ button.card:focus-visible {
   justify-content: space-between;
   align-items: flex-end;
   gap: 0;
-  padding: 6px 0 2px;
+  padding: 12px 0 6px;
   background: transparent;
   border: none;
   box-shadow: none;
@@ -400,7 +402,7 @@ button.card:focus-visible {
   grid-template-columns: auto 1fr;
   align-items: center;
   gap: 10px;
-  padding: 2px 0 8px;
+  padding: 6px 0 12px;
 }
 
 .progress-label {

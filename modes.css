@@ -9,7 +9,7 @@
 .bubble-feed {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-section);
   padding: 12px 0 0;
 }
 
@@ -20,7 +20,7 @@
   width: fit-content;
   max-width: min(520px, 86%);
   margin-right: auto;
-  padding: 14px 16px;
+  padding: var(--space-card-pad);
   border-radius: 22px;
   overflow: visible;
 }
@@ -40,7 +40,7 @@
 
 .revision-point--focused {
   border-color: rgba(143, 181, 166, 0.5);
-  box-shadow: var(--shadow-card), var(--highlight-line);
+  box-shadow: var(--shadow-card);
 }
 
 /* Subtle iMessage-style bubble: no triangle tail (cleaner) */
@@ -56,12 +56,12 @@
   display: flex;
   flex-direction: column;
   align-items: center; /* centered cards */
-  gap: 12px;
+  gap: var(--space-section);
   padding: 12px 0 0;
 }
 
 .qa-card {
-  padding: 16px 16px;
+  padding: var(--space-card-pad);
   width: min(620px, 100%);
   border-radius: 22px;
 }
@@ -75,7 +75,7 @@
   font-size: 12.5px;
   font-weight: 650;
   color: var(--muted);
-  margin-bottom: 8px;
+  margin-bottom: var(--space-subtitle);
 }
 
 .qa-text {
@@ -84,8 +84,8 @@
 }
 
 .qa-answer {
-  margin-top: 10px;
-  padding: 10px 0 0;
+  margin-top: var(--space-subtitle);
+  padding: var(--space-subtitle) 0 0;
   border-top: 1px solid var(--content-edge);
   background: transparent;
   border-radius: 0;
