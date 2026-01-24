@@ -98,6 +98,14 @@ body {
   display: none;
 }
 
+.app-header.header--list {
+  align-items: center;
+}
+
+.app-header.header--list .header-title {
+  gap: 4px;
+}
+
 .header-title {
   flex: 1;
   min-width: 0;
