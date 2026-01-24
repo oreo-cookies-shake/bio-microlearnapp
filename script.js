@@ -667,9 +667,9 @@ function getResumeMode(progress, chState) {
 function getModeLabel(mode, revisionSubMode = "story") {
   if (mode === "questions") return "Questions";
   if (mode === "revision") {
-    return revisionSubMode === "questions" ? "Revision · Questions" : "Revision · Points";
+    return revisionSubMode === "questions" ? "Focus · Questions" : "Focus · Pills";
   }
-  return "Points";
+  return "Pills";
 }
 
 function buildLastSessionPayload(chapter, viewState, objectiveId) {
@@ -1367,7 +1367,7 @@ qsa("[data-reset]").forEach((btn) => {
     const chapterIds = getChapterIdsForScope(scope);
     const scopeLabel = getSettingsScopeLabel(scope);
     const actionLabel = kind === "points"
-      ? "Points"
+      ? "Pills"
       : kind === "questions"
         ? "Questions"
         : "ALL";
@@ -1653,7 +1653,7 @@ function renderChapters() {
       <div class="chapter-meta">
         ${isSoon ? "<span>Coming soon</span>" : `
           <div class="chapter-meta-chips">
-            <span class="chapter-chip">Points · ${progress.totalStory} · ${progress.storyPct}%</span>
+            <span class="chapter-chip">Pills · ${progress.totalStory} · ${progress.storyPct}%</span>
             <span class="chapter-chip">Questions · ${progress.totalQ} · ${progress.questionPct}%</span>
             ${hasProgress ? '<span class="chapter-chip chapter-chip--muted">Continue</span>' : ""}
           </div>
@@ -2084,7 +2084,7 @@ function syncActionDock(chapter, chState, objectiveId, viewState, items) {
   actionDock.classList.remove("hidden");
   actionLeftBtn.classList.remove("hidden");
   actionLeftBtn.disabled = false;
-  setLeftButton({ label: "Add to Revision", shape: "circle", useIcon: true });
+  setLeftButton({ label: "Add to Focus", shape: "circle", useIcon: true });
 
   if (mode === "story") {
     const total = items.storyPoints.length;
@@ -2205,7 +2205,7 @@ function advanceStory(chapter, viewState, objectiveId, storyPoints) {
     saveState();
     renderCurrentMode();
   } else {
-    showToast("End of points");
+    showToast("End of pills");
   }
 }
 
@@ -2218,7 +2218,7 @@ function markCurrentStoryRevision(chapter, viewState, storyPoints) {
   if (!chState.revisionStoryIds.includes(point.id)) {
     chState.revisionStoryIds.push(point.id);
     saveState();
-    showToast("Saved to Revision");
+    showToast("Saved to Focus");
   } else {
     showToast("Already saved");
   }
@@ -2341,7 +2341,7 @@ function createEndOfSetCard({ levelId, chapterId, mode, objectiveId }) {
   const revisionBtn = document.createElement("button");
   revisionBtn.className = "btn btn--ghost btn--small";
   revisionBtn.type = "button";
-  revisionBtn.textContent = "Start revision";
+  revisionBtn.textContent = "Start Focus";
   revisionBtn.addEventListener("click", () => {
     appState.currentRevisionSubMode = mode === "questions" ? "questions" : "story";
     setActiveMode("revision");
@@ -2470,7 +2470,7 @@ function markCurrentQuestionRevision(chapter, viewState, questions) {
   if (!chState.revisionQuestionIds.includes(q.id)) {
     chState.revisionQuestionIds.push(q.id);
     saveState();
-    showToast("Saved to Revision");
+    showToast("Saved to Focus");
   } else {
     showToast("Already saved");
   }
@@ -2510,7 +2510,7 @@ function getRevisionDeck(chapter, chState, subMode, objectiveId = null) {
     .map((p) => ({
       id: p.id,
       kind: "story",
-      label: "Point",
+      label: "Pill",
       text: p.text
     }));
 }
@@ -2597,7 +2597,7 @@ function renderRevisionMode(chapter, chState, objectiveId) {
 
   revisionListEl.innerHTML = "";
   revisionStartBtn.disabled = deck.length === 0;
-  revisionStartBtn.textContent = "Start revision";
+  revisionStartBtn.textContent = "Start Focus";
   revisionStartBtn.classList.toggle("btn--pressed", isRevisionConfigOpen);
   revisionStartBtn.classList.toggle("btn--press-lock", isRevisionConfigOpen);
   revisionStartBtn.setAttribute("aria-pressed", isRevisionConfigOpen ? "true" : "false");
@@ -2840,14 +2840,14 @@ function renderRevisionSession() {
     doneCard.className = "qa-card";
     doneCard.innerHTML = `
       <div class="qa-meta">Session complete</div>
-      <div class="qa-text">You’ve finished this revision set.</div>
+      <div class="qa-text">You’ve finished this Focus set.</div>
     `;
 
     const actions = document.createElement("div");
     actions.className = "revision-session-actions";
     const backBtn = document.createElement("button");
     backBtn.className = "btn";
-    backBtn.textContent = "Back to Revision";
+    backBtn.textContent = "Back to Focus";
     backBtn.addEventListener("click", () => {
       resetRevisionSession();
       renderCurrentMode();
