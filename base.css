@@ -71,7 +71,7 @@ body {
   width: 100%;
   max-width: var(--maxw);
   margin: 0 auto;
-  padding: calc(var(--space-header-top) + env(safe-area-inset-top)) var(--side-pad) var(--space-header-bottom);
+  padding: calc(var(--space-header-top) + env(safe-area-inset-top)) var(--space-header-x) var(--space-header-bottom);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -80,7 +80,7 @@ body {
 
 /* Objectives screen: add breathing room and safe-area padding */
 .app-header.header--objectives {
-  padding: calc(var(--space-header-top) + env(safe-area-inset-top)) var(--side-pad) var(--space-header-bottom);
+  padding: calc(var(--space-header-top) + env(safe-area-inset-top)) var(--space-header-x) var(--space-header-bottom);
   align-items: flex-start;
   margin-bottom: var(--space-section);
 }
