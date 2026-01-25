@@ -560,13 +560,6 @@
   gap: 14px;
 }
 
-.revision-session-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-}
-
 .revision-session-actions {
   display: flex;
   justify-content: center;
