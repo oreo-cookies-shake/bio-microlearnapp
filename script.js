@@ -859,14 +859,22 @@ const revisionHubEl = qs("#revisionHub");
 const revisionConfigEl = qs("#revisionConfig");
 const revisionSessionEl = qs("#revisionSession");
 const revisionStartBtn = qs("#revisionStartBtn");
+const revisionActionButtonsEl = qs("#revisionActionButtons");
+const revisionSelectionBannerEl = qs("#revisionSelectionBanner");
 const revisionSelectionBarEl = qs("#revisionSelectionBar");
 const revisionSelectedCountEl = qs("#revisionSelectedCount");
 const revisionSelectAllBtn = qs("#revisionSelectAll");
 const revisionClearSelectionBtn = qs("#revisionClearSelection");
+const revisionSelectionCtaEl = qs("#revisionSelectionCta");
+const revisionSelectionCancelBtn = qs("#revisionSelectionCancel");
+const revisionSelectionStartBtn = qs("#revisionSelectionStart");
+const revisionHelperTextEl = qs("#revisionHelperText");
 const revisionCountOptionsEl = qs("#revisionCountOptions");
 const revisionOrderOptionsEl = qs("#revisionOrderOptions");
+const revisionSelectionOptionsEl = qs("#revisionSelectionOptions");
 const revisionConfigStartBtn = qs("#revisionConfigStart");
 const revisionConfigCancelBtn = qs("#revisionConfigCancel");
+const revisionConfigCloseBtn = qs("#revisionConfigClose");
 
 const themeToggleBtn = qs("#themeToggle");
 const appHeaderEl = document.querySelector(".app-header");
@@ -942,9 +950,10 @@ let revisionSessionIndex = 0;
 let isRevisionConfigOpen = false;
 let revisionCountChoice = null;
 let revisionLastStandardCount = "all";
-let revisionOrder = "in-order";
+let revisionOrder = "random";
 let pendingRevisionSubMode = null;
 let revisionSelectMode = false;
+let revisionSelectionMode = "all";
 let revisionSelectedIds = new Set();
 let revisionQuestionRevealedById = {};
 let revisionSessionMaxIndex = 0;
@@ -1856,8 +1865,9 @@ function setActiveMode(mode) {
     resetRevisionSession();
     isRevisionConfigOpen = false;
     revisionSelectMode = false;
+    revisionSelectionMode = "all";
     revisionSelectedIds.clear();
-    revisionCountChoice = revisionLastStandardCount;
+    revisionCountChoice = null;
   }
 
   renderCurrentMode();
@@ -1884,8 +1894,9 @@ qsa("[data-revision-submode]").forEach((btn) => {
     appState.currentRevisionSubMode = btn.dataset.revisionSubmode;
     isRevisionConfigOpen = false;
     revisionSelectMode = false;
+    revisionSelectionMode = "all";
     revisionSelectedIds.clear();
-    revisionCountChoice = revisionLastStandardCount;
+    revisionCountChoice = null;
     saveState();
     renderCurrentMode();
   });
@@ -1893,6 +1904,15 @@ qsa("[data-revision-submode]").forEach((btn) => {
 
 revisionStartBtn.addEventListener("click", () => {
   if (revisionStartBtn.disabled || isRevisionConfigOpen) return;
+  const chapter = getChapter(appState.currentLevelId, appState.currentChapterId);
+  const chState = chapter ? ensureChapterState(chapter.id) : null;
+  const objectiveId = chapter ? getActiveObjectiveId(chapter.id) : null;
+  const deckSize = chapter
+    ? getRevisionDeck(chapter, chState, appState.currentRevisionSubMode, objectiveId).length
+    : 0;
+  revisionCountChoice = deckSize >= 10 ? "10" : "all";
+  revisionLastStandardCount = revisionCountChoice;
+  revisionSelectionMode = "all";
   isRevisionConfigOpen = true;
   renderCurrentMode();
 });
@@ -1913,11 +1933,11 @@ revisionClearSelectionBtn.addEventListener("click", () => {
 });
 
 revisionConfigCancelBtn.addEventListener("click", () => {
-  if (revisionSelectMode) {
-    revisionSelectedIds.clear();
-    revisionSelectMode = false;
-    revisionCountChoice = revisionLastStandardCount;
-  }
+  isRevisionConfigOpen = false;
+  renderCurrentMode();
+});
+
+revisionConfigCloseBtn.addEventListener("click", () => {
   isRevisionConfigOpen = false;
   renderCurrentMode();
 });
@@ -1927,14 +1947,17 @@ revisionConfigStartBtn.addEventListener("click", () => {
   if (!chapter) return;
   const chState = ensureChapterState(chapter.id);
   const objectiveId = getActiveObjectiveId(chapter.id);
-  if (revisionSelectMode && revisionSelectedIds.size === 0) {
-    showToast("Select at least 1 item");
+  if (revisionSelectionMode === "manual") {
+    isRevisionConfigOpen = false;
+    revisionSelectMode = true;
+    revisionSelectedIds.clear();
+    renderCurrentMode();
     return;
   }
   startRevisionSession(
     chapter,
     chState,
-    revisionSelectMode ? Array.from(revisionSelectedIds) : null,
+    null,
     objectiveId
   );
 });
@@ -1943,15 +1966,8 @@ revisionCountOptionsEl.addEventListener("click", (e) => {
   const btn = e.target.closest(".pill");
   if (!btn || btn.disabled) return;
   const countChoice = btn.dataset.count;
-  if (countChoice === "select") {
-    revisionSelectMode = true;
-    revisionCountChoice = "select";
-  } else {
-    revisionSelectMode = false;
-    revisionSelectedIds.clear();
-    revisionCountChoice = countChoice;
-    revisionLastStandardCount = countChoice;
-  }
+  revisionCountChoice = countChoice;
+  revisionLastStandardCount = countChoice;
   renderCurrentMode();
 });
 
@@ -1960,6 +1976,33 @@ revisionOrderOptionsEl.addEventListener("click", (e) => {
   if (!btn) return;
   revisionOrder = btn.dataset.order;
   renderCurrentMode();
+});
+
+revisionSelectionOptionsEl.addEventListener("click", (e) => {
+  const btn = e.target.closest(".segmented__btn");
+  if (!btn) return;
+  revisionSelectionMode = btn.dataset.selection;
+  renderCurrentMode();
+});
+
+revisionSelectionCancelBtn.addEventListener("click", () => {
+  revisionSelectMode = false;
+  revisionSelectionMode = "all";
+  revisionSelectedIds.clear();
+  renderCurrentMode();
+});
+
+revisionSelectionStartBtn.addEventListener("click", () => {
+  const chapter = getChapter(appState.currentLevelId, appState.currentChapterId);
+  if (!chapter) return;
+  const chState = ensureChapterState(chapter.id);
+  const objectiveId = getActiveObjectiveId(chapter.id);
+  if (revisionSelectedIds.size === 0) {
+    showToast("Select at least 1 item");
+    return;
+  }
+  revisionSelectionMode = "all";
+  startRevisionSession(chapter, chState, Array.from(revisionSelectedIds), objectiveId);
 });
 
 function renderCurrentMode() {
@@ -2341,7 +2384,7 @@ function createEndOfSetCard({ levelId, chapterId, mode, objectiveId }) {
   const revisionBtn = document.createElement("button");
   revisionBtn.className = "btn btn--ghost btn--small";
   revisionBtn.type = "button";
-  revisionBtn.textContent = "Start Focus";
+  revisionBtn.textContent = "Review options";
   revisionBtn.addEventListener("click", () => {
     appState.currentRevisionSubMode = mode === "questions" ? "questions" : "story";
     setActiveMode("revision");
@@ -2540,14 +2583,14 @@ function updateRevisionSelectionUI(deckSize) {
     revisionSelectedCountEl.textContent = "0 selected";
     revisionSelectAllBtn.disabled = true;
     revisionClearSelectionBtn.disabled = true;
-    revisionConfigStartBtn.disabled = deckSize === 0;
+    revisionSelectionStartBtn.disabled = true;
     return;
   }
   const selectedCount = revisionSelectedIds.size;
   revisionSelectedCountEl.textContent = `${selectedCount} selected`;
   revisionSelectAllBtn.disabled = deckSize === 0 || selectedCount === deckSize;
   revisionClearSelectionBtn.disabled = selectedCount === 0;
-  revisionConfigStartBtn.disabled = deckSize === 0 || selectedCount === 0;
+  revisionSelectionStartBtn.disabled = deckSize === 0 || selectedCount === 0;
 }
 
 function renderRevisionMode(chapter, chState, objectiveId) {
@@ -2587,6 +2630,7 @@ function renderRevisionMode(chapter, chState, objectiveId) {
   if (deck.length === 0) {
     isRevisionConfigOpen = false;
     revisionSelectMode = false;
+    revisionSelectionMode = "all";
     revisionSelectedIds.clear();
   }
   const deckIdSet = new Set(deck.map((item) => item.id));
@@ -2596,12 +2640,17 @@ function renderRevisionMode(chapter, chState, objectiveId) {
   setRevisionProgress(deck.length);
 
   revisionListEl.innerHTML = "";
-  revisionStartBtn.disabled = deck.length === 0;
-  revisionStartBtn.textContent = "Start Focus";
+  const isEmpty = deck.length === 0;
+  revisionStartBtn.disabled = isEmpty;
+  revisionStartBtn.textContent = isEmpty ? "Save items to review" : "Review options";
   revisionStartBtn.classList.toggle("btn--pressed", isRevisionConfigOpen);
   revisionStartBtn.classList.toggle("btn--press-lock", isRevisionConfigOpen);
   revisionStartBtn.setAttribute("aria-pressed", isRevisionConfigOpen ? "true" : "false");
+  revisionSelectionBannerEl.classList.toggle("hidden", !revisionSelectMode);
   revisionSelectionBarEl.classList.toggle("hidden", !revisionSelectMode);
+  revisionSelectionCtaEl.classList.toggle("hidden", !revisionSelectMode);
+  revisionActionButtonsEl.classList.toggle("hidden", revisionSelectMode);
+  revisionHelperTextEl.classList.toggle("hidden", !isEmpty || revisionSelectMode);
 
   if (deck.length === 0) {
     revisionEmptyEl.classList.remove("hidden");
@@ -2666,6 +2715,12 @@ function renderRevisionMode(chapter, chState, objectiveId) {
   }
 }
 
+function getDefaultRevisionCount(deckSize, availableCounts) {
+  if (deckSize >= 10 && availableCounts.includes("10")) return "10";
+  if (availableCounts.includes("all")) return "all";
+  return availableCounts[0] || "all";
+}
+
 function renderRevisionConfig(deckSize) {
   revisionConfigEl.classList.toggle("hidden", !isRevisionConfigOpen);
   if (!isRevisionConfigOpen) return;
@@ -2675,26 +2730,21 @@ function renderRevisionConfig(deckSize) {
 
   countButtons.forEach((btn) => {
     const countValue = btn.dataset.count;
-    if (countValue === "select") {
-      btn.disabled = deckSize === 0;
-      if (deckSize > 0) availableCounts.push("select");
-      return;
-    }
-
     if (countValue === "all") {
-      btn.disabled = deckSize === 0 || revisionSelectMode;
+      btn.disabled = deckSize === 0;
       if (deckSize > 0) availableCounts.push("all");
       return;
     }
 
     const num = Number(countValue);
     const isAvailable = num <= deckSize;
-    btn.disabled = !isAvailable || revisionSelectMode;
+    btn.disabled = !isAvailable;
     if (isAvailable) availableCounts.push(countValue);
   });
 
-  if (!availableCounts.includes(revisionCountChoice)) {
-    revisionCountChoice = availableCounts[0] || "all";
+  if (!revisionCountChoice || !availableCounts.includes(revisionCountChoice)) {
+    revisionCountChoice = getDefaultRevisionCount(deckSize, availableCounts);
+    revisionLastStandardCount = revisionCountChoice;
   }
 
   countButtons.forEach((btn) => {
@@ -2707,9 +2757,13 @@ function renderRevisionConfig(deckSize) {
     btn.setAttribute("aria-pressed", isActive ? "true" : "false");
   });
 
-  if (!revisionSelectMode) {
-    revisionConfigStartBtn.disabled = deckSize === 0;
-  }
+  const selectionButtons = Array.from(revisionSelectionOptionsEl.querySelectorAll(".segmented__btn"));
+  selectionButtons.forEach((btn) => {
+    const isActive = btn.dataset.selection === revisionSelectionMode;
+    btn.setAttribute("aria-pressed", isActive ? "true" : "false");
+  });
+
+  revisionConfigStartBtn.disabled = deckSize === 0;
 }
 
 function shuffleArray(items) {

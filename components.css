@@ -419,10 +419,29 @@
   gap: 10px;
 }
 
+.revision-selection-banner {
+  margin-top: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
 .revision-action-buttons {
   display: flex;
-  justify-content: flex-end;
-  gap: 10px;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.revision-helper {
+  font-size: 13px;
+  color: var(--muted);
+  text-align: center;
+  margin: 0;
+}
+
+.revision-primary-cta {
+  width: 100%;
+  justify-content: center;
 }
 
 .revision-selection {
@@ -442,6 +461,15 @@
 .revision-selection-count {
   font-size: 13px;
   color: var(--muted);
+}
+
+.revision-selection-cta {
+  position: sticky;
+  bottom: 12px;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+  background: transparent;
 }
 
 .revision-item--selectable {
@@ -480,6 +508,19 @@
   border-radius: var(--radius-card);
   background: var(--content-bg);
   box-shadow: var(--shadow-soft);
+}
+
+.revision-config-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.revision-config-heading {
+  font-size: 16px;
+  font-weight: 700;
 }
 
 .revision-config-section + .revision-config-section {
