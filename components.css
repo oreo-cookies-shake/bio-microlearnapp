@@ -347,7 +347,7 @@
 .revision-list {
   list-style: none;
   margin: 0;
-  padding: 12px 0 0;
+  padding: 12px 0 calc(140px + env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -419,6 +419,15 @@
   gap: 10px;
 }
 
+.revision-actions--sticky {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  background: var(--content-bg);
+  border-top: 1px solid var(--content-edge);
+  padding: 12px 0 calc(12px + env(safe-area-inset-bottom));
+}
+
 .revision-selection-banner {
   margin-top: 8px;
   font-size: 13px;
@@ -464,8 +473,6 @@
 }
 
 .revision-selection-cta {
-  position: sticky;
-  bottom: 12px;
   display: flex;
   gap: 10px;
   justify-content: space-between;

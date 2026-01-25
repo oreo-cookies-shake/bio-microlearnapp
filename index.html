@@ -133,7 +133,7 @@
             </div>
             <div id="revisionSelectionBanner" class="revision-selection-banner hidden">Select items to review</div>
             <ul id="revisionList" class="revision-list"></ul>
-            <div class="revision-actions">
+            <div class="revision-actions revision-actions--sticky">
               <div id="revisionSelectionBar" class="revision-selection hidden">
                 <span id="revisionSelectedCount" class="revision-selection-count">0 selected</span>
                 <div class="revision-selection-actions">
@@ -167,20 +167,14 @@
                   <button class="pill" data-count="10">10</button>
                   <button class="pill" data-count="15">15</button>
                   <button class="pill" data-count="all">All</button>
+                  <button class="pill" data-count="select">Select items</button>
                 </div>
               </div>
               <div class="revision-config-section">
                 <div class="revision-config-title">Order</div>
                 <div class="segmented" id="revisionOrderOptions" role="group" aria-label="Focus order">
                   <button class="segmented__btn" data-order="random" aria-pressed="true">Random</button>
-                  <button class="segmented__btn" data-order="in-order" aria-pressed="false">In order</button>
-                </div>
-              </div>
-              <div class="revision-config-section">
-                <div class="revision-config-title">Which items?</div>
-                <div class="segmented" id="revisionSelectionOptions" role="group" aria-label="Review items">
-                  <button class="segmented__btn" data-selection="all" aria-pressed="true">All saved items</button>
-                  <button class="segmented__btn" data-selection="manual" aria-pressed="false">Let me choose items</button>
+                  <button class="segmented__btn" data-order="inorder" aria-pressed="false">In order</button>
                 </div>
               </div>
               <div class="revision-config-actions">
