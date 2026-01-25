@@ -122,21 +122,37 @@ body {
   font-size: 18px;
 }
 
+.focus-session--active .app-header,
 .app-header.header--session-compact,
 .app-header.header--session-expanded {
   transition: padding 0.2s ease, gap 0.2s ease;
 }
 
+.focus-session--active .app-header,
 .app-header.header--session-compact {
   padding: 6px var(--side-pad) 4px;
 }
 
+.focus-session--active .app-header .header-main,
 .app-header.header--session-compact .header-main {
   font-size: 16px;
 }
 
+.focus-session--active .app-header .header-subtitle,
 .app-header.header--session-compact .header-subtitle {
   margin-top: 2px;
+}
+
+.focus-session--active.focus-session--header-expanded .app-header {
+  padding: 10px var(--side-pad) 6px;
+}
+
+.focus-session--active.focus-session--header-expanded .app-header .header-main {
+  font-size: 26px;
+}
+
+.focus-session--active.focus-session--header-expanded .app-header .header-subtitle {
+  margin-top: 4px;
 }
 
 
