@@ -344,10 +344,14 @@
   stroke: var(--accent);
 }
 
+#revisionHub {
+  --revision-actions-height: 156px;
+}
+
 .revision-list {
   list-style: none;
   margin: 0;
-  padding: 12px 0 calc(140px + env(safe-area-inset-bottom));
+  padding: 12px 0 calc(var(--revision-actions-height, 156px) + env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -423,7 +427,8 @@
   position: sticky;
   bottom: 0;
   z-index: 2;
-  background: var(--content-bg);
+  /* Previously used --content-bg here, which rendered a white strip in light mode. */
+  background: var(--bg);
   border-top: 1px solid var(--content-edge);
   padding: 12px 0 calc(12px + env(safe-area-inset-bottom));
 }
