@@ -129,8 +129,9 @@
                   <path d="M21.5 5.5A2.5 2.5 0 0 0 19 3h-6a2 2 0 0 0-2 2v16a2 2 0 0 1 2-2h6a2.5 2.5 0 0 1 2.5 2.5V5.5z" />
                 </svg>
               </span>
-              button to save items to Focus.
+              button to save items for review.
             </div>
+            <div id="revisionSelectionBanner" class="revision-selection-banner hidden">Select items to review</div>
             <ul id="revisionList" class="revision-list"></ul>
             <div class="revision-actions">
               <div id="revisionSelectionBar" class="revision-selection hidden">
@@ -140,14 +141,25 @@
                   <button id="revisionClearSelection" class="btn btn--ghost btn--small" type="button">Clear</button>
                 </div>
               </div>
-              <div class="revision-action-buttons">
-                <button id="revisionStartBtn" class="btn" disabled>Start Focus</button>
+              <div class="revision-action-buttons" id="revisionActionButtons">
+                <p id="revisionHelperText" class="revision-helper hidden">
+                  Tap the bookmark icon while studying to save items here.
+                </p>
+                <button id="revisionStartBtn" class="btn revision-primary-cta" disabled>Review options</button>
+              </div>
+              <div id="revisionSelectionCta" class="revision-selection-cta hidden">
+                <button id="revisionSelectionCancel" class="btn btn--ghost">Cancel</button>
+                <button id="revisionSelectionStart" class="btn" disabled>Start session</button>
               </div>
             </div>
           </div>
 
           <div id="revisionConfig" class="revision-config hidden">
             <div class="revision-config-card">
+              <div class="revision-config-header">
+                <div class="revision-config-heading">Set up review</div>
+                <button id="revisionConfigClose" class="icon-button icon-button--flat icon-button--small" aria-label="Close review options">×</button>
+              </div>
               <div class="revision-config-section">
                 <div class="revision-config-title">How many items?</div>
                 <div class="pill-group" id="revisionCountOptions">
@@ -155,19 +167,25 @@
                   <button class="pill" data-count="10">10</button>
                   <button class="pill" data-count="15">15</button>
                   <button class="pill" data-count="all">All</button>
-                  <button class="pill" data-count="select">Select</button>
                 </div>
               </div>
               <div class="revision-config-section">
                 <div class="revision-config-title">Order</div>
                 <div class="segmented" id="revisionOrderOptions" role="group" aria-label="Focus order">
-                  <button class="segmented__btn" data-order="in-order" aria-pressed="true">In order</button>
-                  <button class="segmented__btn" data-order="random" aria-pressed="false">Random</button>
+                  <button class="segmented__btn" data-order="random" aria-pressed="true">Random</button>
+                  <button class="segmented__btn" data-order="in-order" aria-pressed="false">In order</button>
+                </div>
+              </div>
+              <div class="revision-config-section">
+                <div class="revision-config-title">Which items?</div>
+                <div class="segmented" id="revisionSelectionOptions" role="group" aria-label="Review items">
+                  <button class="segmented__btn" data-selection="all" aria-pressed="true">All saved items</button>
+                  <button class="segmented__btn" data-selection="manual" aria-pressed="false">Let me choose items</button>
                 </div>
               </div>
               <div class="revision-config-actions">
                 <button id="revisionConfigCancel" class="btn btn--ghost">Cancel</button>
-                <button id="revisionConfigStart" class="btn">Start Focus</button>
+                <button id="revisionConfigStart" class="btn">Start session</button>
               </div>
             </div>
           </div>
