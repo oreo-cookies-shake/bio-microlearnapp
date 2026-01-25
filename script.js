@@ -957,6 +957,21 @@ let revisionQuestionRevealedById = {};
 let revisionSessionMaxIndex = 0;
 let revisionPointIndex = 0;
 let revisionPointMaxIndex = 0;
+let revisionUiMode = "idle"; // idle | setup | selecting | session
+
+const revisionDebug = false;
+function logRevisionDebug(message, detail = {}) {
+  if (!revisionDebug) return;
+  console.log(`[revision] ${message}`, detail);
+}
+
+function setRevisionUiMode(mode) {
+  // Previously setup/selecting flags could drift independently, causing Start session to no-op.
+  revisionUiMode = mode;
+  isRevisionConfigOpen = mode === "setup";
+  isSelecting = mode === "selecting";
+  isRevisionSessionActive = mode === "session";
+}
 
 const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -1088,8 +1103,7 @@ function closeConfirmDialog() {
 
 function resetTransientUiState() {
   resetRevisionSession();
-  isRevisionConfigOpen = false;
-  isSelecting = false;
+  setRevisionUiMode("idle");
   selectedIds.clear();
   questionRevealed = false;
   currentAnswerEl = null;
@@ -1861,8 +1875,7 @@ function setActiveMode(mode) {
   }
   if (mode !== "revision") {
     resetRevisionSession();
-    isRevisionConfigOpen = false;
-    isSelecting = false;
+    setRevisionUiMode("idle");
     selectedIds.clear();
     focusCountChoice = null;
   }
@@ -1889,8 +1902,7 @@ qsa("[data-revision-submode]").forEach((btn) => {
     }
 
     appState.currentRevisionSubMode = btn.dataset.revisionSubmode;
-    isRevisionConfigOpen = false;
-    isSelecting = false;
+    setRevisionUiMode("idle");
     selectedIds.clear();
     focusCountChoice = null;
     saveState();
@@ -1899,7 +1911,7 @@ qsa("[data-revision-submode]").forEach((btn) => {
 });
 
 revisionStartBtn.addEventListener("click", () => {
-  if (revisionStartBtn.disabled || isRevisionConfigOpen) return;
+  if (revisionStartBtn.disabled || revisionUiMode === "setup") return;
   const chapter = getChapter(appState.currentLevelId, appState.currentChapterId);
   const chState = chapter ? ensureChapterState(chapter.id) : null;
   const objectiveId = chapter ? getActiveObjectiveId(chapter.id) : null;
@@ -1908,7 +1920,7 @@ revisionStartBtn.addEventListener("click", () => {
     : 0;
   focusCountChoice = deckSize >= 10 ? "10" : "all";
   focusLastStandardCount = focusCountChoice;
-  isRevisionConfigOpen = true;
+  setRevisionUiMode("setup");
   renderCurrentMode();
 });
 
@@ -1928,12 +1940,12 @@ revisionClearSelectionBtn.addEventListener("click", () => {
 });
 
 revisionConfigCancelBtn.addEventListener("click", () => {
-  isRevisionConfigOpen = false;
+  setRevisionUiMode("idle");
   renderCurrentMode();
 });
 
 revisionConfigCloseBtn.addEventListener("click", () => {
-  isRevisionConfigOpen = false;
+  setRevisionUiMode("idle");
   renderCurrentMode();
 });
 
@@ -1943,18 +1955,27 @@ revisionConfigStartBtn.addEventListener("click", () => {
   const chState = ensureChapterState(chapter.id);
   const objectiveId = getActiveObjectiveId(chapter.id);
   if (focusCountChoice === "select") {
-    isRevisionConfigOpen = false;
-    isSelecting = true;
+    setRevisionUiMode("selecting");
     selectedIds.clear();
+    logRevisionDebug("enter selecting mode", { mode: revisionUiMode });
     renderCurrentMode();
     return;
   }
-  startRevisionSession(
+  const deck = getRevisionDeck(chapter, chState, appState.currentRevisionSubMode, objectiveId);
+  const sessionItems = getRevisionItemsForCount(deck, focusCountChoice, focusOrderChoice);
+  logRevisionDebug("start session from setup", {
+    mode: revisionUiMode,
+    order: focusOrderChoice,
+    items: sessionItems.length
+  });
+  startReviewSession({
     chapter,
     chState,
-    null,
-    objectiveId
-  );
+    objectiveId,
+    items: sessionItems.map((item) => item.id),
+    order: focusOrderChoice,
+    source: "saved"
+  });
 });
 
 revisionCountOptionsEl.addEventListener("click", (e) => {
@@ -1976,7 +1997,7 @@ revisionOrderOptionsEl.addEventListener("click", (e) => {
 });
 
 revisionSelectionCancelBtn.addEventListener("click", () => {
-  isSelecting = false;
+  setRevisionUiMode("idle");
   selectedIds.clear();
   renderCurrentMode();
 });
@@ -1990,7 +2011,21 @@ revisionSelectionStartBtn.addEventListener("click", () => {
     showToast("Select at least 1 item");
     return;
   }
-  startRevisionSession(chapter, chState, Array.from(selectedIds), objectiveId);
+  const deck = getRevisionDeck(chapter, chState, appState.currentRevisionSubMode, objectiveId);
+  const sessionItems = getRevisionItemsForSelection(deck, selectedIds, focusOrderChoice);
+  logRevisionDebug("start session from selection", {
+    mode: revisionUiMode,
+    order: focusOrderChoice,
+    items: sessionItems.length
+  });
+  startReviewSession({
+    chapter,
+    chState,
+    objectiveId,
+    items: sessionItems.map((item) => item.id),
+    order: focusOrderChoice,
+    source: "saved"
+  });
 });
 
 function renderCurrentMode() {
@@ -2156,6 +2191,7 @@ actionLeftBtn.addEventListener("click", () => {
     markCurrentQuestionRevision(chapter, viewState, items.questions);
   } else if (appState.currentMode === "revision" && isRevisionSessionActive) {
     resetRevisionSession();
+    setRevisionUiMode("idle");
     renderCurrentMode();
   }
 });
@@ -2616,8 +2652,7 @@ function renderRevisionMode(chapter, chState, objectiveId) {
   revisionSessionEl.classList.add("hidden");
   revisionHubEl.classList.remove("hidden");
   if (deck.length === 0) {
-    isRevisionConfigOpen = false;
-    isSelecting = false;
+    setRevisionUiMode("idle");
     selectedIds.clear();
   }
   const deckIdSet = new Set(deck.map((item) => item.id));
@@ -2766,40 +2801,47 @@ function shuffleArray(items) {
   return items;
 }
 
-function startRevisionSession(chapter, chState, selectedIds = null, objectiveId = null) {
+function getRevisionItemsForCount(deck, countChoice, orderChoice) {
+  let ordered = deck.slice();
+  if (orderChoice === "random") {
+    ordered = shuffleArray(ordered.slice());
+  }
+  let count = countChoice === "all" ? ordered.length : Number(countChoice);
+  if (!count || Number.isNaN(count)) {
+    count = Math.min(ordered.length, 5);
+  }
+  return ordered.slice(0, count);
+}
+
+function getRevisionItemsForSelection(deck, selectionSet, orderChoice) {
+  let ordered = deck.filter((item) => selectionSet.has(item.id));
+  if (orderChoice === "random") {
+    ordered = shuffleArray(ordered.slice());
+  }
+  return ordered;
+}
+
+function startReviewSession({ chapter, chState, objectiveId = null, items, order, source }) {
   const subMode = appState.currentRevisionSubMode || "story";
   const deck = getRevisionDeck(chapter, chState, subMode, objectiveId);
   if (deck.length === 0) return;
+  if (!Array.isArray(items) || items.length === 0) return;
 
-  let queue = deck.slice();
-  if (Array.isArray(selectedIds)) {
-    if (selectedIds.length === 0) return;
-    const selectedSet = new Set(selectedIds);
-    queue = deck.filter((item) => selectedSet.has(item.id));
-    if (focusOrderChoice === "random") {
-      queue = shuffleArray(queue);
-    }
-  } else {
-    if (focusOrderChoice === "random") {
-      queue = shuffleArray(queue);
-    }
-
-    let count = focusCountChoice === "all" ? queue.length : Number(focusCountChoice);
-    if (!count || Number.isNaN(count)) {
-      count = Math.min(queue.length, 5);
-    }
-
-    queue = queue.slice(0, count);
-  }
+  const deckMap = new Map(deck.map((item) => [item.id, item]));
+  const queue = items.map((id) => deckMap.get(id)).filter(Boolean);
+  logRevisionDebug("startReviewSession", {
+    mode: revisionUiMode,
+    order,
+    source,
+    items: queue.length
+  });
 
   if (queue.length === 0) return;
   revisionSessionQueue = queue;
   revisionSessionIndex = 0;
   revisionSessionMaxIndex = 0;
   revisionQuestionRevealedById = {};
-  isRevisionSessionActive = true;
-  isRevisionConfigOpen = false;
-  isSelecting = false;
+  setRevisionUiMode("session");
   selectedIds.clear();
   focusCountChoice = focusLastStandardCount;
   revisionPointIndex = 0;
