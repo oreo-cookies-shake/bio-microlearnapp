@@ -1,5 +1,5 @@
 // Bump the version to force PWAs to update on phones.
-const CACHE_NAME = "microlearn-v2024-05-30";
+const CACHE_NAME = "microlearn-v2024-09-15";
 
 const ASSETS = [
   "./",
@@ -19,6 +19,7 @@ const ASSETS = [
 ];
 
 self.addEventListener("install", (event) => {
+  self.skipWaiting();
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)));
 });
 

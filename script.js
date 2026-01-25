@@ -961,10 +961,8 @@ let revisionPointMaxIndex = 0;
 let revisionUiMode = "idle"; // idle | setup | selecting | session
 let isFocusSession = false;
 let focusSessionHeaderMode = "expanded";
-let isFocusSessionScrollBound = false;
 let isFocusSessionTapBound = false;
 let focusSessionTapStart = null;
-let focusSessionTapMoved = false;
 const focusTapHintEl = qs("#focusTapHint");
 
 const revisionDebug = false;
@@ -992,24 +990,18 @@ function updateFocusSessionHeaderClasses() {
     return;
   }
 
-  const isExpanded = focusSessionHeaderMode === "expanded";
   appEl.classList.add("focus-session--active");
-  appEl.classList.toggle("focus-session--header-expanded", isExpanded);
+  appEl.classList.remove("focus-session--header-expanded");
   console.log("[focus-session] header classes updated", {
     mode: focusSessionHeaderMode,
-    expanded: isExpanded
+    expanded: false
   });
 }
 
 function handleFocusSessionScroll() {
   if (!isFocusSession) return;
-  const scroller = document.scrollingElement;
-  if (!scroller) return;
-  const nextMode = scroller.scrollTop === 0 ? "expanded" : "compact";
-  if (nextMode !== focusSessionHeaderMode) {
-    focusSessionHeaderMode = nextMode;
-    updateFocusSessionHeaderClasses();
-  }
+  focusSessionHeaderMode = "compact";
+  updateFocusSessionHeaderClasses();
 }
 
 function setFocusSessionActive(active) {
@@ -1019,23 +1011,9 @@ function setFocusSessionActive(active) {
     focusSessionHeaderMode = "compact";
     updateFocusSessionHeaderClasses();
     syncFocusSessionTapHandlers();
-    if (!isFocusSessionScrollBound) {
-      window.addEventListener("scroll", handleFocusSessionScroll, { passive: true });
-      isFocusSessionScrollBound = true;
-    }
-    requestAnimationFrame(() => {
-      const scroller = document.scrollingElement;
-      if (scroller && scroller.scrollTop === 0) {
-        scroller.scrollTop = 1;
-      }
-      handleFocusSessionScroll();
-    });
+    handleFocusSessionScroll();
     console.log("[focus-session] session active");
   } else {
-    if (isFocusSessionScrollBound) {
-      window.removeEventListener("scroll", handleFocusSessionScroll);
-      isFocusSessionScrollBound = false;
-    }
     updateFocusSessionHeaderClasses();
     syncFocusSessionTapHandlers();
     console.log("[focus-session] session inactive");
@@ -1057,20 +1035,10 @@ function isFocusTapHintVisible() {
 function handleFocusSessionPointerDown(event) {
   if (!isFocusSession || !isRevisionSessionActive) return;
   if (event.pointerType === "mouse" && event.button !== 0) return;
-  focusSessionTapStart = { x: event.clientX, y: event.clientY };
-  focusSessionTapMoved = false;
+  focusSessionTapStart = { x: event.clientX, y: event.clientY, time: event.timeStamp };
 }
 
-function handleFocusSessionPointerMove(event) {
-  if (!focusSessionTapStart) return;
-  const deltaX = Math.abs(event.clientX - focusSessionTapStart.x);
-  const deltaY = Math.abs(event.clientY - focusSessionTapStart.y);
-  if (deltaX > 10 || deltaY > 10) {
-    focusSessionTapMoved = true;
-  }
-}
-
-function handleFocusSessionPointerUp() {
+function clearFocusSessionTapStart() {
   focusSessionTapStart = null;
 }
 
@@ -1083,29 +1051,24 @@ function advanceRevisionQuestion() {
   renderCurrentMode();
 }
 
-function handleFocusSessionNextTap() {
-  if (!isRevisionSessionActive) return;
-  if (appState.currentRevisionSubMode === "story") {
-    handleRevisionPrimary();
-    return;
-  }
-
-  const current = getCurrentRevisionItem();
-  if (!current || !isRevisionQuestionRevealed(current)) return;
-  if (revisionSessionIndex < revisionSessionMaxIndex) return;
-  advanceRevisionQuestion();
-}
-
 function handleFocusSessionTap(event) {
   if (!isRevisionSessionActive) return;
   if (isFocusTapHintVisible()) return;
-  if (focusSessionTapMoved) {
-    focusSessionTapMoved = false;
+  if (!focusSessionTapStart) return;
+
+  const tapStart = focusSessionTapStart;
+  focusSessionTapStart = null;
+
+  const target = event.target;
+  if (target.closest("button, a, input, textarea, [role=\"button\"], .session-footer, .action-dock, .revision-session-actions")) {
     return;
   }
 
-  const target = event.target;
-  if (target.closest(".action-dock, .revision-session-actions")) {
+  const distanceX = event.clientX - tapStart.x;
+  const distanceY = event.clientY - tapStart.y;
+  const distance = Math.hypot(distanceX, distanceY);
+  const duration = event.timeStamp - tapStart.time;
+  if (duration > 500 || distance > 12) {
     return;
   }
 
@@ -1116,27 +1079,27 @@ function handleFocusSessionTap(event) {
   const leftZone = viewportWidth * 0.33;
   const rightZone = viewportWidth * 0.67;
 
+  const currentIndex = appState.currentRevisionSubMode === "story" ? revisionPointIndex : revisionSessionIndex;
   if (x <= leftZone) {
+    console.log("[focus-session] tap", { zone: "left", action: "prev", index: currentIndex });
     handleRevisionPrev();
   } else if (x >= rightZone) {
-    handleFocusSessionNextTap();
+    console.log("[focus-session] tap", { zone: "right", action: "primary", index: currentIndex });
+    handleRevisionPrimary();
   }
 }
 
 function syncFocusSessionTapHandlers() {
-  if (!revisionSessionEl) return;
   const shouldEnable = isFocusSession && isRevisionSessionActive && !isFocusTapHintVisible();
   if (shouldEnable && !isFocusSessionTapBound) {
-    revisionSessionEl.addEventListener("click", handleFocusSessionTap);
-    revisionSessionEl.addEventListener("pointerdown", handleFocusSessionPointerDown, { passive: true });
-    revisionSessionEl.addEventListener("pointermove", handleFocusSessionPointerMove, { passive: true });
-    revisionSessionEl.addEventListener("pointerup", handleFocusSessionPointerUp, { passive: true });
+    document.addEventListener("pointerdown", handleFocusSessionPointerDown, { capture: true, passive: true });
+    document.addEventListener("pointerup", handleFocusSessionTap, { capture: true, passive: true });
+    document.addEventListener("pointercancel", clearFocusSessionTapStart, { capture: true, passive: true });
     isFocusSessionTapBound = true;
   } else if (!shouldEnable && isFocusSessionTapBound) {
-    revisionSessionEl.removeEventListener("click", handleFocusSessionTap);
-    revisionSessionEl.removeEventListener("pointerdown", handleFocusSessionPointerDown);
-    revisionSessionEl.removeEventListener("pointermove", handleFocusSessionPointerMove);
-    revisionSessionEl.removeEventListener("pointerup", handleFocusSessionPointerUp);
+    document.removeEventListener("pointerdown", handleFocusSessionPointerDown, { capture: true });
+    document.removeEventListener("pointerup", handleFocusSessionTap, { capture: true });
+    document.removeEventListener("pointercancel", clearFocusSessionTapStart, { capture: true });
     isFocusSessionTapBound = false;
   }
 }
