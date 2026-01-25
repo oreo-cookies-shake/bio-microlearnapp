@@ -122,6 +122,23 @@ body {
   font-size: 18px;
 }
 
+.app-header.header--session-compact,
+.app-header.header--session-expanded {
+  transition: padding 0.2s ease, gap 0.2s ease;
+}
+
+.app-header.header--session-compact {
+  padding: 6px var(--side-pad) 4px;
+}
+
+.app-header.header--session-compact .header-main {
+  font-size: 16px;
+}
+
+.app-header.header--session-compact .header-subtitle {
+  margin-top: 2px;
+}
+
 
 
 /* =====================

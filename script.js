@@ -958,6 +958,9 @@ let revisionSessionMaxIndex = 0;
 let revisionPointIndex = 0;
 let revisionPointMaxIndex = 0;
 let revisionUiMode = "idle"; // idle | setup | selecting | session
+let isFocusSession = false;
+let focusSessionHeaderMode = "expanded";
+let isFocusSessionScrollBound = false;
 
 const revisionDebug = false;
 function logRevisionDebug(message, detail = {}) {
@@ -971,9 +974,65 @@ function setRevisionUiMode(mode) {
   isRevisionConfigOpen = mode === "setup";
   isSelecting = mode === "selecting";
   isRevisionSessionActive = mode === "session";
+  syncFocusSessionHeaderState();
 }
 
 const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function updateFocusSessionHeaderClasses() {
+  if (!isFocusSession) {
+    appHeaderEl.classList.remove("header--session-compact", "header--session-expanded");
+    return;
+  }
+
+  const isCompact = focusSessionHeaderMode === "compact";
+  appHeaderEl.classList.toggle("header--session-compact", isCompact);
+  appHeaderEl.classList.toggle("header--session-expanded", !isCompact);
+}
+
+function handleFocusSessionScroll() {
+  if (!isFocusSession) return;
+  const scroller = document.scrollingElement;
+  if (!scroller) return;
+  const nextMode = scroller.scrollTop === 0 ? "expanded" : "compact";
+  if (nextMode !== focusSessionHeaderMode) {
+    focusSessionHeaderMode = nextMode;
+    updateFocusSessionHeaderClasses();
+  }
+}
+
+function setFocusSessionActive(active) {
+  if (isFocusSession === active) return;
+  isFocusSession = active;
+  if (active) {
+    focusSessionHeaderMode = "compact";
+    updateFocusSessionHeaderClasses();
+    if (!isFocusSessionScrollBound) {
+      window.addEventListener("scroll", handleFocusSessionScroll, { passive: true });
+      isFocusSessionScrollBound = true;
+    }
+    requestAnimationFrame(() => {
+      const scroller = document.scrollingElement;
+      if (scroller && scroller.scrollTop === 0) {
+        scroller.scrollTop = 1;
+      }
+      handleFocusSessionScroll();
+    });
+  } else {
+    if (isFocusSessionScrollBound) {
+      window.removeEventListener("scroll", handleFocusSessionScroll);
+      isFocusSessionScrollBound = false;
+    }
+    updateFocusSessionHeaderClasses();
+  }
+}
+
+function syncFocusSessionHeaderState() {
+  const shouldBeActive = !screenChapter.classList.contains("hidden")
+    && appState.currentMode === "revision"
+    && isRevisionSessionActive;
+  setFocusSessionActive(shouldBeActive);
+}
 
 function scrollToLatestContent() {
   // Keep the newest card/bubble visible after advancing.
@@ -1600,6 +1659,7 @@ function showScreen(name) {
   }
 
   updateStreakUI();
+  syncFocusSessionHeaderState();
 }
 
 backButton.addEventListener("click", () => {
@@ -2060,6 +2120,7 @@ function renderCurrentMode() {
 
   syncActionDock(chapter, chState, objectiveId, viewState, items);
   syncLastSession(chapter, viewState, objectiveId);
+  syncFocusSessionHeaderState();
 }
 
 function updateProgress(current, total) {
@@ -2553,6 +2614,7 @@ function resetRevisionSession() {
   revisionSessionMaxIndex = 0;
   revisionPointIndex = 0;
   revisionPointMaxIndex = 0;
+  syncFocusSessionHeaderState();
 }
 
 function getRevisionDeck(chapter, chState, subMode, objectiveId = null) {
@@ -2901,18 +2963,44 @@ function handleRevisionPrev() {
   renderCurrentMode();
 }
 
-function handleRevisionForward() {
-  if (!isRevisionSessionActive) return;
-  if (appState.currentRevisionSubMode === "story") {
-    if (revisionPointIndex >= revisionPointMaxIndex) return;
-    revisionPointIndex += 1;
-    renderCurrentMode();
-    return;
-  }
-  if (appState.currentRevisionSubMode !== "questions") return;
-  if (revisionSessionIndex >= revisionSessionMaxIndex) return;
-  revisionSessionIndex += 1;
-  renderCurrentMode();
+function attachRevisionSwipeHandlers(target) {
+  if (!target) return;
+  let startX = 0;
+  let startY = 0;
+  let isTracking = false;
+
+  target.addEventListener(
+    "touchstart",
+    (event) => {
+      if (event.touches.length !== 1) return;
+      const touch = event.touches[0];
+      startX = touch.clientX;
+      startY = touch.clientY;
+      isTracking = true;
+    },
+    { passive: true }
+  );
+
+  target.addEventListener(
+    "touchend",
+    (event) => {
+      if (!isTracking) return;
+      const touch = event.changedTouches[0];
+      const deltaX = touch.clientX - startX;
+      const deltaY = touch.clientY - startY;
+      isTracking = false;
+
+      const absX = Math.abs(deltaX);
+      const absY = Math.abs(deltaY);
+      if (absX < 50 || absX <= absY) return;
+      if (deltaX < 0) {
+        handleRevisionPrimary();
+      } else {
+        handleRevisionPrev();
+      }
+    },
+    { passive: true }
+  );
 }
 
 function renderRevisionSession() {
@@ -2963,25 +3051,6 @@ function renderRevisionSession() {
     return;
   }
 
-  const header = document.createElement("div");
-  header.className = "revision-session-header";
-  const prevBtn = document.createElement("button");
-  prevBtn.className = "icon-button icon-button--flat icon-button--small";
-  prevBtn.textContent = "←";
-  prevBtn.setAttribute("aria-label", "Back");
-  prevBtn.disabled = currentIndex === 0;
-  prevBtn.addEventListener("click", handleRevisionPrev);
-  header.appendChild(prevBtn);
-
-  const nextBtn = document.createElement("button");
-  nextBtn.className = "icon-button icon-button--flat icon-button--small";
-  nextBtn.textContent = "→";
-  nextBtn.setAttribute("aria-label", "Forward");
-  nextBtn.disabled = currentIndex >= maxIndex;
-  nextBtn.addEventListener("click", handleRevisionForward);
-  header.appendChild(nextBtn);
-  revisionSessionEl.appendChild(header);
-
   if (isStorySession) {
     const feed = document.createElement("div");
     feed.className = "bubble-feed";
@@ -2999,6 +3068,7 @@ function renderRevisionSession() {
     });
 
     revisionSessionEl.appendChild(feed);
+    attachRevisionSwipeHandlers(feed);
     requestAnimationFrame(() => {
       const focused = revisionSessionEl.querySelector(".revision-point--focused");
       if (focused) {
@@ -3032,6 +3102,7 @@ function renderRevisionSession() {
     }
 
     revisionSessionEl.appendChild(card);
+    attachRevisionSwipeHandlers(card);
   }
 }
 
