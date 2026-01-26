@@ -230,6 +230,17 @@
 
 .action-dock .fab { pointer-events: auto; }
 
+.action-dock__slot {
+  position: relative;
+  display: flex;
+  align-items: center;
+  pointer-events: auto;
+}
+
+.action-dock__slot--left {
+  justify-content: flex-start;
+}
+
 .fab {
   border: 1px solid var(--btn-border);
   background: var(--btn-bg);
@@ -298,6 +309,10 @@
   height: 18px;
 }
 
+.fab--star {
+  color: var(--accent);
+}
+
 .fab:active {
   transform: translateY(1px) scale(0.985);
   box-shadow: var(--shadow-press), var(--highlight-line);
@@ -308,6 +323,49 @@
   cursor: not-allowed;
   transform: none;
   box-shadow: var(--shadow-press);
+}
+
+/* Focus save tip (Pills session) */
+.focus-save-tip {
+  position: absolute;
+  left: -2px;
+  bottom: calc(100% + 12px);
+  width: min(240px, 70vw);
+  z-index: 45;
+  pointer-events: auto;
+}
+
+.focus-save-tip__card {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--content-edge);
+  border-radius: 16px;
+  padding: 12px 14px;
+  box-shadow: var(--shadow-ui), var(--highlight-line);
+  color: var(--text);
+}
+
+.focus-save-tip__title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.focus-save-tip__body {
+  font-size: 13.5px;
+  color: var(--muted);
+  line-height: 1.35;
+}
+
+.focus-save-tip__dismiss {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 26px;
+  height: 26px;
+  font-size: 16px;
 }
 
 /* =====================

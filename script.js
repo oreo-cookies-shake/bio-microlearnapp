@@ -943,6 +943,15 @@ function getFlameIconSVG() {
   `;
 }
 
+function getStarIconSVG(isSaved) {
+  const fill = isSaved ? "currentColor" : "none";
+  return `
+    <svg class="fab__icon" viewBox="0 0 24 24" fill="${fill}" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M12 2.8l2.7 5.6 6.2.9-4.5 4.4 1.1 6.2L12 17.1l-5.5 2.8 1.1-6.2-4.5-4.4 6.2-.9L12 2.8z"></path>
+    </svg>
+  `;
+}
+
 function applyStreakIcons() {
   const iconMarkup = getFlameIconSVG();
   [streakChipBtn, streakSheetChipEl].forEach((chip) => {
@@ -974,6 +983,7 @@ let revisionQuestionRevealedByIndex = [];
 let revisionSessionMaxIndex = 0;
 let revisionPointIndex = 0;
 let revisionPointMaxIndex = 0;
+let revisionPointEnterIndex = null;
 let revisionUiMode = "idle"; // idle | setup | selecting | session
 let isFocusSession = false;
 let focusSessionHeaderMode = "expanded";
@@ -985,6 +995,9 @@ const focusTapHintDismissBtn = qs("#focusTapHintDismiss");
 const focusTapHintSubtitleEl = qs("#focusTapHintSubtitle");
 const focusTapHintBodyEl = qs(".focus-tap-hint__body");
 const FOCUS_TAP_HINT_KEY = "focusTipSeen_questions";
+const focusSaveTipEl = qs("#focusSaveTip");
+const focusSaveTipDismissBtn = qs("#focusSaveTipDismiss");
+const FOCUS_SAVE_TIP_KEY = "pills_save_tip_seen";
 
 const revisionDebug = false;
 function logRevisionDebug(message, detail = {}) {
@@ -1032,12 +1045,14 @@ function setFocusSessionActive(active) {
     focusSessionHeaderMode = "compact";
     updateFocusSessionHeaderClasses();
     maybeShowFocusTapHint();
+    maybeShowFocusSaveTip();
     syncFocusSessionTapHandlers();
     handleFocusSessionScroll();
     console.log("[focus-session] session active");
   } else {
     updateFocusSessionHeaderClasses();
     hideFocusTapHint(false);
+    hideFocusSaveTip(false);
     syncFocusSessionTapHandlers();
     console.log("[focus-session] session inactive");
   }
@@ -1067,7 +1082,7 @@ function hideFocusTapHint(markSeen = true) {
 
 function getFocusContinueMessage() {
   if (appState.currentRevisionSubMode === "story") {
-    return "Use OK to continue.";
+    return "Use Next to continue.";
   }
   if (appState.currentRevisionSubMode === "questions") {
     const isRevealed = isRevisionQuestionRevealed(revisionSessionIndex);
@@ -1094,6 +1109,35 @@ function showFocusTapHint() {
   focusTapHintEl.classList.add("focus-tap-hint--show");
   updateFocusTapHintContent();
   syncFocusSessionTapHandlers();
+}
+
+function isFocusSaveTipVisible() {
+  if (!focusSaveTipEl) return false;
+  return !focusSaveTipEl.classList.contains("hidden");
+}
+
+function hideFocusSaveTip(markSeen = true) {
+  if (!focusSaveTipEl) return;
+  focusSaveTipEl.classList.add("hidden");
+  if (markSeen) {
+    localStorage.setItem(FOCUS_SAVE_TIP_KEY, "1");
+  }
+}
+
+function showFocusSaveTip() {
+  if (!focusSaveTipEl) return;
+  focusSaveTipEl.classList.remove("hidden");
+}
+
+function maybeShowFocusSaveTip() {
+  if (appState.currentRevisionSubMode !== "story") {
+    if (isFocusSaveTipVisible()) hideFocusSaveTip(false);
+    return;
+  }
+  if (localStorage.getItem(FOCUS_SAVE_TIP_KEY) === "1") return;
+  if (!isFocusSaveTipVisible()) {
+    showFocusSaveTip();
+  }
 }
 
 function maybeShowFocusTapHint() {
@@ -1132,6 +1176,7 @@ function advanceRevisionQuestion() {
 
 function handleFocusSessionTap(event) {
   if (!isRevisionSessionActive) return;
+  if (appState.currentRevisionSubMode !== "questions") return;
   if (isFocusTapHintVisible()) return;
   if (!focusSessionTapStart) return;
 
@@ -1166,7 +1211,10 @@ function handleFocusSessionTap(event) {
 }
 
 function syncFocusSessionTapHandlers() {
-  const shouldEnable = isFocusSession && isRevisionSessionActive && !isFocusTapHintVisible();
+  const shouldEnable = isFocusSession
+    && isRevisionSessionActive
+    && appState.currentRevisionSubMode === "questions"
+    && !isFocusTapHintVisible();
   if (shouldEnable && !isFocusSessionTapBound) {
     document.addEventListener("pointerdown", handleFocusSessionPointerDown, { capture: true, passive: true });
     document.addEventListener("pointerup", handleFocusSessionTap, { capture: true, passive: true });
@@ -1182,6 +1230,10 @@ function syncFocusSessionTapHandlers() {
 
 focusTapHintDismissBtn?.addEventListener("click", () => {
   hideFocusTapHint(true);
+});
+
+focusSaveTipDismissBtn?.addEventListener("click", () => {
+  hideFocusSaveTip(true);
 });
 
 function scrollToLatestContent() {
@@ -2305,12 +2357,22 @@ function setRightButton({ label, shape = "circle", disabled = false }) {
   actionRightBtn.setAttribute("title", label);
 }
 
-function setLeftButton({ label, shape = "circle", disabled = false, useIcon = false }) {
+function setLeftButton({
+  label,
+  shape = "circle",
+  disabled = false,
+  useIcon = false,
+  iconHtml = null,
+  isStar = false
+}) {
   actionLeftBtn.disabled = disabled;
   actionLeftBtn.classList.toggle("fab--circle", shape === "circle");
   actionLeftBtn.classList.toggle("fab--pill", shape === "pill");
+  actionLeftBtn.classList.toggle("fab--star", isStar);
 
-  if (useIcon) {
+  if (iconHtml) {
+    actionLeftBtn.innerHTML = iconHtml;
+  } else if (useIcon) {
     actionLeftBtn.innerHTML = actionLeftDefaultHtml;
   } else {
     actionLeftBtn.textContent = label;
@@ -2318,6 +2380,9 @@ function setLeftButton({ label, shape = "circle", disabled = false, useIcon = fa
 
   actionLeftBtn.setAttribute("aria-label", label);
   actionLeftBtn.setAttribute("title", label);
+  if (!isStar) {
+    actionLeftBtn.removeAttribute("aria-pressed");
+  }
 }
 
 function syncActionDock(chapter, chState, objectiveId, viewState, items) {
@@ -2326,6 +2391,7 @@ function syncActionDock(chapter, chState, objectiveId, viewState, items) {
   // Show in Story + Questions + active Revision sessions only
   if (!chapter) {
     actionDock.classList.add("hidden");
+    hideFocusSaveTip(false);
     return;
   }
 
@@ -2339,12 +2405,26 @@ function syncActionDock(chapter, chState, objectiveId, viewState, items) {
       : revisionSessionIndex >= total;
     if (done) {
       actionDock.classList.add("hidden");
+      hideFocusSaveTip(false);
       return;
     }
 
     if (appState.currentRevisionSubMode === "story") {
-      setLeftButton({ label: "Exit", shape: "circle" });
-      setRightButton({ label: "OK", shape: "circle", disabled: false });
+      const currentItem = revisionSessionQueue[Math.min(revisionPointIndex, total - 1)];
+      const isSaved = Boolean(
+        currentItem && chState?.revisionStoryIds?.includes(currentItem.id)
+      );
+      const label = isSaved ? "Saved to Focus" : "Save to Focus";
+      setLeftButton({
+        label,
+        shape: "circle",
+        iconHtml: getStarIconSVG(isSaved),
+        isStar: true
+      });
+      actionLeftBtn.setAttribute("aria-pressed", String(isSaved));
+      const isLast = revisionPointIndex >= total - 1;
+      setRightButton({ label: isLast ? "Done" : "Next", shape: "circle", disabled: false });
+      maybeShowFocusSaveTip();
     } else {
       const isRevealed = isRevisionQuestionRevealed(revisionSessionIndex);
       setLeftButton({ label: "Exit", shape: "pill" });
@@ -2359,12 +2439,14 @@ function syncActionDock(chapter, chState, objectiveId, viewState, items) {
 
   if (mode === "revision") {
     actionDock.classList.add("hidden");
+    hideFocusSaveTip(false);
     return;
   }
 
   actionDock.classList.remove("hidden");
   actionLeftBtn.classList.remove("hidden");
   actionLeftBtn.disabled = false;
+  hideFocusSaveTip(false);
   setLeftButton({ label: "Add to Focus", shape: "circle", useIcon: true });
 
   if (mode === "story") {
@@ -2405,9 +2487,15 @@ actionLeftBtn.addEventListener("click", () => {
   } else if (appState.currentMode === "questions") {
     markCurrentQuestionRevision(chapter, viewState, items.questions);
   } else if (appState.currentMode === "revision" && isRevisionSessionActive) {
-    resetRevisionSession();
-    setRevisionUiMode("idle");
-    renderCurrentMode();
+    if (appState.currentRevisionSubMode === "story") {
+      hideFocusSaveTip(true);
+      saveCurrentRevisionStory(chapter);
+      renderCurrentMode();
+    } else {
+      resetRevisionSession();
+      setRevisionUiMode("idle");
+      renderCurrentMode();
+    }
   }
 });
 
@@ -2494,6 +2582,23 @@ function advanceStory(chapter, viewState, objectiveId, storyPoints) {
 function markCurrentStoryRevision(chapter, viewState, storyPoints) {
   const idx = Math.max(viewState.storyIndex - 1, 0);
   const point = storyPoints[idx];
+  if (!point) return;
+
+  const chState = ensureChapterState(chapter.id);
+  if (!chState.revisionStoryIds.includes(point.id)) {
+    chState.revisionStoryIds.push(point.id);
+    saveState();
+    showToast("Saved to Focus");
+  } else {
+    showToast("Already saved");
+  }
+}
+
+function saveCurrentRevisionStory(chapter) {
+  const total = revisionSessionQueue.length;
+  if (total === 0) return;
+  const idx = Math.min(revisionPointIndex, total - 1);
+  const point = revisionSessionQueue[idx];
   if (!point) return;
 
   const chState = ensureChapterState(chapter.id);
@@ -2768,6 +2873,7 @@ function resetRevisionSession() {
   revisionSessionMaxIndex = 0;
   revisionPointIndex = 0;
   revisionPointMaxIndex = 0;
+  revisionPointEnterIndex = null;
   console.log("[focus-session] end");
   syncFocusSessionHeaderState();
 }
@@ -3080,11 +3186,13 @@ function handlePrimaryAction() {
     if (revisionPointIndex < total - 1) {
       revisionPointIndex += 1;
       revisionPointMaxIndex = Math.max(revisionPointMaxIndex, revisionPointIndex);
+      revisionPointEnterIndex = revisionPointIndex;
       recordDailyActivity("revision-step");
       renderCurrentMode();
       return;
     }
     revisionPointIndex = total;
+    revisionPointEnterIndex = null;
     recordDailyActivity("revision-complete");
     renderCurrentMode();
     return;
@@ -3253,21 +3361,25 @@ function renderRevisionSession() {
       if (index === currentIndex) {
         bubble.classList.add("revision-point--focused");
       }
+      if (index === revisionPointEnterIndex) {
+        bubble.classList.add("bubble--enter");
+      }
       bubble.dataset.pointIndex = String(index);
       bubble.innerHTML = `<p class="bubble-text">${point.text}</p>`;
       feed.appendChild(bubble);
     });
 
     revisionSessionEl.appendChild(feed);
-    attachRevisionSwipeHandlers(feed);
     requestAnimationFrame(() => {
-      const focused = revisionSessionEl.querySelector(".revision-point--focused");
-      if (focused) {
-        focused.scrollIntoView({
+      const target = revisionSessionEl.querySelector(".bubble--enter")
+        || revisionSessionEl.querySelector(".revision-point--focused");
+      if (target) {
+        target.scrollIntoView({
           behavior: prefersReducedMotion ? "auto" : "smooth",
-          block: "center"
+          block: "end"
         });
       }
+      revisionPointEnterIndex = null;
     });
   } else {
     const card = document.createElement("div");
