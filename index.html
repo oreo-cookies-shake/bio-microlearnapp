@@ -189,12 +189,21 @@
 
         <!-- Floating actions (Story + Questions only, plus Revision sessions) -->
         <div id="actionDock" class="action-dock hidden" aria-label="Actions">
-          <button id="actionLeft" class="fab fab--circle fab--secondary" aria-label="Add to Focus" title="Add to Focus">
-            <svg class="fab__icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M2.5 5.5A2.5 2.5 0 0 1 5 3h6a2 2 0 0 1 2 2v16a2 2 0 0 0-2-2H5a2.5 2.5 0 0 0-2.5 2.5V5.5z" />
-              <path d="M21.5 5.5A2.5 2.5 0 0 0 19 3h-6a2 2 0 0 0-2 2v16a2 2 0 0 1 2-2h6a2.5 2.5 0 0 1 2.5 2.5V5.5z" />
-            </svg>
-          </button>
+          <div class="action-dock__slot action-dock__slot--left">
+            <button id="actionLeft" class="fab fab--circle fab--secondary" aria-label="Add to Focus" title="Add to Focus">
+              <svg class="fab__icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M2.5 5.5A2.5 2.5 0 0 1 5 3h6a2 2 0 0 1 2 2v16a2 2 0 0 0-2-2H5a2.5 2.5 0 0 0-2.5 2.5V5.5z" />
+                <path d="M21.5 5.5A2.5 2.5 0 0 0 19 3h-6a2 2 0 0 0-2 2v16a2 2 0 0 1 2-2h6a2.5 2.5 0 0 1 2.5 2.5V5.5z" />
+              </svg>
+            </button>
+            <div id="focusSaveTip" class="focus-save-tip hidden" role="dialog" aria-modal="false" aria-labelledby="focusSaveTipTitle">
+              <div class="focus-save-tip__card">
+                <button id="focusSaveTipDismiss" class="icon-button focus-save-tip__dismiss" type="button" aria-label="Dismiss tip">×</button>
+                <div class="focus-save-tip__title" id="focusSaveTipTitle">Tip</div>
+                <div class="focus-save-tip__body">Tap ★ to save this pill to Focus.</div>
+              </div>
+            </div>
+          </div>
           <button id="actionRight" class="fab fab--circle fab--primary" aria-label="OK" title="OK">OK</button>
         </div>
         <div id="focusTapHint" class="focus-tap-hint hidden" role="dialog" aria-modal="true" aria-labelledby="focusTapHintTitle">

@@ -18,11 +18,14 @@
   position: relative;
   align-self: flex-start;
   width: fit-content;
-  max-width: min(520px, 86%);
+  max-width: min(520px, 82%);
   margin-right: auto;
   padding: 14px 16px;
-  border-radius: 22px;
+  border-radius: 20px;
   overflow: visible;
+  background: var(--content-bg);
+  border: 1px solid var(--content-edge);
+  box-shadow: var(--shadow-soft);
 }
 
 .bubble-num {
@@ -40,13 +43,53 @@
 
 .revision-point--focused {
   border-color: rgba(143, 181, 166, 0.5);
-  box-shadow: var(--shadow-card), var(--highlight-line);
+  box-shadow: var(--shadow-soft), var(--highlight-line);
 }
 
-/* Subtle iMessage-style bubble: no triangle tail (cleaner) */
+/* iMessage-style bubble tail */
 .bubble--left::before,
 .bubble--left::after {
-  content: none;
+  content: "";
+  position: absolute;
+  left: -6px;
+  bottom: 10px;
+  width: 14px;
+  height: 14px;
+  border-radius: 6px;
+  transform: rotate(45deg);
+}
+
+.bubble--left::before {
+  background: var(--content-edge);
+}
+
+.bubble--left::after {
+  left: -5px;
+  bottom: 11px;
+  width: 12px;
+  height: 12px;
+  background: var(--content-bg);
+}
+
+.bubble--enter {
+  animation: bubble-in 220ms ease;
+}
+
+@keyframes bubble-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bubble--enter {
+    animation: none;
+  }
 }
 
 /* =====================
