@@ -950,56 +950,70 @@ body.light .bottom-sheet__option.is-selected .bottom-sheet__check::after {
    ===================== */
 .focus-tap-hint {
   position: fixed;
-  left: 50%;
-  top: calc(84px + env(safe-area-inset-top));
-  transform: translateX(-50%) translateY(-6px);
-  max-width: min(520px, calc(100vw - 40px));
+  inset: 0;
   display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 12px 14px;
-  border-radius: 16px;
-  background: rgba(20, 22, 26, 0.88);
-  color: var(--text);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(7, 10, 14, 0.42);
   opacity: 0;
-  transition: opacity 180ms ease, transform 180ms ease;
+  pointer-events: none;
+  transition: opacity 180ms ease;
   z-index: 20;
 }
 
 body.light .focus-tap-hint {
-  background: rgba(255, 255, 255, 0.95);
-  border-color: rgba(17, 24, 39, 0.08);
-  box-shadow: 0 14px 30px rgba(17, 24, 39, 0.14);
+  background: rgba(15, 23, 42, 0.18);
 }
 
-.focus-tap-hint__text {
+.focus-tap-hint__card {
+  position: relative;
+  width: min(520px, 100%);
+  border-radius: 18px;
+  padding: 18px 18px 16px;
+  background: rgba(20, 22, 26, 0.95);
+  color: var(--text);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.45);
   display: grid;
-  gap: 4px;
-  font-size: 13px;
-  line-height: 1.35;
+  gap: 8px;
+  text-align: center;
+}
+
+body.light .focus-tap-hint__card {
+  background: rgba(255, 255, 255, 0.96);
+  border-color: rgba(17, 24, 39, 0.08);
+  box-shadow: 0 14px 30px rgba(17, 24, 39, 0.16);
 }
 
 .focus-tap-hint__title {
-  font-weight: 600;
+  font-size: 16px;
+  font-weight: 650;
+}
+
+.focus-tap-hint__body {
+  font-size: 14px;
+  line-height: 1.4;
 }
 
 .focus-tap-hint__subtitle {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--muted);
 }
 
 .focus-tap-hint__dismiss {
-  width: 24px;
-  height: 24px;
-  font-size: 18px;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 28px;
+  height: 28px;
+  font-size: 20px;
   line-height: 1;
 }
 
 .focus-tap-hint--show {
   opacity: 1;
-  transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
 }
 
 /* =====================
