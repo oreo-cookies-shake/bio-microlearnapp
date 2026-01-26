@@ -332,7 +332,7 @@
   bottom: calc(100% + 12px);
   width: min(240px, 70vw);
   z-index: 45;
-  pointer-events: auto;
+  pointer-events: none;
 }
 
 .focus-save-tip__card {
@@ -343,6 +343,7 @@
   padding: 12px 14px;
   box-shadow: var(--shadow-ui), var(--highlight-line);
   color: var(--text);
+  pointer-events: auto;
 }
 
 .focus-save-tip__title {
@@ -366,6 +367,7 @@
   width: 26px;
   height: 26px;
   font-size: 16px;
+  pointer-events: auto;
 }
 
 /* =====================
