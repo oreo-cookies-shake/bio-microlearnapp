@@ -955,6 +955,7 @@ body.light .bottom-sheet__option.is-selected .bottom-sheet__check::after {
   align-items: center;
   justify-content: center;
   padding: 24px;
+  padding-bottom: calc(140px + env(safe-area-inset-bottom));
   background: rgba(7, 10, 14, 0.42);
   opacity: 0;
   pointer-events: none;
