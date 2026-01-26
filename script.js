@@ -982,8 +982,8 @@ let focusSessionTapStart = null;
 let focusContinueToastAt = 0;
 const focusTapHintEl = qs("#focusTapHint");
 const focusTapHintDismissBtn = qs("#focusTapHintDismiss");
-const FOCUS_TAP_HINT_KEY = "focusTapHintSeen";
-let focusTapHintTimeout = null;
+const focusTapHintSubtitleEl = qs("#focusTapHintSubtitle");
+const FOCUS_TAP_HINT_KEY = "focusTipSeen_questions";
 
 const revisionDebug = false;
 function logRevisionDebug(message, detail = {}) {
@@ -1058,30 +1058,44 @@ function hideFocusTapHint(markSeen = true) {
   if (!focusTapHintEl) return;
   focusTapHintEl.classList.remove("focus-tap-hint--show");
   focusTapHintEl.classList.add("hidden");
-  if (focusTapHintTimeout) {
-    clearTimeout(focusTapHintTimeout);
-    focusTapHintTimeout = null;
-  }
   if (markSeen) {
-    localStorage.setItem(FOCUS_TAP_HINT_KEY, "true");
+    localStorage.setItem(FOCUS_TAP_HINT_KEY, "1");
   }
   syncFocusSessionTapHandlers();
+}
+
+function getFocusContinueMessage() {
+  if (appState.currentRevisionSubMode === "story") {
+    return "Use OK to continue.";
+  }
+  if (appState.currentRevisionSubMode === "questions") {
+    const isRevealed = isRevisionQuestionRevealed(revisionSessionIndex);
+    return isRevealed ? "Use Next to continue." : "Use Reveal to continue.";
+  }
+  return "Use Next to continue.";
+}
+
+function updateFocusTapHintContent() {
+  if (!focusTapHintSubtitleEl) return;
+  if (appState.currentRevisionSubMode !== "questions") return;
+  focusTapHintSubtitleEl.textContent = getFocusContinueMessage();
 }
 
 function showFocusTapHint() {
   if (!focusTapHintEl) return;
   focusTapHintEl.classList.remove("hidden");
   focusTapHintEl.classList.add("focus-tap-hint--show");
-  if (focusTapHintTimeout) clearTimeout(focusTapHintTimeout);
-  focusTapHintTimeout = setTimeout(() => {
-    hideFocusTapHint(true);
-  }, 3500);
+  updateFocusTapHintContent();
   syncFocusSessionTapHandlers();
 }
 
 function maybeShowFocusTapHint() {
   if (!focusTapHintEl) return;
-  if (localStorage.getItem(FOCUS_TAP_HINT_KEY) === "true") return;
+  if (appState.currentRevisionSubMode !== "questions") {
+    if (isFocusTapHintVisible()) hideFocusTapHint(false);
+    return;
+  }
+  if (localStorage.getItem(FOCUS_TAP_HINT_KEY) === "1") return;
   if (!isFocusTapHintVisible()) {
     showFocusTapHint();
   }
@@ -1202,7 +1216,7 @@ function showFocusContinueToast() {
   const now = Date.now();
   if (now - focusContinueToastAt < 2000) return;
   focusContinueToastAt = now;
-  showToast("Use Next to continue");
+  showToast(getFocusContinueMessage());
 }
 
 function getLastStudiedLabel(streak) {
@@ -3102,7 +3116,10 @@ function handleFocusSessionBrowse(direction) {
   if (appState.currentRevisionSubMode === "story") {
     const maxIndex = Math.min(revisionPointMaxIndex, total - 1);
     const targetIndex = revisionPointIndex + direction;
-    if (targetIndex < 0 || targetIndex > maxIndex) return;
+    if (targetIndex < 0 || targetIndex > maxIndex) {
+      if (direction > 0) showFocusContinueToast();
+      return;
+    }
     revisionPointIndex = targetIndex;
     renderCurrentMode();
     return;
@@ -3174,6 +3191,11 @@ function renderRevisionSession() {
   const isStorySession = appState.currentRevisionSubMode === "story";
   const currentIndex = isStorySession ? revisionPointIndex : revisionSessionIndex;
   const maxIndex = isStorySession ? revisionPointMaxIndex : revisionSessionMaxIndex;
+  if (isStorySession) {
+    if (isFocusTapHintVisible()) hideFocusTapHint(false);
+  } else {
+    updateFocusTapHintContent();
+  }
   if (currentIndex >= total) {
     const doneCard = document.createElement("div");
     doneCard.className = "qa-card";
