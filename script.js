@@ -698,7 +698,7 @@ function buildLastSessionPayload(chapter, viewState, objectiveId) {
       sessionMaxIndex: revisionSessionMaxIndex,
       pointIndex: revisionPointIndex,
       pointMaxIndex: revisionPointMaxIndex,
-      revealedById: revisionQuestionRevealedById
+      revealedByIndex: revisionQuestionRevealedByIndex
     }
   };
 }
@@ -773,10 +773,26 @@ function restoreRevisionSession(chapter, chState, session, objectiveId) {
 
   revisionSessionQueue = queue;
   revisionSessionIndex = Math.min(session.revisionSession.sessionIndex || 0, queue.length);
-  revisionSessionMaxIndex = Math.min(session.revisionSession.sessionMaxIndex || 0, queue.length);
+  const maxQueueIndex = Math.max(queue.length - 1, 0);
+  revisionSessionMaxIndex = Math.min(session.revisionSession.sessionMaxIndex || 0, maxQueueIndex);
   revisionPointIndex = Math.min(session.revisionSession.pointIndex || 0, queue.length);
   revisionPointMaxIndex = Math.min(session.revisionSession.pointMaxIndex || 0, queue.length);
-  revisionQuestionRevealedById = session.revisionSession.revealedById || {};
+  const revealedByIndex = Array.isArray(session.revisionSession.revealedByIndex)
+    ? session.revisionSession.revealedByIndex
+    : null;
+  if (revealedByIndex) {
+    revisionQuestionRevealedByIndex = revealedByIndex.slice(0, queue.length);
+    if (revisionQuestionRevealedByIndex.length < queue.length) {
+      revisionQuestionRevealedByIndex = revisionQuestionRevealedByIndex.concat(
+        new Array(queue.length - revisionQuestionRevealedByIndex.length).fill(false)
+      );
+    }
+  } else if (session.revisionSession.revealedById) {
+    const revealedById = session.revisionSession.revealedById;
+    revisionQuestionRevealedByIndex = queue.map((item) => Boolean(revealedById[item.id]));
+  } else {
+    revisionQuestionRevealedByIndex = new Array(queue.length).fill(false);
+  }
   isRevisionSessionActive = true;
 }
 
@@ -954,7 +970,7 @@ let focusOrderChoice = "random";
 let pendingRevisionSubMode = null;
 let isSelecting = false;
 let selectedIds = new Set();
-let revisionQuestionRevealedById = {};
+let revisionQuestionRevealedByIndex = [];
 let revisionSessionMaxIndex = 0;
 let revisionPointIndex = 0;
 let revisionPointMaxIndex = 0;
@@ -963,7 +979,7 @@ let isFocusSession = false;
 let focusSessionHeaderMode = "expanded";
 let isFocusSessionTapBound = false;
 let focusSessionTapStart = null;
-let revisionVisitedIndices = new Set();
+let focusContinueToastAt = 0;
 const focusTapHintEl = qs("#focusTapHint");
 const focusTapHintDismissBtn = qs("#focusTapHintDismiss");
 const FOCUS_TAP_HINT_KEY = "focusTapHintSeen";
@@ -1085,7 +1101,10 @@ function advanceRevisionQuestion() {
   const total = revisionSessionQueue.length;
   if (revisionSessionIndex >= total) return;
   revisionSessionIndex += 1;
-  revisionSessionMaxIndex = Math.max(revisionSessionMaxIndex, revisionSessionIndex);
+  revisionSessionMaxIndex = Math.max(
+    revisionSessionMaxIndex,
+    Math.min(revisionSessionIndex, total - 1)
+  );
   recordDailyActivity("revision-next");
   renderCurrentMode();
 }
@@ -1107,7 +1126,7 @@ function handleFocusSessionTap(event) {
   const distanceY = event.clientY - tapStart.y;
   const distance = Math.hypot(distanceX, distanceY);
   const duration = event.timeStamp - tapStart.time;
-  if (duration > 500 || distance > 12) {
+  if (duration > 350 || distance > 10) {
     return;
   }
 
@@ -1177,6 +1196,13 @@ function showToast(message) {
     toastEl.classList.add("hidden");
     toastTimeout = null;
   }, 2000);
+}
+
+function showFocusContinueToast() {
+  const now = Date.now();
+  if (now - focusContinueToastAt < 2000) return;
+  focusContinueToastAt = now;
+  showToast("Use Next to continue");
 }
 
 function getLastStudiedLabel(streak) {
@@ -2299,10 +2325,8 @@ function syncActionDock(chapter, chState, objectiveId, viewState, items) {
       setLeftButton({ label: "Exit", shape: "circle" });
       setRightButton({ label: "OK", shape: "circle", disabled: false });
     } else {
-      const current = getCurrentRevisionItem();
-      const isRevealed = isRevisionQuestionRevealed(current);
-      const isAtNewest = revisionSessionIndex >= revisionSessionMaxIndex;
-      const disableNext = isRevealed && !isAtNewest;
+      const isRevealed = isRevisionQuestionRevealed(revisionSessionIndex);
+      const disableNext = !isRevealed;
       setLeftButton({ label: "Exit", shape: "pill" });
       setRightButton({
         label: isRevealed ? "Next" : "Reveal",
@@ -2720,11 +2744,10 @@ function resetRevisionSession() {
   isRevisionSessionActive = false;
   revisionSessionQueue = [];
   revisionSessionIndex = 0;
-  revisionQuestionRevealedById = {};
+  revisionQuestionRevealedByIndex = [];
   revisionSessionMaxIndex = 0;
   revisionPointIndex = 0;
   revisionPointMaxIndex = 0;
-  revisionVisitedIndices = new Set();
   console.log("[focus-session] end");
   syncFocusSessionHeaderState();
 }
@@ -2761,9 +2784,8 @@ function getCurrentRevisionItem() {
   return revisionSessionQueue[revisionSessionIndex] || null;
 }
 
-function isRevisionQuestionRevealed(item) {
-  if (!item) return false;
-  return Boolean(revisionQuestionRevealedById[item.id]);
+function isRevisionQuestionRevealed(index) {
+  return Boolean(revisionQuestionRevealedByIndex[index]);
 }
 
 function setRevisionProgress(count) {
@@ -3014,8 +3036,7 @@ function startReviewSession({ chapter, chState, objectiveId = null, items, order
   revisionSessionQueue = queue;
   revisionSessionIndex = 0;
   revisionSessionMaxIndex = 0;
-  revisionQuestionRevealedById = {};
-  revisionVisitedIndices = new Set();
+  revisionQuestionRevealedByIndex = new Array(queue.length).fill(false);
   setRevisionUiMode("session");
   selectedIds.clear();
   focusCountChoice = focusLastStandardCount;
@@ -3051,37 +3072,26 @@ function handlePrimaryAction() {
   if (revisionSessionIndex >= total) return;
 
   if (appState.currentRevisionSubMode === "questions") {
-    const current = getCurrentRevisionItem();
-    if (current && !isRevisionQuestionRevealed(current)) {
-      revisionQuestionRevealedById[current.id] = true;
-      markRevisionVisited(revisionSessionIndex);
+    const currentIndex = revisionSessionIndex;
+    if (!isRevisionQuestionRevealed(currentIndex)) {
+      revisionQuestionRevealedByIndex[currentIndex] = true;
       recordDailyActivity("revision-reveal");
       renderCurrentMode();
       return;
     }
-    markRevisionVisited(revisionSessionIndex);
-    if (revisionSessionIndex < revisionSessionMaxIndex) {
+    const nextUnlock = Math.min(currentIndex + 1, total - 1);
+    if (nextUnlock >= 0) {
+      revisionSessionMaxIndex = Math.max(revisionSessionMaxIndex, nextUnlock);
+    }
+    if (currentIndex < total - 1) {
+      revisionSessionIndex = currentIndex + 1;
+      recordDailyActivity("revision-next");
+      renderCurrentMode();
       return;
     }
   }
 
   advanceRevisionQuestion();
-}
-
-function markRevisionVisited(index) {
-  if (index < 0) return;
-  revisionVisitedIndices.add(index);
-}
-
-function findNearestVisitedIndex(startIndex, direction, total) {
-  let index = startIndex + direction;
-  while (index >= 0 && index < total) {
-    if (revisionVisitedIndices.has(index)) {
-      return index;
-    }
-    index += direction;
-  }
-  return null;
 }
 
 function handleFocusSessionBrowse(direction) {
@@ -3090,23 +3100,30 @@ function handleFocusSessionBrowse(direction) {
   if (total === 0) return;
 
   if (appState.currentRevisionSubMode === "story") {
+    const maxIndex = Math.min(revisionPointMaxIndex, total - 1);
     const targetIndex = revisionPointIndex + direction;
-    if (targetIndex < 0 || targetIndex >= total) return;
+    if (targetIndex < 0 || targetIndex > maxIndex) return;
     revisionPointIndex = targetIndex;
-    revisionPointMaxIndex = Math.max(revisionPointMaxIndex, targetIndex);
     renderCurrentMode();
     return;
   }
 
-  const targetIndex = findNearestVisitedIndex(revisionSessionIndex, direction, total);
-  if (targetIndex === null) {
-    if (direction > 0 && revisionSessionIndex < total - 1) {
-      showToast("Use Next to continue");
-    }
+  const maxIndex = Math.min(revisionSessionMaxIndex, total - 1);
+  if (direction < 0 && revisionSessionIndex > 0) {
+    revisionSessionIndex -= 1;
+    renderCurrentMode();
     return;
   }
-  revisionSessionIndex = targetIndex;
-  renderCurrentMode();
+  if (direction > 0) {
+    if (revisionSessionIndex < maxIndex) {
+      revisionSessionIndex += 1;
+      renderCurrentMode();
+      return;
+    }
+    if (revisionSessionIndex === maxIndex) {
+      showFocusContinueToast();
+    }
+  }
 }
 
 function attachRevisionSwipeHandlers(target) {
@@ -3243,10 +3260,8 @@ function renderRevisionSession() {
       const ans = document.createElement("div");
       ans.className = "qa-answer";
       ans.textContent = current.answer;
-      if (!isRevisionQuestionRevealed(current)) {
+      if (!isRevisionQuestionRevealed(currentIndex)) {
         ans.classList.add("hidden");
-      } else {
-        markRevisionVisited(currentIndex);
       }
       card.appendChild(ans);
     }

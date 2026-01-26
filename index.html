@@ -197,12 +197,13 @@
           </button>
           <button id="actionRight" class="fab fab--circle fab--primary" aria-label="OK" title="OK">OK</button>
         </div>
-        <div id="focusTapHint" class="focus-tap-hint hidden" role="status" aria-live="polite">
-          <div class="focus-tap-hint__text">
-            <div class="focus-tap-hint__title">Tip: Tap right to review next, tap left to go back.</div>
+        <div id="focusTapHint" class="focus-tap-hint hidden" role="dialog" aria-modal="true" aria-labelledby="focusTapHintTitle">
+          <div class="focus-tap-hint__card">
+            <button id="focusTapHintDismiss" class="icon-button focus-tap-hint__dismiss" type="button" aria-label="Dismiss tip">×</button>
+            <div class="focus-tap-hint__title" id="focusTapHintTitle">Tip</div>
+            <div class="focus-tap-hint__body">Tap right to review next, tap left to go back.</div>
             <div class="focus-tap-hint__subtitle">Use Reveal/Next to continue.</div>
           </div>
-          <button id="focusTapHintDismiss" class="icon-button focus-tap-hint__dismiss" type="button" aria-label="Dismiss tip">×</button>
         </div>
       </section>
     </main>
