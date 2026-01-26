@@ -963,7 +963,11 @@ let isFocusSession = false;
 let focusSessionHeaderMode = "expanded";
 let isFocusSessionTapBound = false;
 let focusSessionTapStart = null;
+let revisionVisitedIndices = new Set();
 const focusTapHintEl = qs("#focusTapHint");
+const focusTapHintDismissBtn = qs("#focusTapHintDismiss");
+const FOCUS_TAP_HINT_KEY = "focusTapHintSeen";
+let focusTapHintTimeout = null;
 
 const revisionDebug = false;
 function logRevisionDebug(message, detail = {}) {
@@ -1010,11 +1014,13 @@ function setFocusSessionActive(active) {
   if (active) {
     focusSessionHeaderMode = "compact";
     updateFocusSessionHeaderClasses();
+    maybeShowFocusTapHint();
     syncFocusSessionTapHandlers();
     handleFocusSessionScroll();
     console.log("[focus-session] session active");
   } else {
     updateFocusSessionHeaderClasses();
+    hideFocusTapHint(isFocusTapHintVisible());
     syncFocusSessionTapHandlers();
     console.log("[focus-session] session inactive");
   }
@@ -1030,6 +1036,39 @@ function syncFocusSessionHeaderState() {
 function isFocusTapHintVisible() {
   if (!focusTapHintEl) return false;
   return !focusTapHintEl.classList.contains("hidden");
+}
+
+function hideFocusTapHint(markSeen = true) {
+  if (!focusTapHintEl) return;
+  focusTapHintEl.classList.remove("focus-tap-hint--show");
+  focusTapHintEl.classList.add("hidden");
+  if (focusTapHintTimeout) {
+    clearTimeout(focusTapHintTimeout);
+    focusTapHintTimeout = null;
+  }
+  if (markSeen) {
+    localStorage.setItem(FOCUS_TAP_HINT_KEY, "true");
+  }
+  syncFocusSessionTapHandlers();
+}
+
+function showFocusTapHint() {
+  if (!focusTapHintEl) return;
+  focusTapHintEl.classList.remove("hidden");
+  focusTapHintEl.classList.add("focus-tap-hint--show");
+  if (focusTapHintTimeout) clearTimeout(focusTapHintTimeout);
+  focusTapHintTimeout = setTimeout(() => {
+    hideFocusTapHint(true);
+  }, 3500);
+  syncFocusSessionTapHandlers();
+}
+
+function maybeShowFocusTapHint() {
+  if (!focusTapHintEl) return;
+  if (localStorage.getItem(FOCUS_TAP_HINT_KEY) === "true") return;
+  if (!isFocusTapHintVisible()) {
+    showFocusTapHint();
+  }
 }
 
 function handleFocusSessionPointerDown(event) {
@@ -1079,13 +1118,10 @@ function handleFocusSessionTap(event) {
   const leftZone = viewportWidth * 0.33;
   const rightZone = viewportWidth * 0.67;
 
-  const currentIndex = appState.currentRevisionSubMode === "story" ? revisionPointIndex : revisionSessionIndex;
   if (x <= leftZone) {
-    console.log("[focus-session] tap", { zone: "left", action: "prev", index: currentIndex });
-    handleRevisionPrev();
+    handleFocusSessionBrowse(-1);
   } else if (x >= rightZone) {
-    console.log("[focus-session] tap", { zone: "right", action: "primary", index: currentIndex });
-    handleRevisionPrimary();
+    handleFocusSessionBrowse(1);
   }
 }
 
@@ -1103,6 +1139,10 @@ function syncFocusSessionTapHandlers() {
     isFocusSessionTapBound = false;
   }
 }
+
+focusTapHintDismissBtn?.addEventListener("click", () => {
+  hideFocusTapHint(true);
+});
 
 function scrollToLatestContent() {
   // Keep the newest card/bubble visible after advancing.
@@ -2337,7 +2377,7 @@ actionRightBtn.addEventListener("click", () => {
   } else if (appState.currentMode === "questions") {
     handleQuestionPrimary(chapter, viewState, objectiveId, items.questions);
   } else if (appState.currentMode === "revision") {
-    handleRevisionPrimary();
+    handlePrimaryAction();
   }
 });
 
@@ -2684,6 +2724,7 @@ function resetRevisionSession() {
   revisionSessionMaxIndex = 0;
   revisionPointIndex = 0;
   revisionPointMaxIndex = 0;
+  revisionVisitedIndices = new Set();
   console.log("[focus-session] end");
   syncFocusSessionHeaderState();
 }
@@ -2974,11 +3015,12 @@ function startReviewSession({ chapter, chState, objectiveId = null, items, order
   revisionSessionIndex = 0;
   revisionSessionMaxIndex = 0;
   revisionQuestionRevealedById = {};
+  revisionVisitedIndices = new Set();
   setRevisionUiMode("session");
   selectedIds.clear();
   focusCountChoice = focusLastStandardCount;
   revisionPointIndex = 0;
-  revisionPointMaxIndex = 0;
+  revisionPointMaxIndex = subMode === "story" ? queue.length - 1 : 0;
   recordDailyActivity("revision-start");
   console.log("[focus-session] start", {
     subMode,
@@ -2989,14 +3031,14 @@ function startReviewSession({ chapter, chState, objectiveId = null, items, order
   renderCurrentMode();
 }
 
-function handleRevisionPrimary() {
+function handlePrimaryAction() {
   if (!isRevisionSessionActive) return;
   const total = revisionSessionQueue.length;
   if (appState.currentRevisionSubMode === "story") {
     if (revisionPointIndex >= total) return;
-    if (revisionPointMaxIndex < total - 1) {
-      revisionPointMaxIndex += 1;
-      revisionPointIndex = revisionPointMaxIndex;
+    if (revisionPointIndex < total - 1) {
+      revisionPointIndex += 1;
+      revisionPointMaxIndex = Math.max(revisionPointMaxIndex, revisionPointIndex);
       recordDailyActivity("revision-step");
       renderCurrentMode();
       return;
@@ -3012,10 +3054,12 @@ function handleRevisionPrimary() {
     const current = getCurrentRevisionItem();
     if (current && !isRevisionQuestionRevealed(current)) {
       revisionQuestionRevealedById[current.id] = true;
+      markRevisionVisited(revisionSessionIndex);
       recordDailyActivity("revision-reveal");
       renderCurrentMode();
       return;
     }
+    markRevisionVisited(revisionSessionIndex);
     if (revisionSessionIndex < revisionSessionMaxIndex) {
       return;
     }
@@ -3024,16 +3068,44 @@ function handleRevisionPrimary() {
   advanceRevisionQuestion();
 }
 
-function handleRevisionPrev() {
+function markRevisionVisited(index) {
+  if (index < 0) return;
+  revisionVisitedIndices.add(index);
+}
+
+function findNearestVisitedIndex(startIndex, direction, total) {
+  let index = startIndex + direction;
+  while (index >= 0 && index < total) {
+    if (revisionVisitedIndices.has(index)) {
+      return index;
+    }
+    index += direction;
+  }
+  return null;
+}
+
+function handleFocusSessionBrowse(direction) {
   if (!isRevisionSessionActive) return;
+  const total = revisionSessionQueue.length;
+  if (total === 0) return;
+
   if (appState.currentRevisionSubMode === "story") {
-    if (revisionPointIndex <= 0) return;
-    revisionPointIndex -= 1;
+    const targetIndex = revisionPointIndex + direction;
+    if (targetIndex < 0 || targetIndex >= total) return;
+    revisionPointIndex = targetIndex;
+    revisionPointMaxIndex = Math.max(revisionPointMaxIndex, targetIndex);
     renderCurrentMode();
     return;
   }
-  if (revisionSessionIndex <= 0) return;
-  revisionSessionIndex -= 1;
+
+  const targetIndex = findNearestVisitedIndex(revisionSessionIndex, direction, total);
+  if (targetIndex === null) {
+    if (direction > 0 && revisionSessionIndex < total - 1) {
+      showToast("Use Next to continue");
+    }
+    return;
+  }
+  revisionSessionIndex = targetIndex;
   renderCurrentMode();
 }
 
@@ -3068,9 +3140,9 @@ function attachRevisionSwipeHandlers(target) {
       const absY = Math.abs(deltaY);
       if (absX < 50 || absX <= absY) return;
       if (deltaX < 0) {
-        handleRevisionPrimary();
+        handleFocusSessionBrowse(1);
       } else {
-        handleRevisionPrev();
+        handleFocusSessionBrowse(-1);
       }
     },
     { passive: true }
@@ -3171,7 +3243,11 @@ function renderRevisionSession() {
       const ans = document.createElement("div");
       ans.className = "qa-answer";
       ans.textContent = current.answer;
-      if (!isRevisionQuestionRevealed(current)) ans.classList.add("hidden");
+      if (!isRevisionQuestionRevealed(current)) {
+        ans.classList.add("hidden");
+      } else {
+        markRevisionVisited(currentIndex);
+      }
       card.appendChild(ans);
     }
 

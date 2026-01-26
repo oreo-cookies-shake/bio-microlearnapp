@@ -946,6 +946,63 @@ body.light .bottom-sheet__option.is-selected .bottom-sheet__check::after {
 }
 
 /* =====================
+   Focus tap hint
+   ===================== */
+.focus-tap-hint {
+  position: fixed;
+  left: 50%;
+  top: calc(84px + env(safe-area-inset-top));
+  transform: translateX(-50%) translateY(-6px);
+  max-width: min(520px, calc(100vw - 40px));
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(20, 22, 26, 0.88);
+  color: var(--text);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  transition: opacity 180ms ease, transform 180ms ease;
+  z-index: 20;
+}
+
+body.light .focus-tap-hint {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(17, 24, 39, 0.08);
+  box-shadow: 0 14px 30px rgba(17, 24, 39, 0.14);
+}
+
+.focus-tap-hint__text {
+  display: grid;
+  gap: 4px;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.focus-tap-hint__title {
+  font-weight: 600;
+}
+
+.focus-tap-hint__subtitle {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.focus-tap-hint__dismiss {
+  width: 24px;
+  height: 24px;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.focus-tap-hint--show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* =====================
    Toast
    ===================== */
 .toast {
