@@ -7,6 +7,7 @@
   --maxw: 760px;
   --side-pad: 22px;
   --bottom-pad: 112px; /* space for the floating buttons */
+  --page-bg: var(--bg);
 
   --radius-card: 28px;
   --radius-pill: 999px;
@@ -97,4 +98,5 @@ body.light {
   --btn-text: var(--text);
 
   --nav-bg: rgba(231, 230, 226, 0.92);
+  --page-bg: var(--bg);
 }

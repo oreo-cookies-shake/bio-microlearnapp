@@ -998,6 +998,8 @@ const FOCUS_TAP_HINT_KEY = "focusTipSeen_questions";
 const focusSaveTipEl = qs("#focusSaveTip");
 const focusSaveTipDismissBtn = qs("#focusSaveTipDismiss");
 const FOCUS_SAVE_TIP_KEY = "pills_save_tip_seen";
+let lastStoryRenderKey = null;
+let lastStoryRenderIndex = 0;
 
 const revisionDebug = false;
 function logRevisionDebug(message, detail = {}) {
@@ -1130,7 +1132,7 @@ function showFocusSaveTip() {
 }
 
 function maybeShowFocusSaveTip() {
-  if (appState.currentRevisionSubMode !== "story") {
+  if (appState.currentMode !== "story" || isRevisionSessionActive) {
     if (isFocusSaveTipVisible()) hideFocusSaveTip(false);
     return;
   }
@@ -1251,6 +1253,16 @@ function scrollToLatestContent() {
     const last = wrapper?.lastElementChild;
     if (last) last.scrollIntoView({ block: "end", behavior });
   }
+}
+
+function createChatBubble(text, { animate = false } = {}) {
+  const bubble = document.createElement("div");
+  bubble.className = "chat-bubble chat-bubble--left";
+  if (animate) {
+    bubble.classList.add("chat-bubble--enter");
+  }
+  bubble.innerHTML = `<p class="chat-bubble__text">${text}</p>`;
+  return bubble;
 }
 
 // ---------- Toast ----------
@@ -2424,7 +2436,6 @@ function syncActionDock(chapter, chState, objectiveId, viewState, items) {
       actionLeftBtn.setAttribute("aria-pressed", String(isSaved));
       const isLast = revisionPointIndex >= total - 1;
       setRightButton({ label: isLast ? "Done" : "Next", shape: "circle", disabled: false });
-      maybeShowFocusSaveTip();
     } else {
       const isRevealed = isRevisionQuestionRevealed(revisionSessionIndex);
       setLeftButton({ label: "Exit", shape: "pill" });
@@ -2451,13 +2462,34 @@ function syncActionDock(chapter, chState, objectiveId, viewState, items) {
 
   if (mode === "story") {
     const total = items.storyPoints.length;
-    const done = viewState.storyIndex >= total;
-    if (total === 0 || done) {
+    if (total === 0) {
       actionDock.classList.add("hidden");
+      hideFocusSaveTip(false);
       return;
     }
 
-    setRightButton({ label: "OK", shape: "circle", disabled: false });
+    const endPanelShown = viewState.storyIndex > total;
+    if (endPanelShown) {
+      actionDock.classList.add("hidden");
+      hideFocusSaveTip(false);
+      return;
+    }
+
+    const currentIndex = Math.max(0, Math.min(viewState.storyIndex, total) - 1);
+    const currentPoint = items.storyPoints[currentIndex];
+    const isSaved = Boolean(currentPoint && chState?.revisionStoryIds?.includes(currentPoint.id));
+    const label = isSaved ? "Saved to Focus" : "Save to Focus";
+    setLeftButton({
+      label,
+      shape: "circle",
+      iconHtml: getStarIconSVG(isSaved),
+      isStar: true
+    });
+    actionLeftBtn.setAttribute("aria-pressed", String(isSaved));
+
+    const isLast = viewState.storyIndex >= total;
+    setRightButton({ label: isLast ? "Done" : "Next", shape: "circle", disabled: false });
+    maybeShowFocusSaveTip();
   }
 
   if (mode === "questions") {
@@ -2483,7 +2515,10 @@ actionLeftBtn.addEventListener("click", () => {
   const { chState, objectiveId, viewState, items } = getActiveChapterContext(chapter);
 
   if (appState.currentMode === "story") {
-    markCurrentStoryRevision(chapter, viewState, items.storyPoints);
+    const didSave = markCurrentStoryRevision(chapter, viewState, items.storyPoints);
+    if (didSave) {
+      renderCurrentMode();
+    }
   } else if (appState.currentMode === "questions") {
     markCurrentQuestionRevision(chapter, viewState, items.questions);
   } else if (appState.currentMode === "revision" && isRevisionSessionActive) {
@@ -2522,9 +2557,7 @@ function renderStoryMode(chapter, viewState, objectiveId, storyPoints) {
     const feed = document.createElement("div");
     feed.className = "bubble-feed";
 
-    const bubble = document.createElement("div");
-    bubble.className = "bubble bubble--left";
-    bubble.innerHTML = `<p class="bubble-text">Coming soon.</p>`;
+    const bubble = createChatBubble("Coming soon.");
 
     feed.appendChild(bubble);
     storyFeedEl.innerHTML = "";
@@ -2535,22 +2568,27 @@ function renderStoryMode(chapter, viewState, objectiveId, storyPoints) {
   const feed = document.createElement("div");
   feed.className = "bubble-feed";
 
+  const renderKey = `${chapter.id}:${objectiveId || "all"}`;
+  if (renderKey !== lastStoryRenderKey) {
+    lastStoryRenderKey = renderKey;
+    lastStoryRenderIndex = 0;
+  }
+
   const countToShow = Math.min(viewState.storyIndex, total);
   const visible = storyPoints.slice(0, countToShow);
+  const shouldAnimateNew = viewState.storyIndex > lastStoryRenderIndex
+    && viewState.storyIndex <= total;
 
-  visible.forEach((p) => {
-    const bubble = document.createElement("div");
-    bubble.className = "bubble bubble--left";
-    bubble.innerHTML = `
-      <p class="bubble-text">${p.text}</p>
-    `;
+  visible.forEach((p, index) => {
+    const isLastVisible = index === visible.length - 1;
+    const bubble = createChatBubble(p.text, { animate: shouldAnimateNew && isLastVisible });
     feed.appendChild(bubble);
   });
 
   storyFeedEl.innerHTML = "";
   storyFeedEl.appendChild(feed);
 
-  if (viewState.storyIndex >= total) {
+  if (viewState.storyIndex > total) {
     feed.appendChild(createEndOfSetCard({
       levelId: appState.currentLevelId,
       chapterId: chapter.id,
@@ -2560,6 +2598,7 @@ function renderStoryMode(chapter, viewState, objectiveId, storyPoints) {
   }
 
   // auto scroll to latest bubble
+  lastStoryRenderIndex = viewState.storyIndex;
   requestAnimationFrame(scrollToLatestContent);
 }
 
@@ -2574,23 +2613,28 @@ function advanceStory(chapter, viewState, objectiveId, storyPoints) {
     recordDailyActivity("story-ok");
     saveState();
     renderCurrentMode();
-  } else {
-    showToast("End of pills");
+  } else if (viewState.storyIndex === total) {
+    viewState.storyIndex = total + 1;
+    recordChapterActivity(chapter.id, "story", objectiveId);
+    saveState();
+    renderCurrentMode();
   }
 }
 
 function markCurrentStoryRevision(chapter, viewState, storyPoints) {
   const idx = Math.max(viewState.storyIndex - 1, 0);
   const point = storyPoints[idx];
-  if (!point) return;
+  if (!point) return false;
 
   const chState = ensureChapterState(chapter.id);
   if (!chState.revisionStoryIds.includes(point.id)) {
     chState.revisionStoryIds.push(point.id);
     saveState();
     showToast("Saved to Focus");
+    return true;
   } else {
     showToast("Already saved");
+    return false;
   }
 }
 

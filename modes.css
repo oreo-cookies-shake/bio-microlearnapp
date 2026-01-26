@@ -11,30 +11,30 @@
   flex-direction: column;
   gap: 12px;
   padding: 12px 0 0;
+  --bubble-bg: var(--content-bg);
+  --bubble-fg: var(--text);
+  --bubble-border: var(--content-edge);
+  --page-bg: var(--bg);
 }
 
 /* One-sided, left-aligned chat bubbles */
+.chat-bubble,
 .bubble {
   position: relative;
   align-self: flex-start;
-  width: fit-content;
-  max-width: min(520px, 82%);
+  display: inline-block;
+  max-width: 80%;
   margin-right: auto;
   padding: 14px 16px;
-  border-radius: 20px;
+  border-radius: 22px;
   overflow: visible;
-  background: var(--content-bg);
-  border: 1px solid var(--content-edge);
-  box-shadow: var(--shadow-soft);
+  background: var(--bubble-bg, #ffffff);
+  color: var(--bubble-fg, #111827);
+  border: 1px solid var(--bubble-border, rgba(0, 0, 0, 0.06));
+  box-shadow: none;
 }
 
-.bubble-num {
-  font-size: 12px;
-  font-weight: 650;
-  color: var(--muted);
-  margin-bottom: 6px;
-}
-
+.chat-bubble__text,
 .bubble-text {
   font-size: 16.5px;
   line-height: 1.55;
@@ -47,35 +47,40 @@
 }
 
 /* iMessage-style bubble tail */
-.bubble--left::before,
+.chat-bubble--left::before,
+.bubble--left::before {
+  content: "";
+  position: absolute;
+  left: -8px;
+  bottom: 10px;
+  width: 18px;
+  height: 18px;
+  background: var(--bubble-bg, #ffffff);
+  border-bottom-right-radius: 16px;
+  transform: rotate(35deg);
+  border-left: 1px solid var(--bubble-border, rgba(0, 0, 0, 0.06));
+  border-bottom: 1px solid var(--bubble-border, rgba(0, 0, 0, 0.06));
+}
+
+.chat-bubble--left::after,
 .bubble--left::after {
   content: "";
   position: absolute;
-  left: -6px;
-  bottom: 10px;
-  width: 14px;
-  height: 14px;
-  border-radius: 6px;
-  transform: rotate(45deg);
+  left: -12px;
+  bottom: 7px;
+  width: 18px;
+  height: 18px;
+  background: var(--page-bg, #f3f4f6);
+  border-bottom-right-radius: 16px;
+  transform: rotate(35deg);
 }
 
-.bubble--left::before {
-  background: var(--content-edge);
-}
-
-.bubble--left::after {
-  left: -5px;
-  bottom: 11px;
-  width: 12px;
-  height: 12px;
-  background: var(--content-bg);
-}
-
+.chat-bubble--enter,
 .bubble--enter {
-  animation: bubble-in 220ms ease;
+  animation: chat-bubble-in 220ms ease;
 }
 
-@keyframes bubble-in {
+@keyframes chat-bubble-in {
   from {
     opacity: 0;
     transform: translateY(12px);
@@ -87,6 +92,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .chat-bubble--enter,
   .bubble--enter {
     animation: none;
   }
