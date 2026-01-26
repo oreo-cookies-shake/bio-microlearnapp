@@ -983,6 +983,7 @@ let focusContinueToastAt = 0;
 const focusTapHintEl = qs("#focusTapHint");
 const focusTapHintDismissBtn = qs("#focusTapHintDismiss");
 const focusTapHintSubtitleEl = qs("#focusTapHintSubtitle");
+const focusTapHintBodyEl = qs(".focus-tap-hint__body");
 const FOCUS_TAP_HINT_KEY = "focusTipSeen_questions";
 
 const revisionDebug = false;
@@ -1036,7 +1037,7 @@ function setFocusSessionActive(active) {
     console.log("[focus-session] session active");
   } else {
     updateFocusSessionHeaderClasses();
-    hideFocusTapHint(isFocusTapHintVisible());
+    hideFocusTapHint(false);
     syncFocusSessionTapHandlers();
     console.log("[focus-session] session inactive");
   }
@@ -1070,15 +1071,21 @@ function getFocusContinueMessage() {
   }
   if (appState.currentRevisionSubMode === "questions") {
     const isRevealed = isRevisionQuestionRevealed(revisionSessionIndex);
-    return isRevealed ? "Use Next to continue." : "Use Reveal to continue.";
+    return isRevealed
+      ? "Use Next to go to the next question."
+      : "Use Reveal to show the answer first.";
   }
   return "Use Next to continue.";
 }
 
 function updateFocusTapHintContent() {
-  if (!focusTapHintSubtitleEl) return;
   if (appState.currentRevisionSubMode !== "questions") return;
-  focusTapHintSubtitleEl.textContent = getFocusContinueMessage();
+  if (focusTapHintBodyEl) {
+    focusTapHintBodyEl.textContent = "Tap right to review next, tap left to go back.";
+  }
+  if (focusTapHintSubtitleEl) {
+    focusTapHintSubtitleEl.textContent = "Use Reveal to show the answer, then Next to move on.";
+  }
 }
 
 function showFocusTapHint() {
@@ -2340,12 +2347,11 @@ function syncActionDock(chapter, chState, objectiveId, viewState, items) {
       setRightButton({ label: "OK", shape: "circle", disabled: false });
     } else {
       const isRevealed = isRevisionQuestionRevealed(revisionSessionIndex);
-      const disableNext = !isRevealed;
       setLeftButton({ label: "Exit", shape: "pill" });
       setRightButton({
         label: isRevealed ? "Next" : "Reveal",
         shape: "pill",
-        disabled: disableNext
+        disabled: false
       });
     }
     return;
