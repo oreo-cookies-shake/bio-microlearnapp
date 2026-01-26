@@ -2627,15 +2627,17 @@ function markCurrentStoryRevision(chapter, viewState, storyPoints) {
   if (!point) return false;
 
   const chState = ensureChapterState(chapter.id);
-  if (!chState.revisionStoryIds.includes(point.id)) {
+  const savedIndex = chState.revisionStoryIds.indexOf(point.id);
+  if (savedIndex === -1) {
     chState.revisionStoryIds.push(point.id);
     saveState();
     showToast("Saved to Focus");
     return true;
-  } else {
-    showToast("Already saved");
-    return false;
   }
+  chState.revisionStoryIds.splice(savedIndex, 1);
+  saveState();
+  showToast("Removed from Focus");
+  return true;
 }
 
 function saveCurrentRevisionStory(chapter) {
@@ -2646,13 +2648,16 @@ function saveCurrentRevisionStory(chapter) {
   if (!point) return;
 
   const chState = ensureChapterState(chapter.id);
-  if (!chState.revisionStoryIds.includes(point.id)) {
+  const savedIndex = chState.revisionStoryIds.indexOf(point.id);
+  if (savedIndex === -1) {
     chState.revisionStoryIds.push(point.id);
     saveState();
     showToast("Saved to Focus");
-  } else {
-    showToast("Already saved");
+    return;
   }
+  chState.revisionStoryIds.splice(savedIndex, 1);
+  saveState();
+  showToast("Removed from Focus");
 }
 
 // ---------- Question mode ----------
