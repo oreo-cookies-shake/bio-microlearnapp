@@ -3406,7 +3406,7 @@ function renderRevisionSession() {
 
     revealedPoints.forEach((point, index) => {
       const bubble = document.createElement("div");
-      bubble.className = "bubble bubble--left revision-point";
+      bubble.className = "pill-bubble revision-point";
       if (index === currentIndex) {
         bubble.classList.add("revision-point--focused");
       }
